@@ -31,7 +31,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 - [x] **T-0.01** Scaffold Next.js App Router, TypeScript strict, pnpm, `src/` layout per TRD section 4 · S · NFR-10
 - [x] **T-0.02** ESLint, Prettier, import ordering; `pnpm lint` and `pnpm format` · S · NFR-10
-- [ ] **T-0.03** Tailwind, `next/font` (Newsreader, IBM Plex Sans, IBM Plex Mono), empty `tokens.css` · S · NFR-10
+- [x] **T-0.03** Tailwind, `next/font` (Newsreader, IBM Plex Sans, IBM Plex Mono), empty `tokens.css` · S · NFR-10
 - [ ] **T-0.04** shadcn/ui init with base primitives · S · NFR-10
 - [ ] **T-0.05** Zod-validated env (`src/lib/env.ts`); `.env.example` kept in sync · S · NFR-12
 - [ ] **T-0.06** Firebase dev and prod projects, `firebase/` placeholders, emulators, `pnpm emulators` · M · NFR-03

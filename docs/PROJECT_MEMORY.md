@@ -86,6 +86,9 @@ Pending decisions (resolve at the named task, then add a D-entry):
 - The CSS `overlay` property has limited support; exits are unanimated in some browsers, which is acceptable.
 - Numeric grounding exempts bare integers of 10 or below (known limitation, AI_SPEC V2).
 - Verify tabular numerals in IBM Plex Sans during T-1.01; fall back to Plex Mono for numeric columns if needed.
+- Next.js 16 generates `LayoutProps`/`PageProps` globals into `.next/types`; plain `tsc --noEmit` fails on them until those types exist. `pnpm typecheck` runs `next typegen` first.
+- `next dev` auto-appends a `<!-- BEGIN:nextjs-agent-rules -->` block to `CLAUDE.md` pointing at `node_modules/next/dist/docs/` for this Next.js version's breaking changes vs. training data. It re-adds itself if removed; commit it rather than fight it.
+- Prettier's markdown formatter escapes bare `*` as emphasis (e.g. `FR-*` becomes `FR-_`), corrupting the spec docs' glob-style IDs. Root and `docs/` markdown are excluded from Prettier (`.prettierignore`).
 
 ## 5. Open questions
 
