@@ -37,7 +37,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 - [~] **T-0.06** Firebase dev and prod projects, `firebase/` placeholders, emulators, `pnpm emulators` · M · NFR-03 — emulators verified working (Auth, Firestore, Storage all healthy); creating the real dev/prod Firebase projects needs the account holder, see PROJECT_MEMORY
 - [x] **T-0.07** Vitest, Testing Library, MSW; one sample test · S · NFR-10
 - [x] **T-0.08** Playwright with a smoke test · S · NFR-10
-- [ ] **T-0.09** GitHub Actions: lint, typecheck, test, build · S · NFR-10
+- [x] **T-0.09** GitHub Actions: lint, typecheck, test, build · S · NFR-10
 - [ ] **T-0.10** Commit docs and `CLAUDE.md`; verify imports load; add `CLAUDE.local.md` to `.gitignore` · S · NFR-10
 - [ ] **T-0.11** pino logger with redaction; `Intl` format helpers in `src/lib/format.ts` · S · NFR-04, NFR-11
 
