@@ -12,11 +12,24 @@ Last updated: 2026-09-21
 - Stage: documentation complete; implementation begins at Phase 0 (see TRACKER "Current focus").
 - Stack: Next.js App Router, TypeScript strict, Tailwind, shadcn/ui, Firebase (Auth, Firestore, Storage), Anthropic API, Zod, Vitest, Playwright, pnpm.
 
-Pinned versions (fill in during T-0.11):
+Pinned versions (Node 22, pnpm 10.33.0):
 
-| Package | Version |
-|---|---|
-| | |
+| Package | Version | | Package | Version |
+|---|---|---|---|---|
+| next | 16.3.5 | | @playwright/test | 1.63.0 |
+| react / react-dom | 19.2.8 | | @testing-library/react | 16.3.3 |
+| typescript | 5.9.3 | | @testing-library/jest-dom | 7.0.1 |
+| tailwindcss | 4.3.3 | | @testing-library/user-event | 14.6.7 |
+| zod | 4.6.5 | | @vitejs/plugin-react | 6.1.1 |
+| pino / pino-pretty | 10.3.1 / 13.1.3 | | jsdom | 30.1.0 |
+| @radix-ui/react-slot | 1.3.3 | | msw | 2.15.0 |
+| class-variance-authority | 0.7.1 | | eslint / eslint-config-next | 9.39.5 / 16.3.5 |
+| clsx / tailwind-merge | 2.1.1 / 3.7.0 | | prettier | 3.9.8 |
+| lucide-react | 1.47.0 | | firebase-tools | 15.30.2 |
+| tw-animate-css | 1.4.0 | | @types/node | 26.6.2 |
+
+TypeScript is pinned to 5.9.3, not the newly-published 7.0.2 (the Go-based
+`tsgo` compiler) — too new for this ecosystem's tooling to have caught up to.
 
 Model IDs in use (fill in during Phase 2; defaults are in `.env.example`):
 
@@ -92,6 +105,7 @@ Pending decisions (resolve at the named task, then add a D-entry):
 - The `shadcn` CLI's `init`/`add` need `ui.shadcn.com`, which this sandbox's network policy blocks outright (403 at the CONNECT layer). `raw.githubusercontent.com` and `api.github.com` are reachable. T-0.04's Button primitive was hand-written (cva + @radix-ui/react-slot + cn), matching shadcn/ui's own convention, instead of run through the CLI. Same workaround applies to T-1.02's remaining primitives unless the policy changes.
 - This sandbox pre-installs Chromium at `/opt/pw-browsers/chromium` outside Playwright's own managed cache. `playwright.config.ts` stays portable (normal browser resolution by default); set `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium` as an env var (not committed) to point the `chromium` project at it in this sandbox.
 - T-0.06: no real Firebase project exists yet. `.firebaserc` points at the demo project `demo-argus-ai` (the Firebase Emulator Suite's offline mode — no GCP project, billing or credentials needed) so `pnpm emulators` works standalone; verified Auth (9099), Firestore (8080) and Storage (9199) all start and answer. **Action needed from the project owner before T-3.01**: create real `dev` and `prod` Firebase projects in the console, add their aliases to `.firebaserc`, and put the Admin SDK service-account values into `.env.local` — an agent session can't do this without your Firebase account.
+- `src/lib/env.ts`'s server `env` export originally threw on `typeof window !== "undefined"` to catch a client import early. Dropped it: jsdom (Vitest's default test environment) defines `window` too, so it broke legitimate server-side tests. Next.js already leaves non-`NEXT_PUBLIC_*` vars undefined in the browser bundle, so a client import still fails fast via the normal Zod error, just without the friendlier message.
 
 ## 5. Open questions
 
@@ -99,4 +113,5 @@ See TRACKER "Decisions needed" for the live list (TQ-1 to TQ-5, OQ-1, OQ-8) and 
 
 ## 6. Session log (newest first)
 
+- 2026-09-21: Phase 0 (T-0.01 to T-0.11), all tasks done except the real Firebase dev/prod projects within T-0.06 (needs the account holder; emulators themselves are verified working). Scaffolded Next.js App Router, TypeScript strict, ESLint/Prettier/import-order, Tailwind with the three DESIGN fonts and an empty tokens.css, shadcn/ui (hand-built, see gotchas), Zod env validation, Firebase emulators, Vitest/Testing Library/MSW, Playwright, GitHub Actions CI, and a pino logger with redaction plus Intl format helpers. `pnpm check` and `pnpm build` are green. Next: Phase 1 (design system) and Phase 2 (engine spike) can run in either order or interleaved (IMPLEMENTATION_PLAN section 1.2).
 - 2026-09-21: Generated the documentation set v0.1: PRD, TRD, APP_FLOW, SCHEMA, DESIGN, AI_SPEC, IMPLEMENTATION_PLAN, TRACKER, RULES, PROJECT_MEMORY, CLAUDE.md, README, `.env.example`. No code written yet. Next: Phase 0 (T-0.01).

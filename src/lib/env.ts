@@ -88,15 +88,11 @@ function parseClientEnv(): ClientEnv {
 
 /**
  * Server-only config: Anthropic keys, Firebase Admin credentials, limits.
- * Importing this from a Client Component fails fast, since Next.js leaves
- * non-`NEXT_PUBLIC_*` vars undefined in the browser bundle.
+ * Next.js leaves non-`NEXT_PUBLIC_*` vars undefined in the browser bundle,
+ * so importing this from a Client Component already fails fast with the
+ * same per-field validation error as a broken .env.
  */
-export const env: ServerEnv = ((): ServerEnv => {
-  if (typeof window !== "undefined") {
-    throw new Error("src/lib/env.ts `env` was imported into client code. Use `clientEnv` instead.");
-  }
-  return parseServerEnv();
-})();
+export const env: ServerEnv = parseServerEnv();
 
 /** Public config safe for Client Components: Firebase web config only. */
 export const clientEnv: ClientEnv = parseClientEnv();
