@@ -8,16 +8,16 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 ## Current focus
 
-- Phase: 0 — Foundation
-- Task: T-0.01
-- Next up: T-0.02 to T-0.11
-- Blockers: none
+- Phase: 0 — Foundation (done, one caveat below)
+- Task: none in progress
+- Next up: Phase 1 (T-1.01) and Phase 2 (T-2.01) run in either order or interleaved (IMPLEMENTATION_PLAN section 1.2)
+- Blockers: none. Caveat: T-0.06 needs the project owner to create real Firebase dev/prod projects before T-3.01; local dev runs fully on the emulators in the meantime.
 
 ## Phase progress
 
 | Phase | Name | Tasks | Done | Status |
 |---|---|---|---|---|
-| 0 | Foundation | 11 | 0 | Not started |
+| 0 | Foundation | 11 | 11 | Done (T-0.06 caveat: no real Firebase project yet) |
 | 1 | Design system, landing, shell, dashboard (demo data) | 17 | 0 | Not started |
 | 2 | Engine spike (CLI-first) | 18 | 0 | Not started |
 | 3 | Auth, persistence, intake, orchestration | 14 | 0 | Not started |
@@ -29,17 +29,17 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 ## Phase 0 — Foundation
 
-- [ ] **T-0.01** Scaffold Next.js App Router, TypeScript strict, pnpm, `src/` layout per TRD section 4 · S · NFR-10
-- [ ] **T-0.02** ESLint, Prettier, import ordering; `pnpm lint` and `pnpm format` · S · NFR-10
-- [ ] **T-0.03** Tailwind, `next/font` (Newsreader, IBM Plex Sans, IBM Plex Mono), empty `tokens.css` · S · NFR-10
-- [ ] **T-0.04** shadcn/ui init with base primitives · S · NFR-10
-- [ ] **T-0.05** Zod-validated env (`src/lib/env.ts`); `.env.example` kept in sync · S · NFR-12
-- [ ] **T-0.06** Firebase dev and prod projects, `firebase/` placeholders, emulators, `pnpm emulators` · M · NFR-03
-- [ ] **T-0.07** Vitest, Testing Library, MSW; one sample test · S · NFR-10
-- [ ] **T-0.08** Playwright with a smoke test · S · NFR-10
-- [ ] **T-0.09** GitHub Actions: lint, typecheck, test, build · S · NFR-10
-- [ ] **T-0.10** Commit docs and `CLAUDE.md`; verify imports load; add `CLAUDE.local.md` to `.gitignore` · S · NFR-10
-- [ ] **T-0.11** pino logger with redaction; `Intl` format helpers in `src/lib/format.ts` · S · NFR-04, NFR-11
+- [x] **T-0.01** Scaffold Next.js App Router, TypeScript strict, pnpm, `src/` layout per TRD section 4 · S · NFR-10
+- [x] **T-0.02** ESLint, Prettier, import ordering; `pnpm lint` and `pnpm format` · S · NFR-10
+- [x] **T-0.03** Tailwind, `next/font` (Newsreader, IBM Plex Sans, IBM Plex Mono), empty `tokens.css` · S · NFR-10
+- [x] **T-0.04** shadcn/ui init with base primitives · S · NFR-10
+- [x] **T-0.05** Zod-validated env (`src/lib/env.ts`); `.env.example` kept in sync · S · NFR-12
+- [~] **T-0.06** Firebase dev and prod projects, `firebase/` placeholders, emulators, `pnpm emulators` · M · NFR-03 — emulators verified working (Auth, Firestore, Storage all healthy); creating the real dev/prod Firebase projects needs the account holder, see PROJECT_MEMORY
+- [x] **T-0.07** Vitest, Testing Library, MSW; one sample test · S · NFR-10
+- [x] **T-0.08** Playwright with a smoke test · S · NFR-10
+- [x] **T-0.09** GitHub Actions: lint, typecheck, test, build · S · NFR-10
+- [x] **T-0.10** Commit docs and `CLAUDE.md`; verify imports load; add `CLAUDE.local.md` to `.gitignore` · S · NFR-10
+- [x] **T-0.11** pino logger with redaction; `Intl` format helpers in `src/lib/format.ts` · S · NFR-04, NFR-11
 
 ## Phase 1 — Design system, landing, shell, dashboard (demo data)
 
@@ -182,4 +182,5 @@ None.
 
 ## Changelog
 
+- 2026-09-21: Phase 0 (T-0.01 to T-0.11) complete, except the real Firebase dev/prod projects within T-0.06 (needs the account owner). `pnpm check` and `pnpm build` green.
 - 2026-09-21: Documentation set v0.1 created (PRD, TRD, APP_FLOW, SCHEMA, DESIGN, AI_SPEC, IMPLEMENTATION_PLAN, TRACKER, RULES, PROJECT_MEMORY, CLAUDE.md, README, .env.example).

@@ -1,0 +1,10 @@
+.next/
+node_modules/
+pnpm-lock.yaml
+docs/
+coverage/
+playwright-report/
+
+# Hand-authored docs; Prettier's markdown formatter mangles `*` glob/wildcard
+# notation (e.g. FR-*, NFR-*) by escaping it as emphasis.
+*.md
