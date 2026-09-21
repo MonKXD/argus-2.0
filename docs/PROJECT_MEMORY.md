@@ -89,6 +89,7 @@ Pending decisions (resolve at the named task, then add a D-entry):
 - Next.js 16 generates `LayoutProps`/`PageProps` globals into `.next/types`; plain `tsc --noEmit` fails on them until those types exist. `pnpm typecheck` runs `next typegen` first.
 - `next dev` auto-appends a `<!-- BEGIN:nextjs-agent-rules -->` block to `CLAUDE.md` pointing at `node_modules/next/dist/docs/` for this Next.js version's breaking changes vs. training data. It re-adds itself if removed; commit it rather than fight it.
 - Prettier's markdown formatter escapes bare `*` as emphasis (e.g. `FR-*` becomes `FR-_`), corrupting the spec docs' glob-style IDs. Root and `docs/` markdown are excluded from Prettier (`.prettierignore`).
+- The `shadcn` CLI's `init`/`add` need `ui.shadcn.com`, which this sandbox's network policy blocks outright (403 at the CONNECT layer). `raw.githubusercontent.com` and `api.github.com` are reachable. T-0.04's Button primitive was hand-written (cva + @radix-ui/react-slot + cn), matching shadcn/ui's own convention, instead of run through the CLI. Same workaround applies to T-1.02's remaining primitives unless the policy changes.
 
 ## 5. Open questions
 

@@ -29,8 +29,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "ARGUS AI",
-  description:
-    "Evidence-first startup due diligence and investment intelligence platform.",
+  description: "Evidence-first startup due diligence and investment intelligence platform.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
