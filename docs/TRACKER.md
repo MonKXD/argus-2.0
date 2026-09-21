@@ -34,7 +34,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 - [x] **T-0.03** Tailwind, `next/font` (Newsreader, IBM Plex Sans, IBM Plex Mono), empty `tokens.css` · S · NFR-10
 - [x] **T-0.04** shadcn/ui init with base primitives · S · NFR-10
 - [x] **T-0.05** Zod-validated env (`src/lib/env.ts`); `.env.example` kept in sync · S · NFR-12
-- [ ] **T-0.06** Firebase dev and prod projects, `firebase/` placeholders, emulators, `pnpm emulators` · M · NFR-03
+- [~] **T-0.06** Firebase dev and prod projects, `firebase/` placeholders, emulators, `pnpm emulators` · M · NFR-03 — emulators verified working (Auth, Firestore, Storage all healthy); creating the real dev/prod Firebase projects needs the account holder, see PROJECT_MEMORY
 - [ ] **T-0.07** Vitest, Testing Library, MSW; one sample test · S · NFR-10
 - [ ] **T-0.08** Playwright with a smoke test · S · NFR-10
 - [ ] **T-0.09** GitHub Actions: lint, typecheck, test, build · S · NFR-10

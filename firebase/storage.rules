@@ -1,0 +1,11 @@
+rules_version = '2';
+
+// Deny-by-default (R-SEC-02). Upload paths get their own rules, written
+// alongside T-3.06 (upload flow), with an emulator rules test (R-TST-05).
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

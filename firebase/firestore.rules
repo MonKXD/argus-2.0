@@ -1,0 +1,12 @@
+rules_version = '2';
+
+// Deny-by-default (R-SEC-02). Every collection this app touches gets its own
+// rule, written alongside the feature that needs it, with an emulator rules
+// test (R-TST-05). Nothing is added here speculatively.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
