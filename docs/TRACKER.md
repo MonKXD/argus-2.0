@@ -29,7 +29,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 ## Phase 0 — Foundation
 
-- [ ] **T-0.01** Scaffold Next.js App Router, TypeScript strict, pnpm, `src/` layout per TRD section 4 · S · NFR-10
+- [x] **T-0.01** Scaffold Next.js App Router, TypeScript strict, pnpm, `src/` layout per TRD section 4 · S · NFR-10
 - [ ] **T-0.02** ESLint, Prettier, import ordering; `pnpm lint` and `pnpm format` · S · NFR-10
 - [ ] **T-0.03** Tailwind, `next/font` (Newsreader, IBM Plex Sans, IBM Plex Mono), empty `tokens.css` · S · NFR-10
 - [ ] **T-0.04** shadcn/ui init with base primitives · S · NFR-10
