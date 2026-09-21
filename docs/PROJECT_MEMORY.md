@@ -70,6 +70,8 @@ Run baseline (fill in at T-2.18): median cost per run, median duration, downgrad
 | D-017 | 2026-09-21 | Run modern-web-guidance before any UI, CSS or client-JS work; browser policy in RULES R-UI-13. | Current best practice, fewer dependencies | Accepted |
 | D-018 | 2026-09-21 | Client Firestore reads limited to `analyses` and `runs`; everything else is read server-side. | Minimal exposure and rules cost | Accepted |
 | D-019 | 2026-09-21 | Phase 1 (design) and Phase 2 (engine) are independent and may be interleaved. | Visible progress plus risk reduction | Accepted |
+| D-020 | 2026-09-21 | T-1.01 contrast check (WCAG AA, computed from the real token hex values): every text and evidence-spectrum colour clears 4.5:1 on both Ink and Slate (worst case: Haze/Missing at 4.56:1 on Slate). Haze fails AA text contrast on Surface-3 (4.15:1) but clears the 3:1 non-text minimum there; Surface-3 is reserved for non-text use (the ScoreGauge track), so this is a guardrail, not a violation — automated in `tests/unit/contrast.test.ts`. | DESIGN section 3.2 asks for an automated check recorded here | Accepted |
+| D-021 | 2026-09-21 | T-1.01 tabular-numeral check: inspected the self-hosted IBM Plex Sans (400) file directly (fontTools) — digits 0-9 are all 600 units wide by default, i.e. genuinely tabular, not gated behind an optional `tnum` OpenType feature (which this build doesn't declare). `font-variant-numeric: tabular-nums` is safe to use as-is; no fallback to Plex Mono for numeric columns needed. | Verified by parsing the actual font file rather than assuming (R-PRC-08) | Accepted |
 
 Pending decisions (resolve at the named task, then add a D-entry):
 
@@ -98,7 +100,7 @@ Pending decisions (resolve at the named task, then add a D-entry):
 - In inline orchestration mode the handler must ignore client disconnects; do not tie the pipeline to the request abort signal.
 - The CSS `overlay` property has limited support; exits are unanimated in some browsers, which is acceptable.
 - Numeric grounding exempts bare integers of 10 or below (known limitation, AI_SPEC V2).
-- Verify tabular numerals in IBM Plex Sans during T-1.01; fall back to Plex Mono for numeric columns if needed.
+- Tabular numerals in IBM Plex Sans: confirmed, see D-021. `font-variant-numeric: tabular-nums` works as-is.
 - Next.js 16 generates `LayoutProps`/`PageProps` globals into `.next/types`; plain `tsc --noEmit` fails on them until those types exist. `pnpm typecheck` runs `next typegen` first.
 - `next dev` auto-appends a `<!-- BEGIN:nextjs-agent-rules -->` block to `CLAUDE.md` pointing at `node_modules/next/dist/docs/` for this Next.js version's breaking changes vs. training data. It re-adds itself if removed; commit it rather than fight it.
 - Prettier's markdown formatter escapes bare `*` as emphasis (e.g. `FR-*` becomes `FR-_`), corrupting the spec docs' glob-style IDs. Root and `docs/` markdown are excluded from Prettier (`.prettierignore`).

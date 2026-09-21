@@ -2,87 +2,79 @@
 @import "tw-animate-css";
 @import "../styles/tokens.css";
 
-@custom-variant dark (&:is(.dark *));
-
 /*
- * Placeholder shadcn/ui (new-york, neutral base) CSS variables, standing in
- * for the real ARGUS AI design tokens until T-1.01 replaces this block per
- * docs/DESIGN.md (dark-only, no brand hue, evidence-status colour system).
+ * Tailwind theme mapping (docs/DESIGN.md section 12: "Tokens live only in
+ * src/styles/tokens.css. Tailwind theme maps to the variables ... No raw hex
+ * in components."). Dark only (D-012) — no light theme, no .dark variant.
  */
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --radius: 0.625rem;
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.556 0 0);
-}
-
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
+  /* semantic colours, for shadcn-style component classes (bg-primary, etc.) */
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-card: var(--panel);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--panel-raised);
+  --color-popover-foreground: var(--text);
+  --color-primary: var(--cta-bg);
+  --color-primary-foreground: var(--cta-fg);
+  --color-secondary: var(--panel-raised);
+  --color-secondary-foreground: var(--text);
+  --color-muted: var(--panel);
+  --color-muted-foreground: var(--text-2);
+  --color-accent: var(--panel-raised);
+  --color-accent-foreground: var(--text);
+  --color-destructive: var(--ember);
   --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  /* Font roles per docs/DESIGN.md section 4.1. */
+  --color-input: var(--border);
+  --color-ring: var(--focus);
+
+  /* evidence spectrum (meaning only — R-UI-02/R-UI-03: never for decoration) */
+  --color-verified: var(--verified);
+  --color-analysis: var(--analysis);
+  --color-assumption: var(--assumption);
+  --color-missing: var(--missing);
+  --color-ember: var(--ember);
+  --color-ember-high: var(--ember-high);
+
+  /* radii by role (DESIGN section 3.3) */
+  --radius-control: var(--r-control);
+  --radius-data: var(--r-data);
+  --radius-panel: var(--r-panel);
+  --radius-overlay: var(--r-overlay);
+  --radius-pill: var(--r-pill);
+
+  /* fonts (DESIGN section 4.1 roles) */
   --font-sans: var(--font-ibm-plex-sans);
   --font-serif: var(--font-newsreader);
   --font-mono: var(--font-ibm-plex-mono);
+
+  /* type scale (DESIGN section 3.4) */
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+  --text-ui-sm: 0.8125rem;
+  --text-ui-sm--line-height: 1.125rem;
+  --text-ui: 0.875rem;
+  --text-ui--line-height: 1.25rem;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.5rem;
+  --text-prose: 1.125rem;
+  --text-prose--line-height: 1.8125rem;
+  --text-h4: 1rem;
+  --text-h4--line-height: 1.5rem;
+  --text-h3: 1.375rem;
+  --text-h3--line-height: 1.875rem;
+  --text-h2: 1.875rem;
+  --text-h2--line-height: 2.375rem;
+  --text-h1: 2.75rem;
+  --text-h1--line-height: 3.125rem;
+  --text-display: clamp(2.5rem, 6vw, 4.25rem);
+  --text-display--line-height: 1.04;
+  --text-numeral: 4.5rem;
+  --text-numeral--line-height: 4.5rem;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-background);
+  color: var(--color-foreground);
   font-family: var(--font-sans);
 }

@@ -1,1 +1,62 @@
-/* Design tokens (T-1.01, docs/DESIGN.md section 3). Intentionally empty until then. */
+/*
+ * Design tokens (docs/DESIGN.md section 3.3). This is the only place raw
+ * colour, radius and motion values are allowed to appear (R-UI-02);
+ * everything else references these variables, directly or through the
+ * Tailwind theme mapping in globals.css.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* surfaces */
+  --ink: #0c1118;
+  --surface-1: #111823;
+  --surface-2: #172030;
+  --surface-3: #1d2838;
+  --hairline: rgb(190 205 230 / 0.1);
+  --hairline-strong: rgb(190 205 230 / 0.18);
+
+  /* text */
+  --paper: #ece8df;
+  --mist: #aab3c2;
+  --haze: #7d889b;
+
+  /* evidence spectrum */
+  --verified: #3dcb9c;
+  --analysis: #7fa0ff;
+  --assumption: #e2ac45;
+  --missing: var(--haze);
+  --ember: #f0685d;
+  --ember-high: #ee8b57;
+
+  /* semantic aliases: components use these, never raw hex */
+  --bg: var(--ink);
+  --panel: var(--surface-1);
+  --panel-raised: var(--surface-2);
+  --text: var(--paper);
+  --text-2: var(--mist);
+  --text-3: var(--haze);
+  --border: var(--hairline);
+  --focus: var(--paper);
+  --cta-bg: var(--paper);
+  --cta-fg: var(--ink);
+
+  /* radii by role */
+  --r-control: 6px;
+  --r-data: 8px;
+  --r-panel: 12px;
+  --r-overlay: 16px;
+  --r-pill: 999px;
+
+  /* overlays and glass (overlays only) */
+  --glass-bg: color-mix(in oklab, var(--surface-2) 72%, transparent);
+  --glass-blur: 14px;
+  --shadow-overlay: 0 24px 64px -16px rgb(0 0 0 / 0.6);
+
+  /* motion */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-1: 90ms;
+  --dur-2: 160ms;
+  --dur-3: 240ms;
+  --dur-4: 360ms;
+}
