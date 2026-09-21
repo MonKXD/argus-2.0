@@ -28,6 +28,21 @@
   --color-input: var(--border);
   --color-ring: var(--focus);
 
+  /*
+   * Direct surface/text aliases (DESIGN section 3.3's own names), for
+   * components describing themselves in DESIGN's vocabulary ("Slate fill",
+   * "Mist text") rather than borrowed shadcn variant names (secondary,
+   * muted) that happen to resolve to the same value.
+   */
+  --color-ink: var(--ink);
+  --color-panel: var(--panel);
+  --color-panel-raised: var(--panel-raised);
+  --color-paper: var(--paper);
+  --color-mist: var(--mist);
+  --color-haze: var(--haze);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+
   /* evidence spectrum (meaning only — R-UI-02/R-UI-03: never for decoration) */
   --color-verified: var(--verified);
   --color-analysis: var(--analysis);

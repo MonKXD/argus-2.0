@@ -10,7 +10,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 - Phase: 1 — Design system, landing, shell, dashboard (demo data)
 - Task: none in progress
-- Next up: T-1.02 (primitives)
+- Next up: T-1.03 (EvidenceMarker, StatusBadge, ReliabilityChip)
 - Blockers: none. Caveat: T-0.06 needs the project owner to create real Firebase dev/prod projects before T-3.01; local dev runs fully on the emulators in the meantime.
 
 ## Phase progress
@@ -18,7 +18,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 | Phase | Name | Tasks | Done | Status |
 |---|---|---|---|---|
 | 0 | Foundation | 11 | 11 | Done (T-0.06 caveat: no real Firebase project yet) |
-| 1 | Design system, landing, shell, dashboard (demo data) | 17 | 1 | In progress |
+| 1 | Design system, landing, shell, dashboard (demo data) | 17 | 2 | In progress |
 | 2 | Engine spike (CLI-first) | 18 | 0 | Not started |
 | 3 | Auth, persistence, intake, orchestration | 14 | 0 | Not started |
 | 4 | Report UI (Alpha) | 14 | 0 | Not started |
@@ -44,7 +44,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 ## Phase 1 — Design system, landing, shell, dashboard (demo data)
 
 - [x] **T-1.01** Tokens, Tailwind mapping, fonts; automated contrast check recorded in PROJECT_MEMORY; verify tabular numerals · M · NFR-05
-- [ ] **T-1.02** Primitives: Button, Input, Select, Tabs, Dialog/Sheet, Popover, Tooltip, Toast, Skeleton, Table · M · NFR-05
+- [x] **T-1.02** Primitives: Button, Input, Select, Tabs, Dialog/Sheet, Popover, Tooltip, Toast, Skeleton, Table · M · NFR-05
 - [ ] **T-1.03** `EvidenceMarker`, `StatusBadge`, `ReliabilityChip` with all four textures and forced-colors fallback · S · FR-RPT-17, NFR-05
 - [ ] **T-1.04** `EvidenceBar` with text alternative and legend · S · FR-RPT-18
 - [ ] **T-1.05** `ScoreGauge` (scored, not scored, capped states; confidence meter) · M · FR-RPT-03
