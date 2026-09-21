@@ -30,7 +30,13 @@ describe("formatNumber", () => {
 
 describe("formatDate", () => {
   it("formats a date with the default medium style", () => {
-    expect(formatDate("2026-01-15T00:00:00.000Z")).toBe("Jan 15, 2026");
+    // formatDate defaults to the host's local time zone (deliberately: it's
+    // a display helper for viewers, not a fixed-zone report timestamp), so
+    // the test pins UTC explicitly rather than asserting a wall-clock date
+    // that would shift with the CI runner's time zone.
+    expect(formatDate("2026-01-15T00:00:00.000Z", { dateStyle: "medium", timeZone: "UTC" })).toBe(
+      "Jan 15, 2026",
+    );
   });
 });
 
