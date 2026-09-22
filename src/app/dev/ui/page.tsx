@@ -1,5 +1,6 @@
 "use client";
 
+import { DemoBanner } from "@/components/argus/demo-banner";
 import { EvidenceBar } from "@/components/argus/evidence-bar";
 import { EvidenceMarker } from "@/components/argus/evidence-marker";
 import { ReliabilityChip } from "@/components/argus/reliability-chip";
@@ -20,6 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { demoAnalyses, demoDimensions, demoReport } from "@/demo";
 import type { ClaimStatus, Reliability } from "@/lib/schema/enums";
 
 const ALL_STATUSES: ClaimStatus[] = ["VERIFIED", "AI_ANALYSIS", "ASSUMPTION", "MISSING"];
@@ -36,6 +38,42 @@ export default function DevUiGallery() {
   return (
     <main className="flex flex-col gap-8 p-16">
       <h1 className="font-serif text-h2">Component gallery</h1>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">DemoBanner</h2>
+        <DemoBanner />
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">Demo dataset (T-1.08)</h2>
+        <p className="text-ui-sm text-mist">
+          Real fixture data from <code>src/demo/</code>, fed into the same chart components above —
+          not a second implementation.
+        </p>
+        <ul className="flex flex-col gap-1 text-ui-sm">
+          {demoAnalyses.map((analysis) => (
+            <li key={analysis.id} className="flex gap-3">
+              <span className="text-foreground">{analysis.startup.name}</span>
+              <span className="text-mist">{analysis.status}</span>
+              <span className="tabular-nums text-mist">{analysis.latest?.overallScore ?? "—"}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="flex gap-8">
+          <ScoreGauge
+            score={demoReport.overall.score ?? 0}
+            confidence={demoReport.overall.confidence}
+          />
+          <DimensionRadar
+            scores={Object.fromEntries(
+              demoDimensions.map((d) => [
+                d.dimension,
+                { score: d.score, confidence: d.confidence },
+              ]),
+            )}
+          />
+        </div>
+      </section>
 
       <section className="flex flex-col gap-2">
         <h2 className="text-h4 font-semibold">EvidenceMarker</h2>

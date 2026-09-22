@@ -1,11 +1,14 @@
 import { z } from "zod";
 
 /**
- * Verbatim from docs/SCHEMA.md section 2. The rest of that section's
- * schemas (Evidence, Claim, Report, Analysis, Run, ...) land in T-2.01;
- * these enums are pulled forward because T-1.03's UI components need the
- * real ClaimStatus/Reliability vocabulary, and R-COD-03 says types are
- * z.infer of these schemas, not hand-written duplicates.
+ * Verbatim from docs/SCHEMA.md section 2. Pulled forward in T-1.03 because
+ * the UI components need the real ClaimStatus/Reliability vocabulary
+ * (R-COD-03: types are z.infer of these schemas, not hand-written
+ * duplicates). The rest of SCHEMA.md sections 3 to 5 (ids, evidence,
+ * claims, report, analysis, run) followed in T-1.08, for the same reason,
+ * once demo data needed real Analysis/Report shapes to type against.
+ * Comparison, Activity, Signal and Export (section 6) are still deferred —
+ * nothing before Phase 5/6 needs them.
  */
 
 export const ClaimStatus = z.enum(["VERIFIED", "AI_ANALYSIS", "ASSUMPTION", "MISSING"]);

@@ -10,7 +10,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 - Phase: 1 — Design system, landing, shell, dashboard (demo data)
 - Task: none in progress
-- Next up: T-1.08 (fictional demo dataset, `isDemo` labelling, `DemoBanner`)
+- Next up: T-1.09 (`AppShell`: sidebar, topbar, mobile bottom bar, breadcrumbs)
 - Blockers: none. Caveat: T-0.06 needs the project owner to create real Firebase dev/prod projects before T-3.01; local dev runs fully on the emulators in the meantime.
 
 ## Phase progress
@@ -18,7 +18,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 | Phase | Name | Tasks | Done | Status |
 |---|---|---|---|---|
 | 0 | Foundation | 11 | 11 | Done (T-0.06 caveat: no real Firebase project yet) |
-| 1 | Design system, landing, shell, dashboard (demo data) | 17 | 7 | In progress |
+| 1 | Design system, landing, shell, dashboard (demo data) | 17 | 8 | In progress |
 | 2 | Engine spike (CLI-first) | 18 | 0 | Not started |
 | 3 | Auth, persistence, intake, orchestration | 14 | 0 | Not started |
 | 4 | Report UI (Alpha) | 14 | 0 | Not started |
@@ -50,7 +50,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 - [x] **T-1.05** `ScoreGauge` (scored, not scored, capped states; confidence meter) · M · FR-RPT-03
 - [x] **T-1.06** `DimensionRadar` (low-confidence and unscored styling; table alternative) · M · FR-RPT-03
 - [x] **T-1.07** Sparkline and bar chart wrappers · M · FR-DSH-01
-- [ ] **T-1.08** Fictional demo dataset typed with schemas (`src/demo/`), `isDemo` labelling, `DemoBanner` · M · FR-LND-02
+- [x] **T-1.08** Fictional demo dataset typed with schemas (`src/demo/`), `isDemo` labelling, `DemoBanner` · M · FR-LND-02
 - [ ] **T-1.09** `AppShell`: sidebar, topbar, mobile bottom bar, breadcrumbs · M · FR-DSH-01, NFR-06
 - [ ] **T-1.10** Command palette skeleton (glass overlay, native dialog pattern) · S · FR-DSH-09
 - [ ] **T-1.11** Landing page with hero sequence, statuses, how it works, tour, trust section, footer disclaimer · L · FR-LND-01, FR-LND-03, NFR-01
@@ -63,7 +63,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 ## Phase 2 — Engine spike (CLI-first)
 
-- [ ] **T-2.01** Zod schemas per SCHEMA sections 2 to 5; decide Zod version and JSON Schema conversion (TQ-2) · M · NFR-12
+- [ ] **T-2.01** Zod schemas per SCHEMA sections 2 to 5 (mostly done: T-1.03/T-1.08 pulled `src/lib/schema/{enums,ids,evidence,claims,report,analysis,run}.ts` forward for the UI/demo data; this task is now mainly the remaining TQ-2 decision — JSON Schema conversion for the model's forced tool call — plus Comparison/Activity/Signal/Export from section 6) · M · NFR-12
 - [ ] **T-2.02** `EvidenceStore` interface and `FileStore` · S · FR-ENG-01
 - [ ] **T-2.03** PDF extraction with page locators and vision fallback; choose library (TQ-1) · M · FR-ENG-01
 - [ ] **T-2.04** DOCX, XLSX, CSV, TXT, MD extractors behind an `Extractor` interface · M · FR-ENG-01

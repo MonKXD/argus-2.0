@@ -71,7 +71,7 @@ export const ID_PREFIXES = {
 } as const;
 export const idOf = (prefix: string) =>
   z.string().regex(new RegExp(`^${prefix}_[0-9A-HJKMNP-TV-Z]{26}$`));
-export const Iso = z.string().datetime();
+export const Iso = z.iso.datetime();  // z.string().datetime() is deprecated in the pinned Zod (4.6.5)
 ```
 
 ## 3. Core evidence types
@@ -81,7 +81,7 @@ export const Iso = z.string().datetime();
 export const Locator = z.object({
   kind: z.enum(["page", "url", "paragraph", "sheet"]),
   page: z.number().int().positive().optional(),
-  url: z.string().url().optional(),
+  url: z.url().optional(),
   paragraph: z.number().int().nonnegative().optional(),
   sheet: z.string().optional(),
   cell: z.string().optional(),
@@ -96,7 +96,7 @@ export const Source = z.object({
   origin: SourceOrigin,
   title: z.string().max(200),
   filename: z.string().optional(),
-  url: z.string().url().optional(),
+  url: z.url().optional(),
   storagePath: z.string().optional(),
   mimeType: z.string().optional(),
   sizeBytes: z.number().int().nonnegative().optional(),
@@ -296,7 +296,7 @@ export const Analysis = z.object({
   id: idOf("ana"), ownerId: z.string(),
   startup: z.object({
     name: z.string().min(1).max(120),
-    website: z.string().url().optional(),
+    website: z.url().optional(),
     oneLiner: z.string().max(240).optional(),
     stage: Stage.default("UNKNOWN"),
     sector: z.string().max(80).optional(),
@@ -404,7 +404,7 @@ export const Activity = z.object({
 
 export const Signal = z.object({
   id: idOf("sig"), analysisId: idOf("ana"),
-  title: z.string(), url: z.string().url(), publisher: z.string().optional(),
+  title: z.string(), url: z.url(), publisher: z.string().optional(),
   publishedAt: Iso.optional(), summary: z.string().max(400),
   impact: z.enum(["POSITIVE", "NEGATIVE", "NEUTRAL", "UNCLEAR"]),
   relatedDimension: DimensionKey.optional(),
