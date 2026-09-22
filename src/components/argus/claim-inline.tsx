@@ -49,9 +49,7 @@ function ClaimInline({ claim, onSelect, selected, className }: ClaimInlineProps)
   );
 
   if (!onSelect) {
-    return (
-      <span className={cn("flex items-start gap-2 text-left", className)}>{content}</span>
-    );
+    return <span className={cn("flex items-start gap-2 text-left", className)}>{content}</span>;
   }
 
   return (

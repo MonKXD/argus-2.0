@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 
-import { NAV_ITEMS } from "@/components/shell/nav-items";
+import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { cn } from "@/lib/utils";
 
 // DESIGN section 5.1: sidebar 232px, collapsible to 64px, hidden below the

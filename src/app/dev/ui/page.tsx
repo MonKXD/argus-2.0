@@ -13,7 +13,7 @@ import { BarChart } from "@/components/charts/bar-chart";
 import { DimensionRadar } from "@/components/charts/dimension-radar";
 import { ScoreGauge } from "@/components/charts/score-gauge";
 import { Sparkline } from "@/components/charts/sparkline";
-import { Breadcrumbs } from "@/components/shell/breadcrumbs";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

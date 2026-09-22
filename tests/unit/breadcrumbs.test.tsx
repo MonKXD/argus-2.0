@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { Breadcrumbs } from "@/components/shell/breadcrumbs";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 
 describe("Breadcrumbs", () => {
   it("links every item except the last, which is marked as the current page", () => {

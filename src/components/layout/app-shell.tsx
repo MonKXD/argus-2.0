@@ -2,10 +2,10 @@
 
 import * as React from "react";
 
-import { CommandPalette } from "@/components/shell/command-palette";
-import { MobileBottomBar } from "@/components/shell/mobile-bottom-bar";
-import { Sidebar } from "@/components/shell/sidebar";
-import { Topbar } from "@/components/shell/topbar";
+import { CommandPalette } from "@/components/layout/command-palette";
+import { MobileBottomBar } from "@/components/layout/mobile-bottom-bar";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Topbar } from "@/components/layout/topbar";
 
 import type { ReactNode } from "react";
 

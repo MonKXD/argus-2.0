@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { MobileBottomBar } from "@/components/shell/mobile-bottom-bar";
+import { MobileBottomBar } from "@/components/layout/mobile-bottom-bar";
 
 const { usePathname } = vi.hoisted(() => ({ usePathname: vi.fn(() => "/app") }));
 vi.mock("next/navigation", () => ({ usePathname }));

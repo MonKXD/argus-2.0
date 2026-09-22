@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 
-import { NAV_ITEMS } from "@/components/shell/nav-items";
+import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { useNativeDialog } from "@/hooks/use-native-dialog";
 import { cn } from "@/lib/utils";
 
