@@ -24,3 +24,11 @@ export class PricingNotFoundError extends Error {
     this.name = "PricingNotFoundError";
   }
 }
+
+/** The web search tool didn't run (no result block), or the server tool itself reported an error. */
+export class WebSearchError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "WebSearchError";
+  }
+}

@@ -10,7 +10,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 - Phase: 1 complete. Phase 2 (engine spike) in progress.
 - Task: none in progress
-- Next up: T-2.14 (ResearchProvider interface and implementation; choose provider, TQ-5)
+- Next up: T-2.15 (prompt-injection defences and tests)
 - Blockers: none. Caveat: T-0.06 needs the project owner to create real Firebase dev/prod projects before T-3.01; local dev runs fully on the emulators in the meantime.
 
 ## Phase progress
@@ -76,7 +76,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 - [x] **T-2.11** Consistency step (deterministic pass plus model adjudication) and flags · M · FR-ENG-04
 - [x] **T-2.12** Synthesis step (narrative and checklist) · M · FR-ENG-07
 - [x] **T-2.13** Verifier V1 to V7 with unit tests · L · FR-ENG-08
-- [ ] **T-2.14** `ResearchProvider` interface and implementation; choose provider (TQ-5) · M · FR-ENG-03
+- [x] **T-2.14** `ResearchProvider` interface and implementation; choose provider (TQ-5) · M · FR-ENG-03
 - [ ] **T-2.15** Prompt-injection defences and tests · S · FR-ENG-13
 - [ ] **T-2.16** Eval harness, fixtures F1 to F8, thresholds, results logging · L · FR-ENG-12
 - [ ] **T-2.17** CLI `pnpm analyze` with progress output and JSON report · S · FR-ENG-01, FR-ENG-05
@@ -160,7 +160,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 | TQ-2 | Zod version and JSON Schema conversion | T-2.01 | Resolved — D-037 |
 | TQ-3 / OQ-7 | Hosting: Firebase App Hosting or Vercel | T-3.14 | Open |
 | TQ-4 | Queue technology for mode B | T-6.03 | Open |
-| TQ-5 | Web research provider | T-2.14 | Open |
+| TQ-5 | Web research provider | T-2.14 | Resolved — D-052 |
 | OQ-1 | Pricing and packaging | Before public launch | Open |
 | OQ-8 | Legal review of terms and disclaimer | T-6.09 | Open |
 

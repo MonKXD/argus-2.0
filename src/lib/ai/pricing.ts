@@ -53,3 +53,17 @@ export function estimateCostUsd(modelId: string, tokens: TokenCounts): number {
     1_000_000
   );
 }
+
+/**
+ * $10 per 1,000 searches, billed in addition to token usage (verified
+ * against platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool
+ * on 2026-09-22, T-2.14). Each search counts as one use regardless of
+ * result count; an errored search is not billed, so callers should only
+ * pass a count of *successful* `web_search_requests` from the response's
+ * own `usage.server_tool_use`, never an assumed count.
+ */
+const WEB_SEARCH_COST_PER_SEARCH_USD = 0.01;
+
+export function estimateWebSearchCostUsd(searchCount: number): number {
+  return searchCount * WEB_SEARCH_COST_PER_SEARCH_USD;
+}
