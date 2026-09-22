@@ -4,8 +4,10 @@ import { EvidenceBar } from "@/components/argus/evidence-bar";
 import { EvidenceMarker } from "@/components/argus/evidence-marker";
 import { ReliabilityChip } from "@/components/argus/reliability-chip";
 import { StatusBadge } from "@/components/argus/status-badge";
+import { BarChart } from "@/components/charts/bar-chart";
 import { DimensionRadar } from "@/components/charts/dimension-radar";
 import { ScoreGauge } from "@/components/charts/score-gauge";
+import { Sparkline } from "@/components/charts/sparkline";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -103,6 +105,29 @@ export default function DevUiGallery() {
             risk: { score: 65, confidence: 0.9 },
           }}
         />
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">Sparkline</h2>
+        <div className="flex gap-8">
+          <Sparkline values={[52, 58, 55, 63, 71]} label="Average score, last 5 runs" />
+          <Sparkline values={[80, 74, 70, 65]} label="Average score, last 4 runs" />
+          <Sparkline values={[40, 40, 40]} label="Average score, last 3 runs" />
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">BarChart</h2>
+        <div className="w-64">
+          <BarChart
+            data={[
+              { label: "Fintech", value: 12 },
+              { label: "Healthtech", value: 7 },
+              { label: "Climate", value: 3 },
+              { label: "Devtools", value: 1 },
+            ]}
+          />
+        </div>
       </section>
 
       <section className="flex flex-col gap-2">
