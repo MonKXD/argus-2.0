@@ -10,7 +10,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 - Phase: 1 complete. Phase 2 (engine spike) in progress.
 - Task: none in progress
-- Next up: T-2.07 (LLM client: model roles, forced-tool structured output, repair, caching, usage and budget)
+- Next up: T-2.08 (fact extraction step with quote validation, V1)
 - Blockers: none. Caveat: T-0.06 needs the project owner to create real Firebase dev/prod projects before T-3.01; local dev runs fully on the emulators in the meantime.
 
 ## Phase progress
@@ -19,7 +19,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 |---|---|---|---|---|
 | 0 | Foundation | 11 | 11 | Done (T-0.06 caveat: no real Firebase project yet) |
 | 1 | Design system, landing, shell, dashboard (demo data) | 17 | 17 | Done |
-| 2 | Engine spike (CLI-first) | 18 | 6 | In progress |
+| 2 | Engine spike (CLI-first) | 18 | 7 | In progress |
 | 3 | Auth, persistence, intake, orchestration | 14 | 0 | Not started |
 | 4 | Report UI (Alpha) | 14 | 0 | Not started |
 | 5 | Compare, export, watchlist, activity (Beta) | 13 | 0 | Not started |
@@ -69,7 +69,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 - [x] **T-2.04** DOCX, XLSX, CSV, TXT, MD extractors behind an `Extractor` interface · M · FR-ENG-01
 - [x] **T-2.05** SSRF-safe website ingestion (limited crawl, robots.txt, readable text) · M · FR-ENG-01, NFR-03
 - [x] **T-2.06** Evidence chunking, locators, hashes, sanitisation, injection-pattern detection · S · FR-ENG-01, FR-ENG-13
-- [ ] **T-2.07** LLM client: model roles, forced-tool structured output, repair, caching, usage and budget · M · FR-ENG-11, FR-ENG-13
+- [x] **T-2.07** LLM client: model roles, forced-tool structured output, repair, caching, usage and budget · M · FR-ENG-11, FR-ENG-13
 - [ ] **T-2.08** Fact extraction step with quote validation (V1) · M · FR-ENG-02
 - [ ] **T-2.09** Dimension analysis for all eight dimensions with rubrics, clamps and per-dimension validation · L · FR-ENG-05
 - [ ] **T-2.10** Scoring module with the AI_SPEC 5.4 golden test · M · FR-ENG-06
