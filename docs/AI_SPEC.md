@@ -65,6 +65,7 @@ Rules every model call must satisfy. They are stated in every system prompt (sec
 - Every fact needs at least one verbatim quote with its `evidenceId`.
 - Code then: validates quotes (V1), assigns deterministic IDs, computes `reliability` as the strongest among quotes, merges duplicates (same key, value and period), and keeps distinct values as separate facts so CONSISTENCY can compare them.
 - Facts whose quotes fail validation are dropped and counted (`CITATION_INVALID`).
+- `Fact.confidence` uses the same reliability weight table as 5.2's `quality_c` (INDEPENDENT 1.0, FIRST_PARTY 0.7, PROVIDED 0.5), taken at the fact's (strongest-quote) `reliability`. The model never outputs it (section 5).
 
 ### 3.3 RESEARCH (optional, `FEATURE_WEB_RESEARCH`)
 
