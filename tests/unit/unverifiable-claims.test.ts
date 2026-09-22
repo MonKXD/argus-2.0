@@ -33,7 +33,7 @@ describe("detectUnverifiableClaims", () => {
       category: "UNVERIFIABLE_CLAIM",
       severity: "MEDIUM",
       claimIds: [claim.id],
-      detectedBy: "DIMENSION",
+      detectedBy: "VERIFIER",
       status: "OPEN",
     });
   });

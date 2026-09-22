@@ -12,6 +12,12 @@ import { newId } from "@/lib/schema/ids";
  * fixed at MEDIUM — AI_SPEC gives a "LOW to MEDIUM" range with no further
  * rule to pick within it, and this is the only category of unverifiable
  * claim this function looks at, so there's no second axis to vary on.
+ *
+ * `detectedBy: "VERIFIER"` (not `"DIMENSION"`, T-2.11's original guess made
+ * before this function had a real caller): T-2.13 wires it up from the
+ * VERIFY step, and V5 (attribution/unverifiable-claim, AI_SPEC section 6)
+ * is one of "the verifier"'s own checks — section 6 collectively calls
+ * V1-V7 that.
  */
 export function detectUnverifiableClaims(
   claims: Claim[],
@@ -37,7 +43,7 @@ export function detectUnverifiableClaims(
       description: `Supported only by the founder's own material, not independently confirmed: "${claim.text}"`,
       evidenceIds: claim.quotes.map((q) => q.evidenceId),
       claimIds: [claim.id],
-      detectedBy: "DIMENSION",
+      detectedBy: "VERIFIER",
       status: "OPEN",
     });
   }

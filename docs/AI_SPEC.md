@@ -48,7 +48,7 @@ Rules every model call must satisfy. They are stated in every system prompt (sec
 | 5 | `ANALYZE` | `ANALYSIS` | Eight dimension analyses in parallel; per-dimension validation and scoring | 25 |
 | 6 | `SCORE` | none | Deterministic overall score, coverage, confidence, gate, cap | 2 |
 | 7 | `SYNTHESIZE` | `SYNTHESIS` | Narrative sections and due diligence checklist from validated data | 10 |
-| 8 | `VERIFY` | none (`FAST` optional) | Full grounding verification of narrative; compute evidence stats | 5 |
+| 8 | `VERIFY` | none (`FAST` optional) | Full grounding verification of every claim (dimension and narrative); compute evidence stats | 5 |
 | 9 | `FINALIZE` | none | Assemble and persist report; update analysis summary; write activity | 3 |
 
 ### 3.1 INGEST
@@ -105,7 +105,7 @@ Constraints:
 
 ### 3.8 VERIFY
 
-Runs the full verifier (section 6) over narrative claims, re-checks everything for statistics, and produces `EvidenceStats`. If any dimension claim changes, re-run `SCORE` and `SYNTHESIZE` once.
+Runs the full verifier (section 6) over every claim — dimension and narrative, not narrative alone — so V7 (new at this step) and V4's cross-claim referential check cover dimension claims too, not just the ones restated in the narrative. This closes a documented gap (T-2.09/D-047): a claim citing another claim that later gets dropped is not chased through a cascade at ANALYZE time, since that per-dimension call can only see its own dimension's claims; VERIFY has the full picture and repairs it. Produces `EvidenceStats` from the surviving claims. If any dimension claim changes, re-run `SCORE` and `SYNTHESIZE` once.
 
 ### 3.9 FINALIZE
 
