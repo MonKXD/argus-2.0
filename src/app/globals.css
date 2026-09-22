@@ -96,3 +96,58 @@ body {
   color: var(--color-foreground);
   font-family: var(--font-sans);
 }
+
+/*
+ * Landing hero, "the one orchestrated moment" (DESIGN section 8): each
+ * sample sentence begins hatched and muted, then resolves into its real
+ * status in sequence, ~1.6s total, staggered per item via the
+ * `--hero-delay` custom property set inline per item. Reduced motion
+ * (section 8): skip the sequence entirely and show the final state — done
+ * here by nesting the whole effect inside the no-preference media query,
+ * so a reduced-motion visitor never sees the muted/hatched state at all.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes hero-claim-resolve {
+    from {
+      opacity: 0.4;
+      filter: grayscale(1) saturate(0);
+    }
+    to {
+      opacity: 1;
+      filter: grayscale(0) saturate(1);
+    }
+  }
+  @keyframes hero-hatch-fade {
+    from {
+      opacity: 0.6;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  .hero-claim {
+    position: relative;
+    opacity: 0.4;
+    animation: hero-claim-resolve 320ms var(--ease) forwards;
+    animation-delay: var(--hero-delay, 0ms);
+  }
+  .hero-claim::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      135deg,
+      var(--hairline-strong) 0 2px,
+      transparent 2px 6px
+    );
+    animation: hero-hatch-fade 320ms var(--ease) forwards;
+    animation-delay: var(--hero-delay, 0ms);
+  }
+
+  .hero-evidence {
+    opacity: 0;
+    animation: hero-claim-resolve 320ms var(--ease) forwards;
+    animation-delay: var(--hero-delay, 0ms);
+  }
+}

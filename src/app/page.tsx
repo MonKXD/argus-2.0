@@ -1,13 +1,30 @@
-import { Button } from "@/components/ui/button";
+import { ClaimKinds } from "@/components/marketing/claim-kinds";
+import { CompareTeaser } from "@/components/marketing/compare-teaser";
+import { FinalCta } from "@/components/marketing/final-cta";
+import { Hero } from "@/components/marketing/hero";
+import { HowItWorks } from "@/components/marketing/how-it-works";
+import { ReportTour } from "@/components/marketing/report-tour";
+import { SiteFooter } from "@/components/marketing/site-footer";
+import { SiteHeader } from "@/components/marketing/site-header";
+import { TrustSection } from "@/components/marketing/trust-section";
 
+// DESIGN section 5.6: section order is hero; four kinds of statement; how it
+// works; report tour; compare; trust; final CTA; footer with disclaimer
+// (FR-LND-01, FR-LND-03).
 export default function Home() {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-4 p-16">
-      <h1 className="font-serif text-h2">ARGUS AI</h1>
-      <p className="max-w-md text-center text-body text-muted-foreground">
-        Foundation scaffold. The landing page ships in Phase 1 (see docs/TRACKER.md).
-      </p>
-      <Button>Placeholder button</Button>
-    </main>
+    <>
+      <SiteHeader />
+      <main>
+        <Hero />
+        <ClaimKinds />
+        <HowItWorks />
+        <ReportTour />
+        <CompareTeaser />
+        <TrustSection />
+        <FinalCta />
+      </main>
+      <SiteFooter />
+    </>
   );
 }

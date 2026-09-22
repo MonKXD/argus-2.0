@@ -103,5 +103,5 @@ function EvidenceRailContent({
   );
 }
 
-export { EvidenceRailContent };
+export { EvidenceRailContent, locatorLabel };
 export type { EvidenceRailContentProps };

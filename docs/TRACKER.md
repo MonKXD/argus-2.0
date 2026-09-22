@@ -10,7 +10,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 - Phase: 1 — Design system, landing, shell, dashboard (demo data)
 - Task: none in progress
-- Next up: T-1.11 (landing page)
+- Next up: T-1.12 (`/sample` preview)
 - Blockers: none. Caveat: T-0.06 needs the project owner to create real Firebase dev/prod projects before T-3.01; local dev runs fully on the emulators in the meantime.
 
 ## Phase progress
@@ -18,7 +18,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 | Phase | Name | Tasks | Done | Status |
 |---|---|---|---|---|
 | 0 | Foundation | 11 | 11 | Done (T-0.06 caveat: no real Firebase project yet) |
-| 1 | Design system, landing, shell, dashboard (demo data) | 17 | 10 | In progress |
+| 1 | Design system, landing, shell, dashboard (demo data) | 17 | 11 | In progress |
 | 2 | Engine spike (CLI-first) | 18 | 0 | Not started |
 | 3 | Auth, persistence, intake, orchestration | 14 | 0 | Not started |
 | 4 | Report UI (Alpha) | 14 | 0 | Not started |
@@ -53,7 +53,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 - [x] **T-1.08** Fictional demo dataset typed with schemas (`src/demo/`), `isDemo` labelling, `DemoBanner` · M · FR-LND-02
 - [x] **T-1.09** `AppShell`: sidebar, topbar, mobile bottom bar, breadcrumbs · M · FR-DSH-01, NFR-06
 - [x] **T-1.10** Command palette skeleton (glass overlay, native dialog pattern) · S · FR-DSH-09
-- [ ] **T-1.11** Landing page with hero sequence, statuses, how it works, tour, trust section, footer disclaimer · L · FR-LND-01, FR-LND-03, NFR-01
+- [x] **T-1.11** Landing page with hero sequence, statuses, how it works, tour, trust section, footer disclaimer · L · FR-LND-01, FR-LND-03, NFR-01
 - [ ] **T-1.12** `/sample` preview (score, radar, two sections with claims and evidence rail) · M · FR-LND-02
 - [ ] **T-1.13** Dashboard on demo data (KPI strip, table, in-progress, panels) · L · FR-DSH-01, FR-DSH-02
 - [ ] **T-1.14** Analyses list on demo data with search and sort · M · FR-DSH-04
@@ -108,8 +108,8 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 - [ ] **T-4.05** Sections 9 and 10: traction, financial signals · M · FR-RPT-09, FR-RPT-10
 - [ ] **T-4.06** Sections 11 to 13: risks and flags, strengths and weaknesses, market gaps · M · FR-RPT-11, FR-RPT-12, FR-RPT-13
 - [ ] **T-4.07** Sections 14 to 16: AI insights, evidence and sources, checklist · L · FR-RPT-14, FR-RPT-15, FR-RPT-16
-- [ ] **T-4.08** Evidence rail and sheet with quote in context, reliability, and "based on" · L · FR-RPT-17
-- [ ] **T-4.09** `ClaimRow` and `ClaimInline`; status filter · M · FR-RPT-23
+- [ ] **T-4.08** Evidence rail and sheet with quote in context, reliability, and "based on" (extends `EvidenceRailContent` from T-1.11/D-031 with the responsive docked-column-vs-sheet chrome and live Firestore lookups — not a rebuild) · L · FR-RPT-17
+- [ ] **T-4.09** `ClaimRow` and `ClaimInline`; status filter (`ClaimInline` already exists from T-1.11/D-031; this adds `ClaimRow` for the report-page gutter and the status filter) · M · FR-RPT-23
 - [ ] **T-4.10** Section evidence bars and coverage notes · S · FR-RPT-18
 - [ ] **T-4.11** Report versions, version selector, re-run · M · FR-RPT-19
 - [ ] **T-4.12** Checklist tracking (status, notes) and flag acknowledge · M · FR-RPT-21
