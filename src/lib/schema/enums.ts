@@ -7,8 +7,7 @@ import { z } from "zod";
  * duplicates). The rest of SCHEMA.md sections 3 to 5 (ids, evidence,
  * claims, report, analysis, run) followed in T-1.08, for the same reason,
  * once demo data needed real Analysis/Report shapes to type against.
- * Comparison, Activity, Signal and Export (section 6) are still deferred —
- * nothing before Phase 5/6 needs them.
+ * Comparison, Activity, Signal and Export (section 6) landed in T-2.01.
  */
 
 export const ClaimStatus = z.enum(["VERIFIED", "AI_ANALYSIS", "ASSUMPTION", "MISSING"]);

@@ -8,9 +8,9 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 ## Current focus
 
-- Phase: 1 complete. Phase 2 (engine spike) is next.
+- Phase: 1 complete. Phase 2 (engine spike) in progress.
 - Task: none in progress
-- Next up: T-2.01 (Phase 2 kickoff — see IMPLEMENTATION_PLAN; Phase 1 and Phase 2 may interleave per D-019, but Phase 1 itself is now fully done)
+- Next up: T-2.02 (`EvidenceStore` interface and `FileStore`)
 - Blockers: none. Caveat: T-0.06 needs the project owner to create real Firebase dev/prod projects before T-3.01; local dev runs fully on the emulators in the meantime.
 
 ## Phase progress
@@ -19,7 +19,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 |---|---|---|---|---|
 | 0 | Foundation | 11 | 11 | Done (T-0.06 caveat: no real Firebase project yet) |
 | 1 | Design system, landing, shell, dashboard (demo data) | 17 | 17 | Done |
-| 2 | Engine spike (CLI-first) | 18 | 0 | Not started |
+| 2 | Engine spike (CLI-first) | 18 | 1 | In progress |
 | 3 | Auth, persistence, intake, orchestration | 14 | 0 | Not started |
 | 4 | Report UI (Alpha) | 14 | 0 | Not started |
 | 5 | Compare, export, watchlist, activity (Beta) | 13 | 0 | Not started |
@@ -63,7 +63,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 ## Phase 2 — Engine spike (CLI-first)
 
-- [ ] **T-2.01** Zod schemas per SCHEMA sections 2 to 5 (mostly done: T-1.03/T-1.08 pulled `src/lib/schema/{enums,ids,evidence,claims,report,analysis,run}.ts` forward for the UI/demo data; this task is now mainly the remaining TQ-2 decision — JSON Schema conversion for the model's forced tool call — plus Comparison/Activity/Signal/Export from section 6) · M · NFR-12
+- [x] **T-2.01** Zod schemas per SCHEMA sections 2 to 5 (mostly done: T-1.03/T-1.08 pulled `src/lib/schema/{enums,ids,evidence,claims,report,analysis,run}.ts` forward for the UI/demo data; this task is now mainly the remaining TQ-2 decision — JSON Schema conversion for the model's forced tool call — plus Comparison/Activity/Signal/Export from section 6) · M · NFR-12
 - [ ] **T-2.02** `EvidenceStore` interface and `FileStore` · S · FR-ENG-01
 - [ ] **T-2.03** PDF extraction with page locators and vision fallback; choose library (TQ-1) · M · FR-ENG-01
 - [ ] **T-2.04** DOCX, XLSX, CSV, TXT, MD extractors behind an `Extractor` interface · M · FR-ENG-01
@@ -157,7 +157,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 | ID | Question | Resolve in | Status |
 |---|---|---|---|
 | TQ-1 | PDF extraction library | T-2.03 | Open |
-| TQ-2 | Zod version and JSON Schema conversion | T-2.01 | Open |
+| TQ-2 | Zod version and JSON Schema conversion | T-2.01 | Resolved — D-037 |
 | TQ-3 / OQ-7 | Hosting: Firebase App Hosting or Vercel | T-3.14 | Open |
 | TQ-4 | Queue technology for mode B | T-6.03 | Open |
 | TQ-5 | Web research provider | T-2.14 | Open |
