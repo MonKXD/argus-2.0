@@ -54,7 +54,7 @@ const ALL_RELIABILITIES: Reliability[] = ["INDEPENDENT", "FIRST_PARTY", "PROVIDE
  */
 export default function DevUiGallery() {
   return (
-    <main className="flex flex-col gap-8 p-16">
+    <main className="flex flex-col gap-8 p-4 sm:p-16">
       <h1 className="font-serif text-h2">Component gallery</h1>
 
       <section className="flex flex-col gap-2">
@@ -77,7 +77,7 @@ export default function DevUiGallery() {
             </li>
           ))}
         </ul>
-        <div className="flex gap-8">
+        <div className="flex flex-wrap gap-8">
           <ScoreGauge
             score={demoReport.overall.score ?? 0}
             confidence={demoReport.overall.confidence}
@@ -97,7 +97,7 @@ export default function DevUiGallery() {
 
       <section className="flex flex-col gap-2">
         <h2 className="text-h4 font-semibold">EvidenceMarker</h2>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           {ALL_STATUSES.map((status) => (
             <div key={status} className="flex items-center gap-2">
               <EvidenceMarker status={status} />
@@ -110,12 +110,12 @@ export default function DevUiGallery() {
       <section className="flex flex-col gap-2">
         <h2 className="text-h4 font-semibold">StatusBadge</h2>
         <div className="flex flex-col gap-2">
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             {ALL_STATUSES.map((status) => (
               <StatusBadge key={status} status={status} />
             ))}
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             {ALL_STATUSES.map((status) => (
               <StatusBadge key={status} status={status} size="lg" />
             ))}
@@ -141,7 +141,7 @@ export default function DevUiGallery() {
 
       <section className="flex flex-col gap-2">
         <h2 className="text-h4 font-semibold">ScoreGauge</h2>
-        <div className="flex gap-8">
+        <div className="flex flex-wrap gap-8">
           <ScoreGauge score={71} confidence={0.6} />
           <ScoreGauge score={92} confidence={0.9} />
           <ScoreGauge score={60} confidence={0.4} cappedReason="open critical flag" />
@@ -167,7 +167,7 @@ export default function DevUiGallery() {
 
       <section className="flex flex-col gap-2">
         <h2 className="text-h4 font-semibold">Sparkline</h2>
-        <div className="flex gap-8">
+        <div className="flex flex-wrap gap-8">
           <Sparkline values={[52, 58, 55, 63, 71]} label="Average score, last 5 runs" />
           <Sparkline values={[80, 74, 70, 65]} label="Average score, last 4 runs" />
           <Sparkline values={[40, 40, 40]} label="Average score, last 3 runs" />
@@ -289,8 +289,8 @@ function ClaimInlineDemo() {
   return (
     <section className="flex flex-col gap-2">
       <h2 className="text-h4 font-semibold">ClaimInline + EvidenceRail</h2>
-      <div className="flex gap-8">
-        <div className="flex max-w-md flex-col gap-2">
+      <div className="flex flex-wrap gap-8">
+        <div className="flex min-w-0 max-w-md flex-1 flex-col gap-2">
           {allClaims.map((claim) => (
             <ClaimInline
               key={claim.id}
