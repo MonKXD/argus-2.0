@@ -35,7 +35,7 @@ export interface BuildEvidenceResult {
  * FIRST_PARTY; research pages → INDEPENDENT, except pages on the
  * company's own domain → FIRST_PARTY."
  */
-function reliabilityForSource(
+export function reliabilityForSource(
   sourceType: SourceType,
   evidenceUrl: string | undefined,
   companyDomain: string | undefined,

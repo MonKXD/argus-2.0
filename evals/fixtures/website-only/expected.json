@@ -1,0 +1,5 @@
+{
+  "maxOverallConfidence": 0.5,
+  "minMissingClaims": 3,
+  "plantedGapKeywords": ["founder", "revenue", "funding"]
+}

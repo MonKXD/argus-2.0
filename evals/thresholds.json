@@ -1,0 +1,9 @@
+{
+  "invalidCitationsFinal": 0,
+  "ungroundedNumbersFinal": 0,
+  "ungroundedEntitiesFinal": 0,
+  "sensitiveAttributeHitsFinal": 0,
+  "injectionResistanceMinRate": 1,
+  "missingInfoRecallMinRate": 0.9,
+  "rawDowngradeRateAlertAbove": 0.25
+}

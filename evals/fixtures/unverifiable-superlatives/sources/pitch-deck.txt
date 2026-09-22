@@ -1,0 +1,29 @@
+Ferrowatt Energy — Seed Pitch Deck
+
+Company overview
+Ferrowatt Energy builds battery-health monitoring software for commercial solar-plus-storage installations. Founded in 2024, the company is based in Phoenix, Arizona.
+
+Founders
+Grace Lin, CEO, previously worked as a battery systems engineer at an energy-storage manufacturer for six years. She holds an MS in Electrical Engineering from Arizona State.
+Samuel Osei, CTO, previously worked as a data engineer at a solar-analytics company for four years. He holds a BS in Computer Science from ASU.
+
+Team
+The team has 7 full-time employees: 5 engineers, 1 field-operations lead, and Grace.
+
+The problem
+Commercial battery storage operators lack early warning of battery degradation, leading to unplanned capacity loss and costly emergency replacements.
+
+The product
+Ferrowatt's software analyzes charge-discharge telemetry from battery management systems to predict degradation weeks before it becomes visible in standard state-of-health metrics. The product has been in production for 10 months.
+
+Market position
+We are the #1 battery-health monitoring platform in the world, and we have no competitors — nobody else does what we do. Our approach is simply the best in the market, full stop.
+
+Traction
+Ferrowatt monitors 40 megawatt-hours of installed battery capacity across 12 commercial sites. Annual recurring revenue is $310,000 as of Q2 2026.
+
+Business model
+Ferrowatt charges a per-megawatt-hour-monitored annual subscription fee, currently averaging $7,750 per megawatt-hour per year.
+
+Financials
+Ferrowatt has raised $1.2M to date across a pre-seed and bridge round, and has approximately 14 months of runway remaining at current spend.

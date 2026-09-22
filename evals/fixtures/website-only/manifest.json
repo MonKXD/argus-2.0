@@ -1,0 +1,17 @@
+{
+  "slug": "website-only",
+  "trap": "Only a URL",
+  "startupName": "Kettlewell",
+  "stage": "UNKNOWN",
+  "sector": "Insurtech",
+  "companyDomain": "kettlewell.example",
+  "sources": [
+    {
+      "id": "website",
+      "type": "WEBSITE",
+      "origin": "URL",
+      "title": "Company website",
+      "html": "sources/site.html"
+    }
+  ]
+}

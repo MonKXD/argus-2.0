@@ -1,0 +1,4 @@
+{
+  "minFlagsOfCategory": { "INCONSISTENCY": 1 },
+  "flagsMustCiteMultipleEvidence": ["INCONSISTENCY"]
+}

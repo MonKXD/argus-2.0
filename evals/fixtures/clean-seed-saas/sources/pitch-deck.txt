@@ -1,0 +1,32 @@
+Brightledger Labs — Seed Pitch Deck
+
+Company overview
+Brightledger Labs builds automated expense-reconciliation software for mid-market retail chains. Founded in 2024, the company is based in Denver, Colorado.
+
+Founders
+Maria Torres, CEO, previously spent six years as a finance engineering lead at a payments company where she built the automated reconciliation pipeline used by that company's own accounting team. She holds a BS in Computer Science from the University of Colorado.
+David Okafor, CTO, previously founded and sold a data-infrastructure startup after four years of operation. He holds an MS in Computer Science from Georgia Tech.
+
+Team
+The team has 8 full-time employees: 5 engineers, 1 designer, 1 sales lead, and Maria and David.
+
+The problem
+Mid-market retail chains with 20 to 200 locations reconcile expenses manually across dozens of vendor invoices per week, a process that typically consumes 15 to 20 hours of accounting staff time per location per month.
+
+The product
+Brightledger's platform ingests vendor invoices and point-of-sale exports, matches line items automatically using a rules engine trained on each customer's historical corrections, and flags mismatches for human review. The product has been in production for 14 months with three paying customers.
+
+Traction
+Brightledger has $480,000 in annual recurring revenue as of Q2 2026, up from $120,000 in Q2 2025. The company has 3 paying customers: a 60-location grocery chain, a 40-location pharmacy chain, and a 25-location home-goods chain. Net revenue retention over the trailing 12 months is 128%, driven by customers adding locations.
+
+Competitive landscape
+The two named competitors in this space are Reconcile.io, a well-funded incumbent focused on enterprise retailers with 500+ locations, and LedgerMatch, a smaller competitor targeting single-location small businesses. Brightledger's positioning is the mid-market gap between these two.
+
+Business model
+Brightledger charges a flat monthly SaaS fee per location, currently $85 per location per month, billed annually. Gross margin on the hosted platform is 82%.
+
+Financials
+Brightledger has $480,000 in ARR, $1.1M raised to date in a pre-seed round from angel investors, and 18 months of runway at the current burn rate of $42,000 per month. The company is raising a $2.5M seed round to expand the sales team and add two additional rules-engine specialists.
+
+Use of funds
+60% of the new round will go to sales and customer success hiring, 30% to engineering headcount, and 10% to infrastructure costs as the customer base grows.

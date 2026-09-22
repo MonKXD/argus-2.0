@@ -1,0 +1,6 @@
+{
+  "nullDimensions": ["financial"],
+  "minMissingClaims": 2,
+  "checklistMustMentionKeywords": ["financial"],
+  "plantedGapKeywords": ["runway", "revenue"]
+}

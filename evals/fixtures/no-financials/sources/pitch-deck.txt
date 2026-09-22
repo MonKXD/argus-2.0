@@ -1,0 +1,29 @@
+Farrow Health — Seed Pitch Deck
+
+Company overview
+Farrow Health builds remote patient-monitoring software for independent physical therapy clinics. Founded in 2025, the company is based in Raleigh, North Carolina.
+
+Founders
+Priya Nair, CEO, previously worked as a product manager at a health-tech company for five years, leading the team that built a patient-intake product. She holds a BS in Bioengineering from NC State.
+Tom Reyes, CTO, previously worked as a senior engineer at a telehealth company for three years. He holds a BS in Computer Science from UNC Chapel Hill.
+
+Team
+The team has 5 full-time employees: 3 engineers, 1 clinical lead, and Priya.
+
+The problem
+Independent physical therapy clinics lose track of home-exercise-program adherence once a patient leaves the clinic, making it hard to catch patients falling behind before their next visit.
+
+The product
+Farrow Health's app lets clinics assign home exercise videos to patients and tracks completion through the patient's phone. Clinicians see an adherence dashboard across their patient list. The product has been in production for 6 months with 4 pilot clinics.
+
+Traction
+Farrow Health has 4 pilot clinics actively using the product, covering roughly 300 patients across those clinics. Two of the four pilots have converted to a signed annual contract; the other two remain in a free pilot period.
+
+Competitive landscape
+The two named competitors are Kaia Health, a larger player focused on enterprise health systems, and a smaller regional competitor, KinetiTrack, focused on the same independent-clinic segment Farrow targets.
+
+Business model
+Farrow charges clinics a per-clinic monthly subscription. Pricing for paying clinics has not been finalized; the two converted pilots are on a discounted introductory rate while Farrow tests willingness to pay at different price points.
+
+Team and hiring plans
+Farrow plans to hire two more engineers and a clinical success lead over the next year to support onboarding more clinics.

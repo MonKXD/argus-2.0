@@ -1,0 +1,17 @@
+{
+  "slug": "no-financials",
+  "trap": "Deck without financials",
+  "startupName": "Farrow Health",
+  "stage": "SEED",
+  "sector": "Health tech",
+  "companyDomain": "farrowhealth.example",
+  "sources": [
+    {
+      "id": "pitch-deck",
+      "type": "PITCH_DECK",
+      "origin": "UPLOAD",
+      "title": "Seed pitch deck",
+      "file": "sources/pitch-deck.txt"
+    }
+  ]
+}

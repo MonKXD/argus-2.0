@@ -1,0 +1,32 @@
+Ridgeline Robotics — Seed Pitch Deck
+
+Company overview
+Ridgeline Robotics builds warehouse-floor navigation software for small and mid-size fulfillment centers. Founded in 2024, the company is based in Columbus, Ohio.
+
+Founders
+Aisha Bello, CEO, previously worked as a robotics engineer at an industrial automation company for six years. She holds an MS in Robotics from Carnegie Mellon.
+Marcus Lindqvist, CTO, previously worked as a senior software engineer building fleet-coordination systems at a logistics company for five years. He holds a BS in Computer Science from Ohio State.
+
+Team slide
+Ridgeline currently has a team of 14 people, spanning engineering, operations and a small sales function.
+
+The problem
+Small and mid-size fulfillment centers that adopt autonomous mobile robots struggle to coordinate multiple robot fleets from different vendors on the same warehouse floor, leading to collisions and inefficient routing.
+
+The product
+Ridgeline's software sits above individual robot fleet controllers and coordinates routing across vendors, reducing collision incidents and idle time. The product has been piloted at two warehouses over the past nine months.
+
+Traction
+Ridgeline has 2 pilot customers, each a single warehouse site. Both pilots report a measurable reduction in robot idle time, though neither has yet converted to a paid annual contract.
+
+Competitive landscape
+The named competitors are Fetch Robotics, a large incumbent robot-fleet vendor, and a smaller competitor, WarehouseSync, focused on multi-vendor coordination software specifically.
+
+Business model
+Ridgeline plans to charge a per-warehouse-site monthly fee once pilots convert to paid contracts. Exact pricing has not yet been set with customers.
+
+Financials
+Ridgeline has raised $900,000 in a pre-seed round from angel investors and has approximately 12 months of runway remaining at current spend.
+
+Team, revisited
+Ridgeline is a lean team of 8 people today, with engineering as the largest function.

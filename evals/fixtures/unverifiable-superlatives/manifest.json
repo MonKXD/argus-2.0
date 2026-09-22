@@ -1,0 +1,17 @@
+{
+  "slug": "unverifiable-superlatives",
+  "trap": "\"#1 in the world\", \"no competitors\"",
+  "startupName": "Ferrowatt Energy",
+  "stage": "SEED",
+  "sector": "Energy tech",
+  "companyDomain": "ferrowattenergy.example",
+  "sources": [
+    {
+      "id": "pitch-deck",
+      "type": "PITCH_DECK",
+      "origin": "UPLOAD",
+      "title": "Seed pitch deck",
+      "file": "sources/pitch-deck.txt"
+    }
+  ]
+}

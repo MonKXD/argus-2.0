@@ -1,0 +1,29 @@
+Coastwise Analytics — Seed Pitch Deck
+
+Company overview
+Coastwise Analytics builds catch-forecasting software for regional commercial fishing fleets. Founded in 2024, the company is based in Portland, Maine.
+
+Founders
+Nora Kimball, CEO, previously worked as a fisheries data analyst for a state agency for five years. She holds an MS in Marine Science from the University of Maine.
+Ben Alcott, CTO, previously worked as a data engineer at a weather-analytics company for four years. He holds a BS in Computer Science from Northeastern.
+
+Team
+The team has 5 full-time employees: 3 engineers, 1 fisheries science lead, and Nora.
+
+The problem
+Regional commercial fishing fleets plan trips based on historical intuition rather than current oceanographic and stock data, leading to wasted fuel and missed catch.
+
+The product
+Coastwise ingests satellite ocean-temperature data, historical catch reports, and stock-assessment data to forecast likely catch locations for the coming week. The product has been in production for 8 months with 3 fleet customers.
+
+Traction
+Revenue grew significantly this year as more fleets adopted the product, and customer interest has been strong across the coast. The team is seeing encouraging engagement from fleet captains who use the forecasting tool on most trips.
+
+Competitive landscape
+The named competitors are OLRAC, a larger incumbent focused on regulatory catch reporting rather than forecasting, and a smaller competitor, TrawlSense, focused on real-time sonar analytics rather than forecasting.
+
+Business model
+Coastwise charges fleets a per-vessel monthly subscription for access to the forecasting tool. Specific customer pricing has not been disclosed publicly.
+
+Financials
+Coastwise has raised a pre-seed round from angel investors and reports having enough runway to continue operating through the next fishing season, though the company has not disclosed the specific amount raised or its monthly burn rate.

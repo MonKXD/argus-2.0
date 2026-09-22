@@ -1,0 +1,4 @@
+{
+  "minFlagsOfCategory": { "UNVERIFIABLE_CLAIM": 1 },
+  "forbiddenTextSubstrings": ["no competitors", "nobody else does what we do"]
+}

@@ -1,0 +1,17 @@
+{
+  "slug": "clean-seed-saas",
+  "trap": "None (baseline)",
+  "startupName": "Brightledger Labs",
+  "stage": "SEED",
+  "sector": "Retail fintech / SaaS",
+  "companyDomain": "brightledgerlabs.example",
+  "sources": [
+    {
+      "id": "pitch-deck",
+      "type": "PITCH_DECK",
+      "origin": "UPLOAD",
+      "title": "Seed pitch deck",
+      "file": "sources/pitch-deck.txt"
+    }
+  ]
+}
