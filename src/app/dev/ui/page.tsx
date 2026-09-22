@@ -4,6 +4,7 @@ import { EvidenceBar } from "@/components/argus/evidence-bar";
 import { EvidenceMarker } from "@/components/argus/evidence-marker";
 import { ReliabilityChip } from "@/components/argus/reliability-chip";
 import { StatusBadge } from "@/components/argus/status-badge";
+import { DimensionRadar } from "@/components/charts/dimension-radar";
 import { ScoreGauge } from "@/components/charts/score-gauge";
 import { Button } from "@/components/ui/button";
 import {
@@ -86,6 +87,22 @@ export default function DevUiGallery() {
           <ScoreGauge score={60} confidence={0.4} cappedReason="open critical flag" />
           <ScoreGauge notScoredReason="Coverage below 0.5" />
         </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">DimensionRadar</h2>
+        <DimensionRadar
+          scores={{
+            founder: { score: 80, confidence: 0.8 },
+            market: { score: 60, confidence: 0.5 },
+            product: { score: 40, confidence: 0.2 },
+            traction: { score: null, confidence: 0 },
+            competitive: { score: 70, confidence: 0.7 },
+            business_model: { score: 55, confidence: 0.45 },
+            financial: { score: 30, confidence: 0.6 },
+            risk: { score: 65, confidence: 0.9 },
+          }}
+        />
       </section>
 
       <section className="flex flex-col gap-2">
