@@ -1,8 +1,12 @@
 "use client";
 
+import { useState } from "react";
+
+import { ClaimInline } from "@/components/argus/claim-inline";
 import { DemoBanner } from "@/components/argus/demo-banner";
 import { EvidenceBar } from "@/components/argus/evidence-bar";
 import { EvidenceMarker } from "@/components/argus/evidence-marker";
+import { EvidenceRailContent } from "@/components/argus/evidence-rail";
 import { ReliabilityChip } from "@/components/argus/reliability-chip";
 import { StatusBadge } from "@/components/argus/status-badge";
 import { BarChart } from "@/components/charts/bar-chart";
@@ -22,7 +26,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { demoAnalyses, demoDimensions, demoReport } from "@/demo";
+import {
+  demoAnalyses,
+  demoDimensions,
+  demoEvidence,
+  demoFacts,
+  demoReport,
+  demoSources,
+} from "@/demo";
 import type { ClaimStatus, Reliability } from "@/lib/schema/enums";
 
 const ALL_STATUSES: ClaimStatus[] = ["VERIFIED", "AI_ANALYSIS", "ASSUMPTION", "MISSING"];
@@ -77,6 +88,8 @@ export default function DevUiGallery() {
           />
         </div>
       </section>
+
+      <ClaimInlineDemo />
 
       <section className="flex flex-col gap-2">
         <h2 className="text-h4 font-semibold">EvidenceMarker</h2>
@@ -232,5 +245,42 @@ export default function DevUiGallery() {
         </Sheet>
       </section>
     </main>
+  );
+}
+
+/** ClaimInline + EvidenceRailContent, wired to real Loopwell data (D-031). */
+function ClaimInlineDemo() {
+  const allClaims = [
+    ...demoReport.narrative.executiveSummary,
+    ...demoReport.narrative.investmentOverview,
+  ];
+  const [selected, setSelected] = useState(allClaims[0] ?? null);
+
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="text-h4 font-semibold">ClaimInline + EvidenceRail</h2>
+      <div className="flex gap-8">
+        <div className="flex max-w-md flex-col gap-2">
+          {allClaims.map((claim) => (
+            <ClaimInline
+              key={claim.id}
+              claim={claim}
+              selected={selected?.id === claim.id}
+              onSelect={setSelected}
+            />
+          ))}
+        </div>
+        {selected && (
+          <div className="w-80 shrink-0 border-l border-hairline pl-6">
+            <EvidenceRailContent
+              claim={selected}
+              evidence={demoEvidence}
+              sources={demoSources}
+              facts={demoFacts}
+            />
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
