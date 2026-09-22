@@ -18,7 +18,7 @@ describe("Hero", () => {
     render(<Hero />);
     const start = screen.getByRole("link", { name: "Start an analysis" });
     const sample = screen.getByRole("link", { name: "See a sample report" });
-    expect(start).toHaveAttribute("href", "/app/analyses/new");
+    expect(start).toHaveAttribute("href", "/signup");
     expect(sample).toHaveAttribute("href", "/sample");
   });
 

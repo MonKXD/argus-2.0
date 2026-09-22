@@ -51,7 +51,7 @@ function Hero() {
         </p>
         <div className="mt-7 flex flex-wrap gap-3">
           <Button asChild size="lg">
-            <Link href="/app/analyses/new">Start an analysis</Link>
+            <Link href="/signup">Start an analysis</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
             <Link href="/sample">See a sample report</Link>

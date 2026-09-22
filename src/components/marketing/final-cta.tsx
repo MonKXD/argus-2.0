@@ -9,7 +9,7 @@ function FinalCta() {
         <h2 className="font-serif text-h2 text-foreground">See what your next deck is missing.</h2>
         <div className="flex flex-wrap gap-3">
           <Button asChild size="lg">
-            <Link href="/app/analyses/new">Start an analysis</Link>
+            <Link href="/signup">Start an analysis</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
             <Link href="/sample">See a sample report</Link>
