@@ -30,10 +30,12 @@ const ALL_RELIABILITIES: Reliability[] = ["INDEPENDENT", "FIRST_PARTY", "PROVIDE
 
 /**
  * Component gallery seed (T-1.17 builds this out to cover every primitive
- * and state). For now: Dialog and Sheet, the two hand-built native-<dialog>
- * primitives, exercised by tests/e2e/dialog-sheet.spec.ts — jsdom doesn't
- * implement showModal() (see PROJECT_MEMORY), so a real browser is the only
- * way to catch regressions in that wiring.
+ * and state). Dialog and Sheet are previewed here; CommandPalette (the
+ * third hand-built native-<dialog> primitive) is previewed live at /app
+ * instead, since it needs the real Cmd/Ctrl+K listener and topbar. All
+ * three are exercised by tests/e2e/overlays.spec.ts — jsdom doesn't
+ * implement showModal() (see PROJECT_MEMORY), so a real browser is the
+ * only way to catch regressions in that wiring.
  */
 export default function DevUiGallery() {
   return (

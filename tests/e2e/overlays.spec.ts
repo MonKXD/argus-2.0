@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-// Regression coverage for the hand-built native-<dialog> Dialog/Sheet
-// primitives (docs/DESIGN.md section 12: prefer native <dialog> to Radix).
-// jsdom doesn't implement showModal(), so this can only be verified in a
-// real browser — see docs/PROJECT_MEMORY.md.
+// Regression coverage for every hand-built native-<dialog> overlay (Dialog,
+// Sheet, CommandPalette — docs/DESIGN.md section 12: prefer native <dialog>
+// to Radix). jsdom doesn't implement showModal(), so this can only be
+// verified in a real browser — see docs/PROJECT_MEMORY.md.
 
 test.describe("Dialog", () => {
   test("opens, is labelled, and closes on Escape", async ({ page }) => {
@@ -58,5 +58,33 @@ test.describe("Sheet", () => {
 
     await page.keyboard.press("Escape");
     await expect(sheet).toBeHidden();
+  });
+});
+
+test.describe("CommandPalette", () => {
+  test("opens on Cmd/Ctrl+K from anywhere on an /app page, and on Escape", async ({ page }) => {
+    await page.goto("/app");
+
+    const palette = page.getByRole("dialog", { name: "Command palette" });
+    await expect(palette).toBeHidden();
+
+    await page.keyboard.press("ControlOrMeta+k");
+    await expect(palette).toBeVisible();
+    await expect(palette.getByPlaceholder(/Search analyses/)).toBeFocused();
+
+    await page.keyboard.press("Escape");
+    await expect(palette).toBeHidden();
+  });
+
+  test("opens via the topbar search button, and a nav link closes it", async ({ page }) => {
+    await page.goto("/app");
+
+    await page.getByRole("button", { name: "Search analyses" }).click();
+    const palette = page.getByRole("dialog", { name: "Command palette" });
+    await expect(palette).toBeVisible();
+
+    await palette.getByRole("link", { name: "Analyses" }).click();
+    await expect(palette).toBeHidden();
+    await expect(page).toHaveURL(/\/app\/analyses/);
   });
 });
