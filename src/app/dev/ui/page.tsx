@@ -9,6 +9,7 @@ import { BarChart } from "@/components/charts/bar-chart";
 import { DimensionRadar } from "@/components/charts/dimension-radar";
 import { ScoreGauge } from "@/components/charts/score-gauge";
 import { Sparkline } from "@/components/charts/sparkline";
+import { Breadcrumbs } from "@/components/shell/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -166,6 +167,22 @@ export default function DevUiGallery() {
             ]}
           />
         </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">Breadcrumbs</h2>
+        <Breadcrumbs
+          items={[
+            { label: "Analyses", href: "/app/analyses" },
+            { label: "Loopwell", href: "/app/analyses/ana_1" },
+            { label: "Financial" },
+          ]}
+        />
+        <p className="text-ui-sm text-mist">
+          AppShell (Sidebar, Topbar, MobileBottomBar) is previewed at <code>/app</code> instead of
+          here — the mobile bar is viewport-fixed, so a contained gallery preview would misrepresent
+          it.
+        </p>
       </section>
 
       <section className="flex flex-col gap-2">
