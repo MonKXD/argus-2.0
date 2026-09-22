@@ -27,6 +27,18 @@ describe("AnalysesListPage", () => {
     render(<AnalysesListPage />);
 
     await user.type(screen.getByLabelText("Search"), "nonexistent startup");
-    expect(screen.getByText("No analyses match “nonexistent startup”.")).toBeInTheDocument();
+    expect(screen.getByText('No analyses match "nonexistent startup".')).toBeInTheDocument();
+  });
+
+  it("clears the search and restores the table via the empty state's action", async () => {
+    const user = userEvent.setup();
+    render(<AnalysesListPage />);
+
+    const search = screen.getByLabelText("Search");
+    await user.type(search, "nonexistent startup");
+    await user.click(screen.getByRole("button", { name: "Clear search" }));
+
+    expect(search).toHaveValue("");
+    expect(screen.getByRole("link", { name: "Loopwell" })).toBeInTheDocument();
   });
 });

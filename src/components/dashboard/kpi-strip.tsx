@@ -1,3 +1,4 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber } from "@/lib/format";
 import type { Analysis } from "@/lib/schema/analysis";
 import { cn } from "@/lib/utils";
@@ -42,4 +43,23 @@ function KpiStrip({ analyses, className }: KpiStripProps) {
   );
 }
 
-export { KpiStrip };
+/** Same 4-column, hairline-divided layout as KpiStrip, sized for the real content (DESIGN section 6: skeletons at final layout size). */
+function KpiStripSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap divide-x divide-hairline rounded-panel border border-hairline",
+        className,
+      )}
+    >
+      {Array.from({ length: 4 }, (_, i) => (
+        <div key={i} className="flex flex-1 flex-col gap-2 px-6 py-4">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-7 w-12" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export { KpiStrip, KpiStripSkeleton };

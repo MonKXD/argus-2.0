@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { AnalysesTable } from "@/components/argus/analyses-table";
 import { DemoBanner } from "@/components/argus/demo-banner";
+import { EmptyState } from "@/components/argus/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { demoAnalyses } from "@/demo";
@@ -38,7 +39,10 @@ export default function AnalysesListPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-ui-sm text-mist">No analyses match &ldquo;{query}&rdquo;.</p>
+        <EmptyState
+          message={`No analyses match "${query}".`}
+          action={{ label: "Clear search", onClick: () => setQuery("") }}
+        />
       ) : (
         <AnalysesTable analyses={filtered} />
       )}

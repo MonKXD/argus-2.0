@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { EmptyState } from "@/components/argus/empty-state";
 import type { Analysis } from "@/lib/schema/analysis";
 
 // DESIGN section 5.2: "Watchlist" panel, right-column stack.
@@ -17,7 +18,7 @@ function WatchlistPanel({ analyses }: WatchlistPanelProps) {
     <div className="rounded-panel border border-hairline p-4">
       <h3 className="text-ui font-medium text-foreground">Watchlist</h3>
       {watchlisted.length === 0 ? (
-        <p className="mt-2 text-ui-sm text-mist">Nothing watchlisted yet.</p>
+        <EmptyState message="Nothing watchlisted yet." />
       ) : (
         <ul className="mt-2 flex flex-col gap-2">
           {watchlisted.map((analysis) => (

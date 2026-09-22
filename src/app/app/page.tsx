@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { AnalysesTable } from "@/components/argus/analyses-table";
 import { DemoBanner } from "@/components/argus/demo-banner";
+import { EmptyState } from "@/components/argus/empty-state";
 import { InProgressPanel } from "@/components/dashboard/in-progress-panel";
 import { KpiStrip } from "@/components/dashboard/kpi-strip";
 import { MarketIntelligencePanel } from "@/components/dashboard/market-intelligence-panel";
@@ -18,6 +19,26 @@ import { demoAnalyses, demoRuns } from "@/demo";
 // forward in T-1.08/D-026, and it's Phase 5 functionality) — showing a
 // panel with nothing behind it would be worse than not showing one.
 export default function DashboardPage() {
+  // APP_FLOW section 5.2: "Empty (no analyses): guided first-run panel with
+  // the New analysis action and a link to the sample report." Never
+  // triggers with the current demo fixture (always 4 analyses), but the
+  // real condition once Phase 3 brings real per-user data.
+  if (demoAnalyses.length === 0) {
+    return (
+      <div className="flex flex-col gap-6 p-6">
+        <DemoBanner />
+        <h1 className="font-serif text-h2 text-foreground">Dashboard</h1>
+        <EmptyState
+          message="You haven't started an analysis yet."
+          action={{ label: "New analysis", href: "/app/analyses/new" }}
+        />
+        <Link href="/sample" className="text-ui-sm text-mist hover:text-foreground hover:underline">
+          See a sample report
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <DemoBanner />

@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/argus/empty-state";
 import { StepProgress } from "@/components/argus/step-progress";
 import type { Analysis } from "@/lib/schema/analysis";
 import type { Run } from "@/lib/schema/run";
@@ -18,7 +19,7 @@ function InProgressPanel({ analyses, runs }: InProgressPanelProps) {
     return (
       <div className="rounded-panel border border-hairline p-4">
         <h3 className="text-ui font-medium text-foreground">In progress</h3>
-        <p className="mt-2 text-ui-sm text-mist">Nothing is running right now.</p>
+        <EmptyState message="Nothing is running right now." />
       </div>
     );
   }

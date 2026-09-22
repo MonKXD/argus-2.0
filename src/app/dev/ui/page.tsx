@@ -4,15 +4,19 @@ import { useState } from "react";
 
 import { ClaimInline } from "@/components/argus/claim-inline";
 import { DemoBanner } from "@/components/argus/demo-banner";
+import { EmptyState } from "@/components/argus/empty-state";
 import { EvidenceBar } from "@/components/argus/evidence-bar";
 import { EvidenceMarker } from "@/components/argus/evidence-marker";
 import { EvidenceRailContent } from "@/components/argus/evidence-rail";
+import { InlineError } from "@/components/argus/inline-error";
 import { ReliabilityChip } from "@/components/argus/reliability-chip";
 import { StatusBadge } from "@/components/argus/status-badge";
+import { TableSkeleton } from "@/components/argus/table-skeleton";
 import { BarChart } from "@/components/charts/bar-chart";
 import { DimensionRadar } from "@/components/charts/dimension-radar";
 import { ScoreGauge } from "@/components/charts/score-gauge";
 import { Sparkline } from "@/components/charts/sparkline";
+import { KpiStripSkeleton } from "@/components/dashboard/kpi-strip";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import {
@@ -181,6 +185,32 @@ export default function DevUiGallery() {
               { label: "Devtools", value: 1 },
             ]}
           />
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">EmptyState</h2>
+        <EmptyState message="Nothing watchlisted yet." />
+        <EmptyState
+          message="You haven't started an analysis yet."
+          action={{ label: "New analysis", href: "/app/analyses/new" }}
+        />
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">InlineError</h2>
+        <InlineError message="The sector-mix panel couldn't load." onRetry={() => {}} />
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">Loading skeletons</h2>
+        <p className="text-ui-sm text-mist">
+          Nothing in Phase 1 fetches asynchronously yet (that&apos;s Phase 3), so these have no live
+          trigger — sized to the real KpiStrip/AnalysesTable layout for when Phase 3 adds one.
+        </p>
+        <KpiStripSkeleton className="max-w-2xl" />
+        <div className="max-w-2xl">
+          <TableSkeleton columns={6} rows={3} />
         </div>
       </section>
 
