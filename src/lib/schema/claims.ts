@@ -71,7 +71,7 @@ export const Flag = z.object({
   description: z.string().max(600),
   evidenceIds: z.array(idOf("ev")),
   claimIds: z.array(idOf("clm")).default([]),
-  detectedBy: z.enum(["CONSISTENCY", "DIMENSION", "VERIFIER"]),
+  detectedBy: z.enum(["INGEST", "CONSISTENCY", "DIMENSION", "VERIFIER"]),
   status: z.enum(["OPEN", "ACKNOWLEDGED", "DISMISSED"]).default("OPEN"),
 });
 
