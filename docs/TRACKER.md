@@ -10,7 +10,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 - Phase: 1 — Design system, landing, shell, dashboard (demo data)
 - Task: none in progress
-- Next up: T-1.12 (`/sample` preview)
+- Next up: T-1.13 (dashboard on demo data)
 - Blockers: none. Caveat: T-0.06 needs the project owner to create real Firebase dev/prod projects before T-3.01; local dev runs fully on the emulators in the meantime.
 
 ## Phase progress
@@ -18,7 +18,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 | Phase | Name | Tasks | Done | Status |
 |---|---|---|---|---|
 | 0 | Foundation | 11 | 11 | Done (T-0.06 caveat: no real Firebase project yet) |
-| 1 | Design system, landing, shell, dashboard (demo data) | 17 | 11 | In progress |
+| 1 | Design system, landing, shell, dashboard (demo data) | 17 | 12 | In progress |
 | 2 | Engine spike (CLI-first) | 18 | 0 | Not started |
 | 3 | Auth, persistence, intake, orchestration | 14 | 0 | Not started |
 | 4 | Report UI (Alpha) | 14 | 0 | Not started |
@@ -54,7 +54,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 - [x] **T-1.09** `AppShell`: sidebar, topbar, mobile bottom bar, breadcrumbs · M · FR-DSH-01, NFR-06
 - [x] **T-1.10** Command palette skeleton (glass overlay, native dialog pattern) · S · FR-DSH-09
 - [x] **T-1.11** Landing page with hero sequence, statuses, how it works, tour, trust section, footer disclaimer · L · FR-LND-01, FR-LND-03, NFR-01
-- [ ] **T-1.12** `/sample` preview (score, radar, two sections with claims and evidence rail) · M · FR-LND-02
+- [x] **T-1.12** `/sample` preview (score, radar, two sections with claims and evidence rail) · M · FR-LND-02
 - [ ] **T-1.13** Dashboard on demo data (KPI strip, table, in-progress, panels) · L · FR-DSH-01, FR-DSH-02
 - [ ] **T-1.14** Analyses list on demo data with search and sort · M · FR-DSH-04
 - [ ] **T-1.15** Empty, loading and error states for all Phase 1 surfaces · S · FR-DSH-05
