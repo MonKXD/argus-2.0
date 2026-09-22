@@ -1,5 +1,7 @@
+import Link from "next/link";
+
+import { AnalysesTable } from "@/components/argus/analyses-table";
 import { DemoBanner } from "@/components/argus/demo-banner";
-import { AnalysesTable } from "@/components/dashboard/analyses-table";
 import { InProgressPanel } from "@/components/dashboard/in-progress-panel";
 import { KpiStrip } from "@/components/dashboard/kpi-strip";
 import { MarketIntelligencePanel } from "@/components/dashboard/market-intelligence-panel";
@@ -27,8 +29,18 @@ export default function DashboardPage() {
         {/* min-w-0: grid items default to min-width: auto, which lets a wide
             table grow the whole page instead of scrolling within Table's
             own overflow-x-auto wrapper (the same footgun as flex items). */}
-        <div className="min-w-0">
+        <div className="flex min-w-0 flex-col gap-2">
+          {/* APP_FLOW section 5.2: "analyses table (top 10 with link to
+              all)". No cap applied here — the demo dataset only has 4 rows,
+              so a slice(0, 10) would be a no-op; T-1.14's real
+              /app/analyses is what the link goes to either way. */}
           <AnalysesTable analyses={demoAnalyses} />
+          <Link
+            href="/app/analyses"
+            className="self-start text-ui-sm text-mist hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          >
+            View all analyses
+          </Link>
         </div>
         <div className="flex flex-col gap-6">
           <InProgressPanel analyses={demoAnalyses} runs={demoRuns} />

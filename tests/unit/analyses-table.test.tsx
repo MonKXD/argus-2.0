@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { AnalysesTable } from "@/components/dashboard/analyses-table";
+import { AnalysesTable } from "@/components/argus/analyses-table";
 import { demoAnalyses } from "@/demo";
 
 describe("AnalysesTable", () => {
