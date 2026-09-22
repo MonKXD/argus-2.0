@@ -82,8 +82,9 @@ describe("computeDimensionScore: formula edge cases", () => {
     const criteria: ScoredCriterionInput[] = [{ score: 2, claims: [aiAnalysisClaim] }];
     const result = computeDimensionScore(criteria, () => undefined, false);
     // coverage_c=1, quality_c=0.25, corroboration=0 -> confidence = 0.5*1 + 0.3*0.25 + 0.2*0 = 0.575,
-    // which rounds to 0.57 here (0.575 isn't exactly representable in floating point).
-    expect(result.confidence).toBe(0.57);
+    // which rounds up to 0.58 (round2's epsilon nudge, T-2.10/round.ts, corrects for the
+    // IEEE-754 drift that would otherwise round this exact-.575 boundary down to 0.57).
+    expect(result.confidence).toBe(0.58);
   });
 
   it("multiplies confidence by 0.9 when evidence was truncated", () => {

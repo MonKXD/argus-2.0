@@ -1,4 +1,5 @@
 import type { LLM } from "@/lib/ai/llm";
+import { SCORING_VERSION } from "@/lib/analysis/config";
 import {
   buildDimensionAnalysisPrompt,
   DIMENSION_ANALYSIS_PROMPT_VERSION,
@@ -10,7 +11,6 @@ import { computeClaimConfidence } from "@/lib/analysis/scoring/claim-confidence"
 import { clampCriterionScore } from "@/lib/analysis/scoring/criterion-clamps";
 import { computeDimensionScore, type ScoredCriterionInput } from "@/lib/analysis/scoring/dimension-score";
 import type { EvidenceInfo } from "@/lib/analysis/scoring/verified-support";
-import { SCORING_VERSION } from "@/lib/analysis/scoring/version";
 import { selectEvidenceForDimension } from "@/lib/analysis/steps/evidence-selection";
 import { validateQuote } from "@/lib/analysis/verify/citation";
 import { heuristicUndeclaredNames, undeclaredEntities } from "@/lib/analysis/verify/entity-grounding";

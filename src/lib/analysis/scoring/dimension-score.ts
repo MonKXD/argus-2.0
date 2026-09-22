@@ -1,4 +1,5 @@
 import { reliabilityWeight } from "@/lib/analysis/scoring/reliability-weight";
+import { round2 } from "@/lib/analysis/scoring/round";
 import {
   distinctSourceCount,
   evidenceInfoForClaims,
@@ -90,8 +91,4 @@ function sum(values: number[]): number {
 
 function mean(values: number[]): number {
   return sum(values) / values.length;
-}
-
-function round2(value: number): number {
-  return Math.round(value * 100) / 100;
 }
