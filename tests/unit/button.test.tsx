@@ -20,4 +20,12 @@ describe("Button", () => {
 
     expect(screen.getByRole("button", { name: "Disabled" })).toBeDisabled();
   });
+
+  it("the destructive variant uses ink text on ember, not white (T-1.17: white failed WCAG AA at 3.06:1)", () => {
+    render(<Button variant="destructive">Delete</Button>);
+
+    const button = screen.getByRole("button", { name: "Delete" });
+    expect(button.className).toContain("text-ink");
+    expect(button.className).not.toContain("text-white");
+  });
 });

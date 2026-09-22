@@ -8,9 +8,9 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 ## Current focus
 
-- Phase: 1 — Design system, landing, shell, dashboard (demo data)
+- Phase: 1 complete. Phase 2 (engine spike) is next.
 - Task: none in progress
-- Next up: T-1.17 (`/dev/ui` component gallery coverage)
+- Next up: T-2.01 (Phase 2 kickoff — see IMPLEMENTATION_PLAN; Phase 1 and Phase 2 may interleave per D-019, but Phase 1 itself is now fully done)
 - Blockers: none. Caveat: T-0.06 needs the project owner to create real Firebase dev/prod projects before T-3.01; local dev runs fully on the emulators in the meantime.
 
 ## Phase progress
@@ -18,7 +18,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 | Phase | Name | Tasks | Done | Status |
 |---|---|---|---|---|
 | 0 | Foundation | 11 | 11 | Done (T-0.06 caveat: no real Firebase project yet) |
-| 1 | Design system, landing, shell, dashboard (demo data) | 17 | 16 | In progress |
+| 1 | Design system, landing, shell, dashboard (demo data) | 17 | 17 | Done |
 | 2 | Engine spike (CLI-first) | 18 | 0 | Not started |
 | 3 | Auth, persistence, intake, orchestration | 14 | 0 | Not started |
 | 4 | Report UI (Alpha) | 14 | 0 | Not started |
@@ -59,7 +59,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 - [x] **T-1.14** Analyses list on demo data with search and sort · M · FR-DSH-04
 - [x] **T-1.15** Empty, loading and error states for all Phase 1 surfaces · S · FR-DSH-05
 - [x] **T-1.16** Responsive and accessibility pass (axe, keyboard, reduced motion) at 1440, 768, 390 · M · NFR-05, NFR-06
-- [ ] **T-1.17** `/dev/ui` component gallery covering every state · S · NFR-10
+- [x] **T-1.17** `/dev/ui` component gallery covering every state · S · NFR-10
 
 ## Phase 2 — Engine spike (CLI-first)
 

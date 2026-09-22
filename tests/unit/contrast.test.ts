@@ -90,4 +90,10 @@ describe("token contrast (DESIGN section 3.2)", () => {
       AA_NON_TEXT,
     );
   });
+
+  it("ink (the destructive Button's text) meets AA normal-text contrast on ember (its background) — white failed at 3.06:1 (T-1.17)", () => {
+    expect(contrastRatio(readToken("ink"), readToken("ember"))).toBeGreaterThanOrEqual(
+      AA_NORMAL_TEXT,
+    );
+  });
 });

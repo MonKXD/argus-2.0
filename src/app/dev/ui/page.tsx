@@ -29,7 +29,28 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Toaster } from "@/components/ui/toaster";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   demoAnalyses,
   demoDimensions,
@@ -38,19 +59,22 @@ import {
   demoReport,
   demoSources,
 } from "@/demo";
+import { toast } from "@/hooks/use-toast";
 import type { ClaimStatus, Reliability } from "@/lib/schema/enums";
 
 const ALL_STATUSES: ClaimStatus[] = ["VERIFIED", "AI_ANALYSIS", "ASSUMPTION", "MISSING"];
 const ALL_RELIABILITIES: Reliability[] = ["INDEPENDENT", "FIRST_PARTY", "PROVIDED"];
 
 /**
- * Component gallery seed (T-1.17 builds this out to cover every primitive
- * and state). Dialog and Sheet are previewed here; CommandPalette (the
- * third hand-built native-<dialog> primitive) is previewed live at /app
- * instead, since it needs the real Cmd/Ctrl+K listener and topbar. All
- * three are exercised by tests/e2e/overlays.spec.ts — jsdom doesn't
- * implement showModal() (see PROJECT_MEMORY), so a real browser is the
- * only way to catch regressions in that wiring.
+ * Component gallery (T-1.17): every T-1.02 primitive and every T-1.03 to
+ * T-1.15 domain component, in every state the doc set specifies. Dialog and
+ * Sheet are previewed here; CommandPalette (the third hand-built
+ * native-<dialog> primitive) is previewed live at /app instead, since it
+ * needs the real Cmd/Ctrl+K listener and topbar. All three are exercised by
+ * tests/e2e/overlays.spec.ts — jsdom doesn't implement showModal() (see
+ * PROJECT_MEMORY), so a real browser is the only way to catch regressions in
+ * that wiring. <Toaster/> is mounted locally on this page only, for the
+ * demo — nothing in the product yet triggers a toast (Phase 3+).
  */
 export default function DevUiGallery() {
   return (
@@ -237,6 +261,156 @@ export default function DevUiGallery() {
             <ReliabilityChip key={reliability} reliability={reliability} />
           ))}
         </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">Button</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="default">Default</Button>
+          <Button variant="destructive">Destructive</Button>
+          <Button variant="outline">Outline</Button>
+          <Button variant="secondary">Secondary</Button>
+          <Button variant="ghost">Ghost</Button>
+          <Button variant="link">Link</Button>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm">Small</Button>
+          <Button size="default">Default size</Button>
+          <Button size="lg">Large</Button>
+          <Button disabled>Disabled</Button>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">Input</h2>
+        <div className="flex flex-col gap-3 sm:max-w-xs">
+          <div>
+            <Label htmlFor="gallery-input-default">Company name</Label>
+            <Input id="gallery-input-default" placeholder="Loopwell" className="mt-1.5" />
+          </div>
+          <div>
+            <Label htmlFor="gallery-input-disabled">Disabled</Label>
+            <Input
+              id="gallery-input-disabled"
+              disabled
+              defaultValue="Loopwell"
+              className="mt-1.5"
+            />
+          </div>
+          <div>
+            <Label htmlFor="gallery-input-invalid">Invalid</Label>
+            <Input
+              id="gallery-input-invalid"
+              aria-invalid
+              defaultValue="not an email"
+              className="mt-1.5"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">Select</h2>
+        <div>
+          <Label id="gallery-select-label">Sector</Label>
+          <Select defaultValue="fintech">
+            <SelectTrigger className="mt-1.5 w-48" aria-labelledby="gallery-select-label">
+              <SelectValue placeholder="Sector" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="fintech">Fintech</SelectItem>
+              <SelectItem value="healthtech">Healthtech</SelectItem>
+              <SelectItem value="climate">Climate</SelectItem>
+              <SelectItem value="devtools">Devtools</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">Tabs</h2>
+        <Tabs defaultValue="summary" className="max-w-md">
+          <TabsList>
+            <TabsTrigger value="summary">Summary</TabsTrigger>
+            <TabsTrigger value="evidence">Evidence</TabsTrigger>
+            <TabsTrigger value="flags">Flags</TabsTrigger>
+          </TabsList>
+          <TabsContent value="summary" className="text-ui-sm text-mist">
+            Executive summary content.
+          </TabsContent>
+          <TabsContent value="evidence" className="text-ui-sm text-mist">
+            Evidence list content.
+          </TabsContent>
+          <TabsContent value="flags" className="text-ui-sm text-mist">
+            Flags content.
+          </TabsContent>
+        </Tabs>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">Popover</h2>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline">Open popover</Button>
+          </PopoverTrigger>
+          <PopoverContent>
+            <p className="text-ui-sm text-foreground">
+              A confidence score below 0.35 is Low, 0.35 to 0.65 is Medium, above 0.65 is High.
+            </p>
+          </PopoverContent>
+        </Popover>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">Tooltip</h2>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline">Hover for a tooltip</Button>
+          </TooltipTrigger>
+          <TooltipContent>Sourced from the deck, not independently verified.</TooltipContent>
+        </Tooltip>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">Table</h2>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Startup</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead align="right">Score</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {demoAnalyses.slice(0, 3).map((analysis) => (
+              <TableRow key={analysis.id}>
+                <TableCell>{analysis.startup.name}</TableCell>
+                <TableCell>{analysis.status}</TableCell>
+                <TableCell align="right" numeric>
+                  {analysis.latest?.overallScore ?? "—"}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <p className="text-ui-sm text-mist">
+          This is the raw <code>Table</code> primitive. <code>AnalysesTable</code> (the sortable
+          <code>DataTable</code> wiring) is previewed at <code>/app</code> and{" "}
+          <code>/app/analyses</code> instead of duplicated here.
+        </p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">Toast</h2>
+        <Button
+          variant="outline"
+          onClick={() =>
+            toast({ title: "Report ready", description: "Loopwell — analysis complete." })
+          }
+        >
+          Show a toast
+        </Button>
+        <Toaster />
       </section>
 
       <section className="flex flex-col gap-2">
