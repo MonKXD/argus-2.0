@@ -10,7 +10,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 - Phase: 1 complete. Phase 2 (engine spike) in progress.
 - Task: none in progress
-- Next up: T-2.12 (synthesis step — narrative and checklist)
+- Next up: T-2.13 (verifier V1 to V7 with unit tests)
 - Blockers: none. Caveat: T-0.06 needs the project owner to create real Firebase dev/prod projects before T-3.01; local dev runs fully on the emulators in the meantime.
 
 ## Phase progress
@@ -74,7 +74,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 - [x] **T-2.09** Dimension analysis for all eight dimensions with rubrics, clamps and per-dimension validation · L · FR-ENG-05
 - [x] **T-2.10** Scoring module with the AI_SPEC 5.4 golden test (the overall/cross-dimension combination — 5.3's weighted score, coverage gate, critical-flag cap; per-dimension score/confidence, 5.2, landed at T-2.09) · M · FR-ENG-06
 - [x] **T-2.11** Consistency step (deterministic pass plus model adjudication) and flags · M · FR-ENG-04
-- [ ] **T-2.12** Synthesis step (narrative and checklist) · M · FR-ENG-07
+- [x] **T-2.12** Synthesis step (narrative and checklist) · M · FR-ENG-07
 - [ ] **T-2.13** Verifier V1 to V7 with unit tests · L · FR-ENG-08
 - [ ] **T-2.14** `ResearchProvider` interface and implementation; choose provider (TQ-5) · M · FR-ENG-03
 - [ ] **T-2.15** Prompt-injection defences and tests · S · FR-ENG-13
