@@ -37,6 +37,9 @@
   --color-ink: var(--ink);
   --color-panel: var(--panel);
   --color-panel-raised: var(--panel-raised);
+  /* No semantic alias in DESIGN section 3.3 for this one — it's spot-used
+     directly (e.g. the ScoreGauge track, DESIGN section 7). */
+  --color-surface-3: var(--surface-3);
   --color-paper: var(--paper);
   --color-mist: var(--mist);
   --color-haze: var(--haze);

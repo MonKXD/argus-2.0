@@ -4,6 +4,7 @@ import { EvidenceBar } from "@/components/argus/evidence-bar";
 import { EvidenceMarker } from "@/components/argus/evidence-marker";
 import { ReliabilityChip } from "@/components/argus/reliability-chip";
 import { StatusBadge } from "@/components/argus/status-badge";
+import { ScoreGauge } from "@/components/charts/score-gauge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -74,6 +75,16 @@ export default function DevUiGallery() {
           <div className="w-64">
             <EvidenceBar counts={{}} />
           </div>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-h4 font-semibold">ScoreGauge</h2>
+        <div className="flex gap-8">
+          <ScoreGauge score={71} confidence={0.6} />
+          <ScoreGauge score={92} confidence={0.9} />
+          <ScoreGauge score={60} confidence={0.4} cappedReason="open critical flag" />
+          <ScoreGauge notScoredReason="Coverage below 0.5" />
         </div>
       </section>
 
