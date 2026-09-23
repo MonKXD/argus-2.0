@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { AnalysesTable } from "@/components/argus/analyses-table";
 import { DemoBanner } from "@/components/argus/demo-banner";
-import { EmptyState } from "@/components/argus/empty-state";
+import { NewAnalysisEmptyState } from "@/components/argus/new-analysis-empty-state";
 import { InProgressPanel } from "@/components/dashboard/in-progress-panel";
 import { KpiStrip } from "@/components/dashboard/kpi-strip";
 import { MarketIntelligencePanel } from "@/components/dashboard/market-intelligence-panel";
@@ -28,10 +28,7 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-6 p-6">
         <DemoBanner />
         <h1 className="font-serif text-h2 text-foreground">Dashboard</h1>
-        <EmptyState
-          message="You haven't started an analysis yet."
-          action={{ label: "New analysis", href: "/app/analyses/new" }}
-        />
+        <NewAnalysisEmptyState message="You haven't started an analysis yet." />
         <Link href="/sample" className="text-ui-sm text-mist hover:text-foreground hover:underline">
           See a sample report
         </Link>

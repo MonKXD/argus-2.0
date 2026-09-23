@@ -35,7 +35,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       ownerId: user.uid,
       startup: body.startup,
       status: "DRAFT",
-      options: body.options ?? { webResearch: false },
+      // APP_FLOW 5.3 step 3: "Public web research toggle (default on...)".
+      options: body.options ?? { webResearch: true },
       latest: null,
       currentRunId: null,
       tags: [],

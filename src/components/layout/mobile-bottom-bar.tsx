@@ -4,6 +4,7 @@ import { LayoutDashboard, ListChecks, GitCompare, MoreHorizontal, Plus } from "l
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { NewAnalysisButton } from "@/components/argus/new-analysis-button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -65,13 +66,12 @@ function MobileBottomBar({ className }: { className?: string }) {
         active={isActive(pathname, "/app/analyses")}
       />
 
-      <Link
-        href="/app/analyses/new"
+      <NewAnalysisButton
         aria-label="New analysis"
         className="mx-1 flex size-12 shrink-0 -translate-y-3 items-center justify-center rounded-full bg-primary text-primary-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
       >
         <Plus className="size-5" />
-      </Link>
+      </NewAnalysisButton>
 
       <TabLink
         href="/app/compare"

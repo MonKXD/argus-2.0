@@ -1,8 +1,8 @@
 import { Search } from "lucide-react";
-import Link from "next/link";
 
+import { NewAnalysisButton } from "@/components/argus/new-analysis-button";
 import { UserMenu } from "@/components/layout/user-menu";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 // DESIGN section 5.1: topbar 52px, "Search analyses ... Cmd K ... New
@@ -39,9 +39,9 @@ function Topbar({
       {/* MobileBottomBar has its own "New analysis" action below md; two
           controls with the same name at once would be confusing (and a
           real duplicate-accessible-name issue for assistive tech). */}
-      <Button asChild size="sm" className="hidden md:inline-flex">
-        <Link href="/app/analyses/new">New analysis</Link>
-      </Button>
+      <NewAnalysisButton className={cn(buttonVariants({ size: "sm" }), "hidden md:inline-flex")}>
+        New analysis
+      </NewAnalysisButton>
       <UserMenu email={userEmail} />
     </header>
   );

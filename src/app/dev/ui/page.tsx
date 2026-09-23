@@ -217,7 +217,7 @@ export default function DevUiGallery() {
         <EmptyState message="Nothing watchlisted yet." />
         <EmptyState
           message="You haven't started an analysis yet."
-          action={{ label: "New analysis", href: "/app/analyses/new" }}
+          action={{ label: "New analysis", onClick: () => {} }}
         />
       </section>
 

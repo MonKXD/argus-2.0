@@ -69,7 +69,7 @@ describe("POST /api/analyses", () => {
     expect(body.analysis.ownerId).toBe(USER.uid);
     expect(body.analysis.status).toBe("DRAFT");
     expect(body.analysis.startup.name).toBe("Acme");
-    expect(body.analysis.options).toEqual({ webResearch: false });
+    expect(body.analysis.options).toEqual({ webResearch: true });
     expect(create).toHaveBeenCalledWith(body.analysis);
   });
 
