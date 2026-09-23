@@ -8,10 +8,10 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 ## Current focus
 
-- Phase: 1 complete. Phase 2 (engine spike) in progress.
+- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18.
 - Task: none in progress
-- Next up: T-2.18 (phase gate: thresholds met; log results, cost and duration in PROJECT_MEMORY)
-- Blockers: none. Caveat: T-0.06 needs the project owner to create real Firebase dev/prod projects before T-3.01; local dev runs fully on the emulators in the meantime.
+- Next up: T-2.18 (phase gate) — needs the project owner to run `pnpm eval` with a real `ANTHROPIC_API_KEY` (none configured in this sandbox) and share the result; an agent session can't complete it alone.
+- Blockers: T-2.18 needs a live API key (above). T-3.01 needs the project owner to create real Firebase dev/prod projects first; local dev runs fully on the emulators in the meantime.
 
 ## Phase progress
 
