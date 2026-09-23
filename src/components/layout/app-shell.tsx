@@ -17,16 +17,17 @@ import type { ReactNode } from "react";
 
 interface AppShellProps {
   children: ReactNode;
+  userEmail: string | null;
 }
 
-function AppShell({ children }: AppShellProps) {
+function AppShell({ children, userEmail }: AppShellProps) {
   const [paletteOpen, setPaletteOpen] = React.useState(false);
 
   return (
     <div className="flex min-h-dvh">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar onOpenPalette={() => setPaletteOpen(true)} />
+        <Topbar onOpenPalette={() => setPaletteOpen(true)} userEmail={userEmail} />
         <main className="min-w-0 flex-1 overflow-y-auto pb-16 md:pb-0">{children}</main>
       </div>
       <MobileBottomBar />

@@ -31,6 +31,7 @@ export default defineConfig({
       NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "test.appspot.com",
       NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123",
       NEXT_PUBLIC_FIREBASE_APP_ID: "1:123:web:abc",
+      NEXT_PUBLIC_USE_FIREBASE_EMULATORS: "true",
     },
   },
 });

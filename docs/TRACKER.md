@@ -2,16 +2,16 @@
 
 Living status of the build. Update in the same commit as the work it describes.
 
-Last updated: 2026-09-22
+Last updated: 2026-09-23
 
 Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L (see IMPLEMENTATION_PLAN section 2). Each task lists the requirement IDs it satisfies.
 
 ## Current focus
 
-- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18.
+- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18. Phase 3 (auth, persistence, intake, orchestration) 1/14 — T-3.01 done.
 - Task: none in progress
-- Next up: T-2.18 (phase gate) — needs the project owner to run `pnpm eval` with a real `ANTHROPIC_API_KEY` (none configured in this sandbox) and share the result; an agent session can't complete it alone.
-- Blockers: T-2.18 needs a live API key (above). T-3.01 needs the project owner to create real Firebase dev/prod projects first; local dev runs fully on the emulators in the meantime.
+- Next up: T-3.02 (Firestore repositories and `FirestoreStore`). T-2.18 (phase gate) stays blocked in parallel — see below.
+- Blockers: T-2.18 needs the project owner to run `pnpm eval` with a real `ANTHROPIC_API_KEY` (none configured in this sandbox) and share the result; an agent session can't complete it alone. Production Firebase (real Google OAuth provider config, real `dev`/`prod` projects, real Admin SDK credentials) still needs the project owner — T-3.01 re-examined this blocker and found it only applies to *production*: `src/lib/env.ts`'s own `USE_FIREBASE_EMULATORS` design (from T-0.05) already makes local dev, and every T-3.01 automated/manual verification, work fully against the Firebase Emulator Suite with no real project. `pnpm build`/`pnpm dev` also need a local `.env.local` (gitignored, never committed) with at least placeholder values for the full server env schema — see PROJECT_MEMORY D-056.
 
 ## Phase progress
 
@@ -19,8 +19,8 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 |---|---|---|---|---|
 | 0 | Foundation | 11 | 11 | Done (T-0.06 caveat: no real Firebase project yet) |
 | 1 | Design system, landing, shell, dashboard (demo data) | 17 | 17 | Done |
-| 2 | Engine spike (CLI-first) | 18 | 10 | In progress |
-| 3 | Auth, persistence, intake, orchestration | 14 | 0 | Not started |
+| 2 | Engine spike (CLI-first) | 18 | 17 | In progress (blocked on T-2.18) |
+| 3 | Auth, persistence, intake, orchestration | 14 | 1 | In progress |
 | 4 | Report UI (Alpha) | 14 | 0 | Not started |
 | 5 | Compare, export, watchlist, activity (Beta) | 13 | 0 | Not started |
 | 6 | Monitoring, hardening, launch (1.0) | 15 | 0 | Not started |
@@ -84,7 +84,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 ## Phase 3 — Auth, persistence, intake, orchestration
 
-- [ ] **T-3.01** Firebase Auth (Google, email), session cookie, middleware, `requireUser()` · M · FR-AUT-01, FR-AUT-02
+- [x] **T-3.01** Firebase Auth (Google, email), session cookie, middleware, `requireUser()` · M · FR-AUT-01, FR-AUT-02
 - [ ] **T-3.02** Firestore repositories and `FirestoreStore` with converters · M · NFR-12
 - [ ] **T-3.03** Firestore and Storage rules with emulator tests · M · NFR-03
 - [ ] **T-3.04** Analyses API: create, list, get, update, `assertOwns()` · M · FR-INT-01, FR-INT-06, FR-DSH-01

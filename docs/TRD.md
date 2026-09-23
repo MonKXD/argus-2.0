@@ -230,7 +230,7 @@ Limits: at most 2 concurrent runs per user; daily analysis limit from `DAILY_ANA
 ## 8. Authentication and sessions
 
 - Firebase Auth on the client; on sign-in, exchange the ID token for a server-set session cookie (`httpOnly`, `secure`, `SameSite=Lax`).
-- Middleware only checks cookie presence for fast redirects. Server components and route handlers verify the cookie with the Admin SDK.
+- `src/proxy.ts` (Next.js 16 renamed the `middleware.ts` file convention to `proxy.ts` — same mechanism, `config.matcher`, Node.js runtime by default; T-3.01 verified this against the installed version's own docs) only checks cookie presence for fast redirects. Server components and route handlers verify the cookie with the Admin SDK.
 - Mutating routes also check the `Origin` header matches `APP_URL`.
 - No client-side Firestore writes. Security rules enforce this (SCHEMA section 6).
 

@@ -68,6 +68,10 @@ const clientSchema = z.object({
   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: z.string().min(1),
   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string().min(1),
   NEXT_PUBLIC_FIREBASE_APP_ID: z.string().min(1),
+  // Mirrors the server-only USE_FIREBASE_EMULATORS: the browser-side client
+  // SDK needs its own flag to call connectAuthEmulator (T-3.01), since it
+  // never sees server env vars.
+  NEXT_PUBLIC_USE_FIREBASE_EMULATORS: boolFromString.default(false),
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;
@@ -95,6 +99,7 @@ function parseClientEnv(): ClientEnv {
     NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    NEXT_PUBLIC_USE_FIREBASE_EMULATORS: process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS,
   });
   if (!result.success) {
     throw new Error(`Invalid client environment variables:\n${formatIssues(result.error)}`);
@@ -119,5 +124,18 @@ export const env: ServerEnv = new Proxy({} as ServerEnv, {
   },
 });
 
-/** Public config safe for Client Components: Firebase web config only. */
-export const clientEnv: ClientEnv = parseClientEnv();
+/**
+ * Public config safe for Client Components: Firebase web config only.
+ * Lazy for the same reason `env` is (see above) — symmetrically: a
+ * server-only module that imports this file only for `env` must not also
+ * trigger an eager `NEXT_PUBLIC_*` parse, which fails during Next's
+ * page-data collection for any route that doesn't have client env vars set
+ * (e.g. a CI or preview build with no .env.local yet).
+ */
+let cachedClientEnv: ClientEnv | undefined;
+export const clientEnv: ClientEnv = new Proxy({} as ClientEnv, {
+  get(_target, prop, receiver) {
+    cachedClientEnv ??= parseClientEnv();
+    return Reflect.get(cachedClientEnv, prop, receiver);
+  },
+});

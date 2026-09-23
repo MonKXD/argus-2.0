@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
 import Link from "next/link";
 
+import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -8,7 +9,15 @@ import { cn } from "@/lib/utils";
 // analysis ●". Opens the command palette (T-1.10); real search over
 // analyses lands with T-5.10.
 
-function Topbar({ className, onOpenPalette }: { className?: string; onOpenPalette: () => void }) {
+function Topbar({
+  className,
+  onOpenPalette,
+  userEmail,
+}: {
+  className?: string;
+  onOpenPalette: () => void;
+  userEmail: string | null;
+}) {
   return (
     <header
       className={cn(
@@ -33,10 +42,7 @@ function Topbar({ className, onOpenPalette }: { className?: string; onOpenPalett
       <Button asChild size="sm" className="hidden md:inline-flex">
         <Link href="/app/analyses/new">New analysis</Link>
       </Button>
-      <span
-        aria-hidden="true"
-        className="size-8 shrink-0 rounded-full border border-hairline bg-panel-raised"
-      />
+      <UserMenu email={userEmail} />
     </header>
   );
 }
