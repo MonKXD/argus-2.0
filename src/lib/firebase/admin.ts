@@ -14,7 +14,9 @@ import { env } from "@/lib/env";
  */
 let cachedApp: App | undefined;
 
-function getAdminApp(): App {
+/** Shared across every Admin SDK service (Auth here, Firestore in
+ * src/lib/repos/admin-firestore.ts) so they reuse one initialized app. */
+export function getAdminApp(): App {
   if (cachedApp) return cachedApp;
 
   const existing = getApps()[0];
