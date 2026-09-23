@@ -3,9 +3,9 @@ import { z } from "zod";
 
 import { logger } from "@/lib/logger";
 
-/** TRD section 7's fixed error-code vocabulary. Route handlers built after
- * T-3.01 (T-3.04 onward) add error classes for the remaining codes as they
- * need them — only UNAUTHENTICATED and FORBIDDEN have a caller today. */
+/** TRD section 7's fixed error-code vocabulary. Route handlers add error
+ * classes for the remaining codes (LIMIT_EXCEEDED, CONFLICT,
+ * UPSTREAM_FAILED) as they need them — no caller yet. */
 export const ApiErrorCode = z.enum([
   "UNAUTHENTICATED",
   "FORBIDDEN",
@@ -58,6 +58,20 @@ export class ForbiddenError extends ApiError {
   }
 }
 
+export class NotFoundError extends ApiError {
+  constructor(message = "Not found.") {
+    super("NOT_FOUND", message);
+    this.name = "NotFoundError";
+  }
+}
+
+export class ValidationError extends ApiError {
+  constructor(message: string, details?: Record<string, unknown>) {
+    super("VALIDATION_FAILED", message, details);
+    this.name = "ValidationError";
+  }
+}
+
 /** The standard error envelope (TRD section 7). */
 export function toErrorEnvelope(error: ApiError): {
   error: { code: ApiErrorCode; message: string; details: Record<string, unknown> };
@@ -76,7 +90,17 @@ export function handleApiError(error: unknown): NextResponse {
     return NextResponse.json(toErrorEnvelope(error), { status: error.status });
   }
 
-  logger.error({ errorName: error instanceof Error ? error.name : "unknown" }, "unhandled API error");
+  if (error instanceof z.ZodError) {
+    const validation = new ValidationError("The request body is invalid.", {
+      issues: error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
+    });
+    return NextResponse.json(toErrorEnvelope(validation), { status: validation.status });
+  }
+
+  logger.error(
+    { errorName: error instanceof Error ? error.name : "unknown" },
+    "unhandled API error",
+  );
   const internal = new ApiError("INTERNAL", "Something went wrong. Try again.");
   return NextResponse.json(toErrorEnvelope(internal), { status: internal.status });
 }

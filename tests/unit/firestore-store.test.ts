@@ -10,107 +10,7 @@ import {
 import { fernwayHealthRun } from "@/demo/portfolio";
 import { FirestoreStore } from "@/lib/repos/firestore-store";
 
-import type { Firestore } from "firebase-admin/firestore";
-
-/**
- * A minimal in-memory fake of the Admin SDK's Firestore surface, exercising
- * FirestoreStore's own logic (batching, subcollection paths, upsert-by-id,
- * converter wiring) against real demo fixtures — not the Firestore service
- * itself, which is covered by the manual real-emulator verification logged
- * in PROJECT_MEMORY (TRD 15's "Integration | Vitest with Firebase
- * emulators" is T-3.03's job to wire into the test run, not duplicated
- * ad hoc here). Round-tripping through the real zodConverter still means a
- * shape bug in FirestoreStore's paths/ids would fail these tests.
- */
-interface FakeConverter {
-  toFirestore(data: unknown): unknown;
-  fromFirestore(snapshot: { data(): unknown }): unknown;
-}
-
-class FakeDocRef {
-  constructor(
-    private readonly store: Map<string, unknown>,
-    private readonly path: string,
-    private readonly converter: FakeConverter | undefined,
-    private readonly makeCollection: (path: string) => FakeCollectionRef,
-  ) {}
-
-  collection(name: string): FakeCollectionRef {
-    return this.makeCollection(`${this.path}/${name}`);
-  }
-
-  withConverter(converter: FakeConverter): FakeDocRef {
-    return new FakeDocRef(this.store, this.path, converter, this.makeCollection);
-  }
-
-  async set(data: unknown, options?: { merge?: boolean }): Promise<void> {
-    const toWrite = this.converter ? this.converter.toFirestore(data) : data;
-    if (options?.merge) {
-      const existing = (this.store.get(this.path) as object | undefined) ?? {};
-      this.store.set(this.path, { ...existing, ...(toWrite as object) });
-    } else {
-      this.store.set(this.path, toWrite);
-    }
-  }
-
-  get rawPath(): string {
-    return this.path;
-  }
-}
-
-class FakeCollectionRef {
-  constructor(
-    private readonly store: Map<string, unknown>,
-    private readonly path: string,
-    private readonly converter: FakeConverter | undefined,
-  ) {}
-
-  doc(id: string): FakeDocRef {
-    return new FakeDocRef(
-      this.store,
-      `${this.path}/${id}`,
-      this.converter,
-      (p) => new FakeCollectionRef(this.store, p, undefined),
-    );
-  }
-
-  withConverter(converter: FakeConverter): FakeCollectionRef {
-    return new FakeCollectionRef(this.store, this.path, converter);
-  }
-
-  async get(): Promise<{ docs: { data(): unknown }[] }> {
-    const prefix = `${this.path}/`;
-    const docs = [...this.store.entries()]
-      .filter(([key]) => key.startsWith(prefix) && !key.slice(prefix.length).includes("/"))
-      .map(([, value]) => ({
-        data: () => (this.converter ? this.converter.fromFirestore({ data: () => value }) : value),
-      }));
-    return { docs };
-  }
-}
-
-class FakeBatch {
-  private readonly ops: (() => Promise<void>)[] = [];
-
-  constructor() {}
-
-  set(docRef: FakeDocRef, data: unknown): void {
-    this.ops.push(() => docRef.set(data));
-  }
-
-  async commit(): Promise<void> {
-    for (const op of this.ops) await op();
-  }
-}
-
-function createFakeFirestore(): { db: Firestore; store: Map<string, unknown> } {
-  const store = new Map<string, unknown>();
-  const db = {
-    collection: (name: string) => new FakeCollectionRef(store, name, undefined),
-    batch: () => new FakeBatch(),
-  };
-  return { db: db as unknown as Firestore, store };
-}
+import { createFakeFirestore } from "../helpers/fake-firestore";
 
 describe("FirestoreStore", () => {
   it("putSources / putEvidence / putFacts upsert by id under the analysis document", async () => {
@@ -160,7 +60,9 @@ describe("FirestoreStore", () => {
 
     expect(readEvidence).toHaveLength(loopwellEvidence.length);
     expect(readFacts).toHaveLength(loopwellFacts.length);
-    expect(new Set(readEvidence.map((e) => e.id))).toEqual(new Set(loopwellEvidence.map((e) => e.id)));
+    expect(new Set(readEvidence.map((e) => e.id))).toEqual(
+      new Set(loopwellEvidence.map((e) => e.id)),
+    );
   });
 
   it("listEvidence throws if a stored document no longer matches the schema (the read boundary actually validates)", async () => {
@@ -183,7 +85,9 @@ describe("FirestoreStore", () => {
     await firestoreStore.saveDimension(analysisId, loopwellReport.id, dimension);
 
     expect(
-      store.get(`analyses/${analysisId}/reports/${loopwellReport.id}/dimensions/${dimension.dimension}`),
+      store.get(
+        `analyses/${analysisId}/reports/${loopwellReport.id}/dimensions/${dimension.dimension}`,
+      ),
     ).toEqual(dimension);
   });
 
@@ -194,7 +98,9 @@ describe("FirestoreStore", () => {
 
     await firestoreStore.saveReport(analysisId, loopwellReport);
 
-    expect(store.get(`analyses/${analysisId}/reports/${loopwellReport.id}`)).toEqual(loopwellReport);
+    expect(store.get(`analyses/${analysisId}/reports/${loopwellReport.id}`)).toEqual(
+      loopwellReport,
+    );
   });
 
   it("updateRun merges a partial patch into the existing run document", async () => {
