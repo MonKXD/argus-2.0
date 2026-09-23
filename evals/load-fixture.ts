@@ -13,19 +13,26 @@ export async function listFixtureSlugs(): Promise<string[]> {
   return entries.filter((e) => e.isDirectory()).map((e) => e.name);
 }
 
-export interface LoadedFixture {
-  manifest: FixtureManifestType;
-  expected: FixtureExpectation;
+export interface LoadedManifestSources {
   sources: IngestSourceInput[];
-  /** Any local HTML servers this fixture started (WEBSITE sources) — call to release them after the run. */
+  /** Any local HTML servers this manifest started (WEBSITE sources) — call to release them after the run. */
   cleanup: () => Promise<void>;
 }
 
-export async function loadFixture(slug: string): Promise<LoadedFixture> {
-  const dir = path.join(FIXTURES_DIR, slug);
-  const manifest = FixtureManifest.parse(JSON.parse(await readFile(path.join(dir, "manifest.json"), "utf-8")));
-  const expected = FixtureExpectation.parse(JSON.parse(await readFile(path.join(dir, "expected.json"), "utf-8")));
-
+/**
+ * Turns a manifest's declared sources into `IngestSourceInput[]`, resolving
+ * each relative to `dir`. Shared by the eval harness's `loadFixture()` and
+ * the `pnpm analyze` CLI's own manifest loader — the only difference
+ * between them is `unsafeAllowPrivateNetworksForTests`, which the CLI must
+ * never set (a real analysis fetching a real external URL needs the real
+ * SSRF guard; only fixtures deliberately point at a throwaway local
+ * server).
+ */
+export async function loadManifestSources(
+  dir: string,
+  manifest: FixtureManifestType,
+  options: { unsafeAllowPrivateNetworksForTests?: boolean } = {},
+): Promise<LoadedManifestSources> {
   const servers: LocalHtmlServer[] = [];
   const sources: IngestSourceInput[] = [];
 
@@ -49,19 +56,41 @@ export async function loadFixture(slug: string): Promise<LoadedFixture> {
         title: sourceFile.title,
         url: server.url,
         companyDomain: manifest.companyDomain,
-        unsafeAllowPrivateNetworksForTests: true,
+        unsafeAllowPrivateNetworksForTests: options.unsafeAllowPrivateNetworksForTests,
+      });
+    } else if (sourceFile.url) {
+      sources.push({
+        id: sourceFile.id,
+        type: sourceFile.type,
+        origin: "URL",
+        title: sourceFile.title,
+        url: sourceFile.url,
+        companyDomain: manifest.companyDomain,
       });
     } else {
-      throw new Error(`Fixture "${slug}" source "${sourceFile.id}" has neither "file" nor "html"`);
+      throw new Error(`Manifest source "${sourceFile.id}" has none of "file", "html" or "url"`);
     }
   }
 
   return {
-    manifest,
-    expected,
     sources,
     cleanup: async () => {
       await Promise.all(servers.map((s) => s.stop()));
     },
   };
+}
+
+export interface LoadedFixture {
+  manifest: FixtureManifestType;
+  expected: FixtureExpectation;
+  sources: IngestSourceInput[];
+  cleanup: () => Promise<void>;
+}
+
+export async function loadFixture(slug: string): Promise<LoadedFixture> {
+  const dir = path.join(FIXTURES_DIR, slug);
+  const manifest = FixtureManifest.parse(JSON.parse(await readFile(path.join(dir, "manifest.json"), "utf-8")));
+  const expected = FixtureExpectation.parse(JSON.parse(await readFile(path.join(dir, "expected.json"), "utf-8")));
+  const { sources, cleanup } = await loadManifestSources(dir, manifest, { unsafeAllowPrivateNetworksForTests: true });
+  return { manifest, expected, sources, cleanup };
 }

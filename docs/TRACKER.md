@@ -10,7 +10,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 - Phase: 1 complete. Phase 2 (engine spike) in progress.
 - Task: none in progress
-- Next up: T-2.17 (CLI `pnpm analyze` with progress output and JSON report)
+- Next up: T-2.18 (phase gate: thresholds met; log results, cost and duration in PROJECT_MEMORY)
 - Blockers: none. Caveat: T-0.06 needs the project owner to create real Firebase dev/prod projects before T-3.01; local dev runs fully on the emulators in the meantime.
 
 ## Phase progress
@@ -79,7 +79,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 - [x] **T-2.14** `ResearchProvider` interface and implementation; choose provider (TQ-5) · M · FR-ENG-03
 - [x] **T-2.15** Prompt-injection defences and tests · S · FR-ENG-13
 - [x] **T-2.16** Eval harness, thresholds, results logging; fixtures F1-F5, F7, F8 built (F6 scanned-deck skipped — needs vision-transcription support, not yet built) · L · FR-ENG-12
-- [ ] **T-2.17** CLI `pnpm analyze` with progress output and JSON report · S · FR-ENG-01, FR-ENG-05
+- [x] **T-2.17** CLI `pnpm analyze` with progress output and JSON report · S · FR-ENG-01, FR-ENG-05
 - [ ] **T-2.18** Phase gate: thresholds met; log results, cost and duration in PROJECT_MEMORY · S · FR-ENG-12
 
 ## Phase 3 — Auth, persistence, intake, orchestration

@@ -14,7 +14,8 @@
     "test:e2e": "playwright test",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "emulators": "firebase emulators:start --project demo-argus-ai",
-    "eval": "tsx evals/run.ts"
+    "eval": "tsx evals/run.ts",
+    "analyze": "tsx evals/analyze.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.127.0",

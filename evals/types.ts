@@ -16,8 +16,10 @@ export const FixtureSourceFile = z.object({
   title: z.string(),
   /** Relative path (from the fixture directory) to a local text/md/pdf/docx/xlsx/csv file, for `origin: "UPLOAD"`. */
   file: z.string().optional(),
-  /** Relative path to a local HTML file the harness serves over a throwaway local server, for `origin: "URL"`. */
+  /** Relative path to a local HTML file the harness serves over a throwaway local server, for `origin: "URL"` fixtures — never used by the `pnpm analyze` CLI. */
   html: z.string().optional(),
+  /** A real external URL to fetch through the real SSRF-safe fetcher, for `origin: "URL"` outside the fixture/test context (the `pnpm analyze` CLI). */
+  url: z.url().optional(),
 });
 
 export const FixtureManifest = z.object({

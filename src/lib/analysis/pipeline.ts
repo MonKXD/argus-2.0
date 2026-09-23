@@ -13,7 +13,7 @@ import { extractFacts } from "@/lib/analysis/steps/extract-facts";
 import { runSynthesis } from "@/lib/analysis/steps/synthesize";
 import { runVerify } from "@/lib/analysis/steps/verify";
 import type { DimensionAnalysis, Flag } from "@/lib/schema/claims";
-import type { Stage, StageProfile } from "@/lib/schema/enums";
+import type { Stage, StageProfile, StepName } from "@/lib/schema/enums";
 import type { Evidence, Fact, Source } from "@/lib/schema/evidence";
 import { newId } from "@/lib/schema/ids";
 import type { Report, RunWarning } from "@/lib/schema/report";
@@ -37,6 +37,8 @@ export interface RunAnalysisPipelineArgs {
   tokenBudgetLimit?: number;
   concurrency?: number;
   signal?: AbortSignal;
+  /** Called as each step completes — the CLI (T-2.17) uses this for progress output; the eval harness ignores it. */
+  onProgress?: (step: StepName) => void;
 }
 
 export interface RunAnalysisPipelineResult {
@@ -89,6 +91,7 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
     flags.push(...injection.flags);
     warnings.push(...injection.warnings);
   }
+  args.onProgress?.("INGEST");
 
   // EXTRACT_FACTS
   const factsResult = await extractFacts({
@@ -103,6 +106,7 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
   warnings.push(...factsResult.warnings);
   usage.push(...factsResult.usage);
   factsResult.usage.forEach((u) => budget.record(u));
+  args.onProgress?.("EXTRACT_FACTS");
 
   // CONSISTENCY
   const consistencyResult = await runConsistency({ llm: args.llm, facts: factsResult.facts, signal: args.signal });
@@ -112,6 +116,7 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
     usage.push(consistencyResult.usage);
     budget.record(consistencyResult.usage);
   }
+  args.onProgress?.("CONSISTENCY");
 
   // ANALYZE
   const analyzeResult = await analyzeAllDimensions({
@@ -131,12 +136,14 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
   warnings.push(...analyzeResult.warnings);
   usage.push(...analyzeResult.usage);
   analyzeResult.usage.forEach((u) => budget.record(u));
+  args.onProgress?.("ANALYZE");
 
   const stageProfile = stageProfileFor(args.stage, args.stageProfileOverride);
   const evidenceInfoOf = makeEvidenceInfoOf(evidence);
 
   let dimensions = analyzeResult.dimensions;
   let overall = computeOverall(toDimensionResults(dimensions), stageProfile, flags);
+  args.onProgress?.("SCORE");
 
   // SYNTHESIZE
   let synthResult = await runSynthesis({
@@ -151,6 +158,7 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
   warnings.push(...synthResult.warnings);
   usage.push(synthResult.usage);
   budget.record(synthResult.usage);
+  args.onProgress?.("SYNTHESIZE");
 
   // VERIFY
   let verifyResult = runVerify({
@@ -163,12 +171,14 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
     evidence,
   });
   warnings.push(...verifyResult.warnings);
+  args.onProgress?.("VERIFY");
 
   // "If any dimension claim changes, re-run SCORE and SYNTHESIZE once" (AI_SPEC 3.8).
   if (verifyResult.changedDimensions.length > 0) {
     dimensions = recomputeDimensionScores(verifyResult.dimensions, evidenceInfoOf, dimensions);
     flags = verifyResult.flags;
     overall = computeOverall(toDimensionResults(dimensions), stageProfile, flags);
+    args.onProgress?.("SCORE");
 
     synthResult = await runSynthesis({
       startupName: args.startupName,
@@ -182,6 +192,7 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
     warnings.push(...synthResult.warnings);
     usage.push(synthResult.usage);
     budget.record(synthResult.usage);
+    args.onProgress?.("SYNTHESIZE");
 
     verifyResult = runVerify({
       dimensions,
@@ -193,6 +204,7 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
       evidence,
     });
     warnings.push(...verifyResult.warnings);
+    args.onProgress?.("VERIFY");
   } else {
     dimensions = verifyResult.dimensions;
     flags = verifyResult.flags;
@@ -218,6 +230,7 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
     evidenceStats: verifyResult.evidenceStats,
     warnings,
   };
+  args.onProgress?.("FINALIZE");
 
   return {
     report,
