@@ -180,4 +180,42 @@ describe("GeminiLLM.structured", () => {
     expect(usage.cacheReadTokens).toBe(4000);
     expect(usage.estimatedCostUsd).toBe(0);
   });
+
+  it("strips maxItems from the outgoing parametersJsonSchema (Gemini rejects schemas whose aggregate maxItems crosses an undocumented threshold, verified live — see the comment on stripMaxItemsForGemini)", async () => {
+    let capturedBody: unknown;
+    server.use(
+      http.post(GENERATE_CONTENT_URL, async ({ request }) => {
+        capturedBody = await request.json();
+        return HttpResponse.json(
+          fakeResponse({
+            functionCalls: [{ name: "submit_test", args: { name: "Loopwell", value: 3, items: ["a"] } }],
+          }),
+        );
+      }),
+    );
+
+    const schemaWithMaxItems = z.object({
+      name: z.string(),
+      value: z.number(),
+      items: z.array(z.string()).max(80),
+    });
+    const llm = makeLlm();
+    await llm.structured({
+      role: "ANALYSIS",
+      system: "system prompt",
+      user: "user prompt",
+      toolName: "submit_test",
+      schema: schemaWithMaxItems,
+      maxOutputTokens: 500,
+    });
+
+    const sentSchema = (
+      capturedBody as {
+        tools: { functionDeclarations: { parametersJsonSchema: unknown }[] }[];
+      }
+    ).tools[0]!.functionDeclarations[0]!.parametersJsonSchema;
+    expect(JSON.stringify(sentSchema)).not.toContain("maxItems");
+    // minItems (when present) and every other constraint stay — only maxItems is stripped.
+    expect(JSON.stringify(sentSchema)).toContain('"items"');
+  });
 });

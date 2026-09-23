@@ -10,10 +10,10 @@ import { toToolInputSchema } from "@/lib/schema/to-json-schema";
 
 import type {
   Content,
-  FunctionCall,
   GenerateContentConfig,
   GenerateContentResponse,
   GoogleGenAI,
+  Part,
 } from "@google/genai";
 import type { Logger } from "pino";
 import type { ZodError } from "zod";
@@ -69,7 +69,8 @@ export class GeminiLLM implements LLM {
     const contents: Content[] = [{ role: "user", parts: [{ text: buildUserText(args.user, args.cachePrefix) }] }];
 
     const first = await this.call(model, config, contents, args.signal);
-    const firstCall = extractFunctionCall(first, args.toolName);
+    const firstPart = extractFunctionCallPart(first, args.toolName);
+    const firstCall = firstPart.functionCall!;
     const firstParsed = args.schema.safeParse(firstCall.args);
     if (firstParsed.success) {
       return { data: firstParsed.data, usage: toUsage(first) };
@@ -80,9 +81,15 @@ export class GeminiLLM implements LLM {
       "gemini structured output failed schema validation; attempting one repair call",
     );
 
+    // Echoing the function-call part back verbatim (not just its
+    // `functionCall`) matters for Gemini's "thinking" models: they attach a
+    // `thoughtSignature` to that part and reject the next turn with a 400
+    // ("Function call is missing a thought_signature") if it's dropped —
+    // found by reproducing this exact repair round-trip directly against
+    // the live API (PROJECT_MEMORY D-064's live-verification follow-up).
     const repairContents: Content[] = [
       ...contents,
-      { role: "model", parts: [{ functionCall: firstCall }] },
+      { role: "model", parts: [firstPart] },
       {
         role: "user",
         parts: [
@@ -98,7 +105,7 @@ export class GeminiLLM implements LLM {
     ];
 
     const second = await this.call(model, config, repairContents, args.signal);
-    const secondCall = extractFunctionCall(second, args.toolName);
+    const secondCall = extractFunctionCallPart(second, args.toolName).functionCall!;
     const secondParsed = args.schema.safeParse(secondCall.args);
     const usage = sumUsage(toUsage(first), toUsage(second));
 
@@ -122,7 +129,7 @@ export class GeminiLLM implements LLM {
           functionDeclarations: [
             {
               name: args.toolName,
-              parametersJsonSchema: toToolInputSchema(args.schema),
+              parametersJsonSchema: stripMaxItemsForGemini(toToolInputSchema(args.schema)),
             },
           ],
         },
@@ -150,19 +157,53 @@ export class GeminiLLM implements LLM {
   }
 }
 
+/**
+ * Gemini's `parametersJsonSchema` rejects the request outright (400
+ * INVALID_ARGUMENT, no useful detail beyond that) once the `maxItems`
+ * values across a schema cross an undocumented threshold — confirmed by
+ * bisecting a real request against the live API: a single array's own
+ * `maxItems: 20` works, `maxItems: 80` alone doesn't, and two arrays at
+ * `maxItems: 20` each (sum 40) fail together even though each is fine
+ * alone, so this reads as an aggregate cap somewhere between 30 and 50,
+ * not a per-field one (PROJECT_MEMORY D-064's live-verification session).
+ * Multiple `oneOf` branches, schema size, and duplicate sub-schemas were
+ * all ruled out first as candidate causes before this one was isolated.
+ * Stripping `maxItems` (keeping `minItems`) sidesteps the limit entirely
+ * and costs nothing real: the upper bound still fully applies to the
+ * actual response via the unmodified Zod schema (R-AI-02, R-AI-08) — this
+ * only loosens the *hint* the model sees, never what's accepted.
+ */
+function stripMaxItemsForGemini(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(stripMaxItemsForGemini);
+  if (node && typeof node === "object") {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(node)) {
+      if (key === "maxItems") continue;
+      result[key] = stripMaxItemsForGemini(value);
+    }
+    return result;
+  }
+  return node;
+}
+
 function buildUserText(user: string, cachePrefix: string | undefined): string {
   return cachePrefix ? `${cachePrefix}\n\n${user}` : user;
 }
 
-function extractFunctionCall(response: GenerateContentResponse, toolName: string): FunctionCall {
-  const call = response.functionCalls?.find((c) => c.name === toolName);
-  if (!call) {
+/**
+ * Returns the whole `Part` (not just its `FunctionCall`) so the caller can
+ * echo `thoughtSignature` back verbatim on a repair turn — see the comment
+ * at the repair call site.
+ */
+function extractFunctionCallPart(response: GenerateContentResponse, toolName: string): Part {
+  const part = response.candidates?.[0]?.content?.parts?.find((p) => p.functionCall?.name === toolName);
+  if (!part) {
     const finishReason = response.candidates?.[0]?.finishReason ?? "unknown";
     throw new LlmResponseError(
       `Expected a "${toolName}" function call; got finishReason "${finishReason}" with no matching call`,
     );
   }
-  return call;
+  return part;
 }
 
 function formatValidationErrors(error: ZodError): string {

@@ -229,7 +229,18 @@ export async function executeRun(db: Firestore, args: ExecuteRunArgs): Promise<v
     const aborted = signal.aborted;
     const now = new Date().toISOString();
     logger.error(
-      { analysisId, runId, aborted, errorName: error instanceof Error ? error.name : "unknown" },
+      {
+        analysisId,
+        runId,
+        aborted,
+        errorName: error instanceof Error ? error.name : "unknown",
+        // The SDK/HTTP error message itself (e.g. "429: rate limited",
+        // "503: overloaded") is operational status text, never document
+        // content, a quote or a prompt — R-SEC-04 doesn't cover it, and
+        // it's the one thing that actually distinguishes a transient
+        // provider issue from a real bug when this shows up in logs.
+        errorMessage: error instanceof Error ? error.message : String(error),
+      },
       "run execution failed",
     );
     await ref.set(
