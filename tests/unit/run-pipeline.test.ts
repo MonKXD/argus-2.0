@@ -8,8 +8,8 @@ import type { Usage } from "@/lib/schema/run";
 
 import { createFakeFirestore } from "../helpers/fake-firestore";
 
-const createAnthropicLlmMock = vi.fn();
-vi.mock("@/lib/ai/llm", () => ({ createAnthropicLlm: () => createAnthropicLlmMock() }));
+const createLlmMock = vi.fn();
+vi.mock("@/lib/ai/create-llm", () => ({ createLlm: () => createLlmMock() }));
 vi.mock("@/lib/env", () => ({
   env: { RUN_TOKEN_BUDGET: 2_000_000, ANALYZE_CONCURRENCY: 4, LOG_LEVEL: "silent", NODE_ENV: "test" },
 }));
@@ -165,7 +165,7 @@ describe("executeRun: happy path", () => {
     // A leftover fact from a previous run on this same analysis — must be gone afterward (PROJECT_MEMORY D-063).
     store.set(`analyses/${ANALYSIS_ID}/facts/fct_stale`, { id: "fct_stale", key: "stale.fact" });
 
-    createAnthropicLlmMock.mockReturnValue(
+    createLlmMock.mockReturnValue(
       new FakeLlm({
         submit_facts: factsHandler,
         submit_dimension_analysis: dimensionHandler,
@@ -208,7 +208,7 @@ describe("executeRun: no usable evidence", () => {
     store.set(`analyses/${ANALYSIS_ID}/runs/${RUN_ID}`, seedRun());
     // No sources/evidence registered.
 
-    createAnthropicLlmMock.mockReturnValue(
+    createLlmMock.mockReturnValue(
       new FakeLlm({ submit_facts: factsHandler, submit_dimension_analysis: dimensionHandler, submit_synthesis: synthesisResponse }),
     );
 
@@ -232,7 +232,7 @@ describe("executeRun: cancelRequested before start", () => {
     store.set(`analyses/${ANALYSIS_ID}/evidence/${EVIDENCE_ID}`, seedEvidence());
 
     const llm = new FakeLlm({ submit_facts: factsHandler, submit_dimension_analysis: dimensionHandler, submit_synthesis: synthesisResponse });
-    createAnthropicLlmMock.mockReturnValue(llm);
+    createLlmMock.mockReturnValue(llm);
 
     await executeRun(db, { analysisId: ANALYSIS_ID, runId: RUN_ID, signal: new AbortController().signal });
 
@@ -253,7 +253,7 @@ describe("executeRun: mid-run failure", () => {
     store.set(`analyses/${ANALYSIS_ID}/sources/${SOURCE_ID}`, seedSource());
     store.set(`analyses/${ANALYSIS_ID}/evidence/${EVIDENCE_ID}`, seedEvidence());
 
-    createAnthropicLlmMock.mockReturnValue(
+    createLlmMock.mockReturnValue(
       new FakeLlm(
         { submit_facts: factsHandler, submit_dimension_analysis: dimensionHandler, submit_synthesis: synthesisResponse },
         "submit_facts",
@@ -277,7 +277,7 @@ describe("executeRun: mid-run failure", () => {
     store.set(`analyses/${ANALYSIS_ID}/sources/${SOURCE_ID}`, seedSource());
     store.set(`analyses/${ANALYSIS_ID}/evidence/${EVIDENCE_ID}`, seedEvidence());
 
-    createAnthropicLlmMock.mockReturnValue(
+    createLlmMock.mockReturnValue(
       new FakeLlm({ submit_facts: factsHandler, submit_dimension_analysis: dimensionHandler, submit_synthesis: synthesisResponse }),
     );
 

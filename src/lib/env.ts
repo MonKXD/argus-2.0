@@ -21,10 +21,26 @@ const serverSchema = z
     SESSION_COOKIE_NAME: z.string().min(1).default("argus_session"),
     SESSION_MAX_AGE_DAYS: z.coerce.number().int().positive().default(5),
 
-    ANTHROPIC_API_KEY: z.string().min(1),
-    ANTHROPIC_MODEL_ANALYSIS: z.string().min(1),
-    ANTHROPIC_MODEL_SYNTHESIS: z.string().min(1),
-    ANTHROPIC_MODEL_FAST: z.string().min(1),
+    // Which LLM provider src/lib/ai's createLlm() wires up (R-AI-10: model
+    // IDs from env only, never hard-coded — this extends the same principle
+    // to the provider choice itself). Both providers stay fully implemented
+    // behind the provider-agnostic LLM interface (R-ARC-08) regardless of
+    // which is active, so switching back is a one-variable change, not a
+    // code change. Default is "gemini" (a free tier) rather than
+    // "anthropic" (paid) — see PROJECT_MEMORY D-064.
+    LLM_PROVIDER: z.enum(["anthropic", "gemini"]).default("gemini"),
+
+    // Required only when LLM_PROVIDER="anthropic" (see the .superRefine below).
+    ANTHROPIC_API_KEY: z.string().min(1).optional(),
+    ANTHROPIC_MODEL_ANALYSIS: z.string().min(1).optional(),
+    ANTHROPIC_MODEL_SYNTHESIS: z.string().min(1).optional(),
+    ANTHROPIC_MODEL_FAST: z.string().min(1).optional(),
+
+    // Required only when LLM_PROVIDER="gemini" (see the .superRefine below).
+    GEMINI_API_KEY: z.string().min(1).optional(),
+    GEMINI_MODEL_ANALYSIS: z.string().min(1).optional(),
+    GEMINI_MODEL_SYNTHESIS: z.string().min(1).optional(),
+    GEMINI_MODEL_FAST: z.string().min(1).optional(),
 
     FIREBASE_PROJECT_ID: z.string().min(1),
     // Server-side mirror of NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET (T-3.06):
@@ -53,13 +69,28 @@ const serverSchema = z
     FEATURE_MONITORING: boolFromString.default(false),
   })
   .superRefine((data, ctx) => {
-    if (data.USE_FIREBASE_EMULATORS) return;
-    for (const field of ["FIREBASE_CLIENT_EMAIL", "FIREBASE_PRIVATE_KEY"] as const) {
+    if (!data.USE_FIREBASE_EMULATORS) {
+      for (const field of ["FIREBASE_CLIENT_EMAIL", "FIREBASE_PRIVATE_KEY"] as const) {
+        if (!data[field]) {
+          ctx.addIssue({
+            code: "custom",
+            path: [field],
+            message: `${field} is required unless USE_FIREBASE_EMULATORS=true`,
+          });
+        }
+      }
+    }
+
+    const requiredFor: Record<typeof data.LLM_PROVIDER, readonly (keyof typeof data)[]> = {
+      anthropic: ["ANTHROPIC_API_KEY", "ANTHROPIC_MODEL_ANALYSIS", "ANTHROPIC_MODEL_SYNTHESIS", "ANTHROPIC_MODEL_FAST"],
+      gemini: ["GEMINI_API_KEY", "GEMINI_MODEL_ANALYSIS", "GEMINI_MODEL_SYNTHESIS", "GEMINI_MODEL_FAST"],
+    };
+    for (const field of requiredFor[data.LLM_PROVIDER]) {
       if (!data[field]) {
         ctx.addIssue({
           code: "custom",
           path: [field],
-          message: `${field} is required unless USE_FIREBASE_EMULATORS=true`,
+          message: `${field} is required when LLM_PROVIDER="${data.LLM_PROVIDER}"`,
         });
       }
     }

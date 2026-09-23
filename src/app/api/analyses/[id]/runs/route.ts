@@ -1,5 +1,6 @@
 import { after, NextResponse } from "next/server";
 
+import { activeModelIds } from "@/lib/ai/create-llm";
 import { stageProfileFor, SCORING_VERSION } from "@/lib/analysis/config";
 import { SYNTHESIS_PROMPT_VERSION } from "@/lib/analysis/prompts/synthesis";
 import { assertWithinRunLimits } from "@/lib/analysis/run-limits";
@@ -8,7 +9,6 @@ import { registerRun, unregisterRun } from "@/lib/analysis/run-registry";
 import { assertOwns, requireUser } from "@/lib/api/auth";
 import { handleApiError, NotFoundError } from "@/lib/api/errors";
 import { assertSameOrigin } from "@/lib/api/origin";
-import { env } from "@/lib/env";
 import { getAdminFirestore } from "@/lib/repos/admin-firestore";
 import { AnalysisRepo } from "@/lib/repos/analysis-repo";
 import { zodConverter } from "@/lib/repos/converter";
@@ -83,11 +83,7 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
       options: { webResearch: analysis.options.webResearch, stageProfile },
       steps: initialSteps(),
       dimensionStatus: {},
-      modelIds: {
-        analysis: env.ANTHROPIC_MODEL_ANALYSIS,
-        synthesis: env.ANTHROPIC_MODEL_SYNTHESIS,
-        fast: env.ANTHROPIC_MODEL_FAST,
-      },
+      modelIds: activeModelIds(),
       promptVersion: SYNTHESIS_PROMPT_VERSION,
       scoringVersion: SCORING_VERSION,
       usage: ZERO_USAGE,

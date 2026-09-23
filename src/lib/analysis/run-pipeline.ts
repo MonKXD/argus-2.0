@@ -1,4 +1,4 @@
-import { createAnthropicLlm } from "@/lib/ai/llm";
+import { createLlm } from "@/lib/ai/create-llm";
 import { runAnalysisPipeline } from "@/lib/analysis/pipeline";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
@@ -166,7 +166,7 @@ export async function executeRun(db: Firestore, args: ExecuteRunArgs): Promise<v
       analystFocus: analysis.options.analystFocus,
       companyDomain: analysis.startup.website ? new URL(analysis.startup.website).hostname : undefined,
       preIngested: { sources, evidence },
-      llm: createAnthropicLlm(),
+      llm: createLlm(),
       tokenBudgetLimit: env.RUN_TOKEN_BUDGET,
       concurrency: env.ANALYZE_CONCURRENCY,
       signal,

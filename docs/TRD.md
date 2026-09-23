@@ -185,14 +185,15 @@ The shared evidence block is the cacheable prefix; dimension-specific instructio
 
 ## 6. LLM integration
 
-- **Model roles** map to env-configured model IDs: `ANALYSIS` (facts, dimensions), `SYNTHESIS` (report narrative), `FAST` (classification, dedupe). All in `src/lib/ai/models.ts`.
-- **Structured output:** force a single tool call whose input schema is generated from the Zod schema. Validate the returned input with Zod. On failure, do one repair call that includes the validation errors. A second failure fails the step.
-- **Prompt caching** on the shared evidence prefix used by the eight dimension calls.
-- **PDFs:** extract text per page locally to preserve page locators. For scanned or image-heavy pages (little or no text layer), send the page to Claude for transcription and mark the evidence with `extraction: "vision"`.
-- **Web research:** behind `ResearchProvider`. Default implementation uses Anthropic's web search tool (check the current tool version in the docs). Results become `Source` and `Evidence` records with URL and retrieval time. Never treat model recall as research.
+- **Provider:** `LLM` (`src/lib/ai/llm.ts`) is provider-agnostic (R-ARC-08). `LLM_PROVIDER` env var picks the active implementation — `gemini` (default, free tier, `src/lib/ai/gemini-llm.ts`) or `anthropic` (`src/lib/ai/llm.ts`'s `AnthropicLLM`); `src/lib/ai/create-llm.ts`'s `createLlm()` is the one switch point. See PROJECT_MEMORY D-064.
+- **Model roles** map to env-configured model IDs: `ANALYSIS` (facts, dimensions), `SYNTHESIS` (report narrative), `FAST` (classification, dedupe). Per-provider, in `src/lib/ai/models.ts` (`modelForRole`/`geminiModelForRole`).
+- **Structured output:** force a single tool/function call whose input schema is generated from the Zod schema. Validate the returned input with Zod. On failure, do one repair call that includes the validation errors. A second failure fails the step.
+- **Prompt caching** on the shared evidence prefix used by the eight dimension calls — Anthropic provider only; Gemini's context-caching is a separate managed resource, not an automatic per-call breakpoint, so the Gemini provider just concatenates the prefix into the request instead.
+- **PDFs:** extract text per page locally to preserve page locators. For scanned or image-heavy pages (little or no text layer), send the page to the model for transcription and mark the evidence with `extraction: "vision"` (not yet built for either provider — deferred, PROJECT_MEMORY D-039/D-054).
+- **Web research:** behind `ResearchProvider`. Default implementation (`AnthropicResearchProvider`) uses Anthropic's web search tool regardless of the active `LLM_PROVIDER` — RESEARCH isn't wired into the pipeline yet (PROJECT_MEMORY D-054), so this only matters once that step is built; a Gemini-native research provider is a future task if `LLM_PROVIDER=gemini` is still the default then. Results become `Source` and `Evidence` records with URL and retrieval time. Never treat model recall as research.
 - **Low temperature** for extraction and analysis where the model supports it.
 - **Injection defence** (also RULES R-AI-06): evidence is wrapped in delimited blocks with escaped closing tags; control and zero-width characters are stripped; analysis calls have no tools other than the output tool; all output is validated before it is stored.
-- **Reference:** Claude API documentation at https://docs.claude.com/en/api/overview. Check current model IDs and tool versions there before pinning.
+- **Reference:** Claude API documentation at https://docs.claude.com/en/api/overview; Gemini API documentation at https://ai.google.dev/gemini-api/docs (this sandbox's network policy blocks that domain — verify against the installed `@google/genai` SDK's own types/README instead when docs aren't reachable). Check current model IDs and tool versions before pinning.
 
 ## 7. API design
 

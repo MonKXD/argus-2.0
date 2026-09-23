@@ -6,7 +6,9 @@ Every statement is labelled VERIFIED, AI_ANALYSIS, ASSUMPTION or MISSING. Trust 
 code (schemas, validators, deterministic scoring), not by prompts alone. Solo-built.
 
 Stack: Next.js App Router, TypeScript strict, Tailwind, shadcn/ui, Firebase (Auth, Firestore,
-Storage), Anthropic API (server-side only), Zod, Vitest, Playwright, pnpm.
+Storage), an LLM provider behind `src/lib/ai`'s provider-agnostic interface (Gemini by
+default — free tier; Anthropic also fully supported — server-side only, switch via
+`LLM_PROVIDER`), Zod, Vitest, Playwright, pnpm.
 
 ## Always-loaded context
 
