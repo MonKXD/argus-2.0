@@ -30,7 +30,7 @@ Personal overrides go in `CLAUDE.local.md` (gitignored).
 
 - `pnpm dev`, `pnpm build`
 - `pnpm check` runs lint, typecheck and tests. It must pass before any task is done.
-- `pnpm test:e2e`, `pnpm emulators`
+- `pnpm test:e2e`, `pnpm test:rules` (needs `pnpm emulators` running), `pnpm emulators`
 - `pnpm analyze <path>` runs the engine on a fixture. `pnpm eval` runs the eval harness (live model).
 
 ## Session loop

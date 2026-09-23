@@ -3,8 +3,31 @@ rules_version = '2';
 // Deny-by-default (R-SEC-02). Every collection this app touches gets its own
 // rule, written alongside the feature that needs it, with an emulator rules
 // test (R-TST-05). Nothing is added here speculatively.
+//
+// analyses and analyses/{id}/runs are the only client-readable collections
+// (D-018) — everything else (sources, evidence, facts, reports and its
+// dimensions subcollection, comparisons, activity, exports, users) is read
+// and written server-side only, through the Admin SDK, which bypasses these
+// rules entirely (SCHEMA.md section 6). Clients never write anywhere
+// (R-ARC-04) — writes go through route handlers, which check ownership in
+// code (R-SEC-01) before the Admin SDK write happens.
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    match /analyses/{analysisId} {
+      allow read: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow write: if false;
+
+      match /runs/{runId} {
+        allow read: if signedIn() && resource.data.ownerId == request.auth.uid;
+        allow write: if false;
+      }
+    }
+
+    // Deny everything else to clients.
     match /{document=**} {
       allow read, write: if false;
     }

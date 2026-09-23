@@ -336,6 +336,7 @@ Mock the model in CI with MSW or recorded fixtures. Do not call the live API in 
 | `pnpm typecheck` | TypeScript, no emit |
 | `pnpm test` | Unit and integration tests |
 | `pnpm test:e2e` | Playwright |
+| `pnpm test:rules` | Firestore/Storage security-rules tests (needs `pnpm emulators` running) |
 | `pnpm emulators` | Firebase emulators |
 | `pnpm analyze <path>` | Run the engine on a fixture or folder, print report JSON and summary |
 | `pnpm eval` | Run the eval harness |

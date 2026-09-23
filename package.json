@@ -12,6 +12,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:rules": "vitest run --config vitest.rules.config.ts",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "emulators": "firebase emulators:start --project demo-argus-ai",
     "eval": "tsx evals/run.ts",
@@ -44,6 +45,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
+    "@firebase/rules-unit-testing": "5.0.2",
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "4.3.3",
     "@testing-library/jest-dom": "7.0.1",
