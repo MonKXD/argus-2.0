@@ -65,6 +65,10 @@ export class FakeDocRef {
             : raw,
     };
   }
+
+  async delete(): Promise<void> {
+    this.store.delete(this.path);
+  }
 }
 
 export class FakeCollectionRef {
@@ -125,8 +129,14 @@ export class FakeCollectionRef {
       });
     }
 
-    const docs = entries.map(([, value]) => ({
+    const docs = entries.map(([key, value]) => ({
       data: () => (this.converter ? this.converter.fromFirestore({ data: () => value }) : value),
+      ref: new FakeDocRef(
+        this.store,
+        key,
+        this.converter,
+        (p) => new FakeCollectionRef(this.store, p, undefined),
+      ),
     }));
     return { docs };
   }
@@ -137,6 +147,10 @@ export class FakeBatch {
 
   set(docRef: FakeDocRef, data: unknown): void {
     this.ops.push(() => docRef.set(data));
+  }
+
+  delete(docRef: FakeDocRef): void {
+    this.ops.push(() => docRef.delete());
   }
 
   async commit(): Promise<void> {

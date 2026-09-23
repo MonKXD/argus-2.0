@@ -23,6 +23,7 @@ export default defineConfig({
       ANTHROPIC_MODEL_SYNTHESIS: "test-model",
       ANTHROPIC_MODEL_FAST: "test-model",
       FIREBASE_PROJECT_ID: "test-project",
+      FIREBASE_STORAGE_BUCKET: "test.appspot.com",
       FIREBASE_CLIENT_EMAIL: "test@test-project.iam.gserviceaccount.com",
       FIREBASE_PRIVATE_KEY: "test-private-key",
       NEXT_PUBLIC_FIREBASE_API_KEY: "test",

@@ -1,4 +1,8 @@
-import { buildEvidence, reliabilityForSource, type InjectionMatch } from "@/lib/analysis/ingest/build-evidence";
+import {
+  buildEvidence,
+  reliabilityForSource,
+  type InjectionMatch,
+} from "@/lib/analysis/ingest/build-evidence";
 import { extractorForFilename } from "@/lib/analysis/ingest/extractor-for-file";
 import { WebsiteExtractor } from "@/lib/analysis/ingest/website-extractor";
 import type { SourceOrigin, SourceType } from "@/lib/schema/enums";
@@ -13,6 +17,8 @@ export interface IngestSourceInput {
   file?: { filename: string; buffer: Buffer };
   url?: string;
   companyDomain?: string;
+  /** Mirrors env.MAX_PDF_PAGES (T-3.06's real caller passes it through); omitted callers (CLI/eval fixtures) keep PdfExtractor's own default. */
+  maxPdfPages?: number;
   /** Same test-only escape hatch as safeFetch/WebsiteExtractor — never set by production callers. The eval harness sets it for its local-server WEBSITE fixture (F7). */
   unsafeAllowPrivateNetworksForTests?: boolean;
 }
@@ -30,7 +36,10 @@ export interface IngestSourceResult {
  * itself too — the CLI/eval pipeline (T-2.16/T-2.17) is the first caller
  * that needs a real `Source`, not just `Evidence`.
  */
-export async function ingestSource(analysisId: string, input: IngestSourceInput): Promise<IngestSourceResult> {
+export async function ingestSource(
+  analysisId: string,
+  input: IngestSourceInput,
+): Promise<IngestSourceResult> {
   const retrievedAt = new Date().toISOString();
 
   const pages = input.url
@@ -38,7 +47,9 @@ export async function ingestSource(analysisId: string, input: IngestSourceInput)
         unsafeAllowPrivateNetworksForTests: input.unsafeAllowPrivateNetworksForTests,
       }).extract(input.url)
     : input.file
-      ? await extractorForFilename(input.file.filename).extract(input.file.buffer)
+      ? await extractorForFilename(input.file.filename, { maxPdfPages: input.maxPdfPages }).extract(
+          input.file.buffer,
+        )
       : missingContent(input.id);
 
   const reliability = reliabilityForSource(input.type, input.url, input.companyDomain);

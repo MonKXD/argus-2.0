@@ -27,6 +27,10 @@ const serverSchema = z
     ANTHROPIC_MODEL_FAST: z.string().min(1),
 
     FIREBASE_PROJECT_ID: z.string().min(1),
+    // Server-side mirror of NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET (T-3.06):
+    // the Admin SDK needs its own copy since it never reads NEXT_PUBLIC_*
+    // vars, and R-COD-06 keeps every env read behind this one file.
+    FIREBASE_STORAGE_BUCKET: z.string().min(1),
     // Optional here; the .superRefine below requires both unless
     // USE_FIREBASE_EMULATORS is true, so emulator-only local dev (T-0.06)
     // doesn't need real Firebase Admin credentials.

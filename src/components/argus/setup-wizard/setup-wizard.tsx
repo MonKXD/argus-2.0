@@ -106,7 +106,7 @@ function SetupWizard({ analysis }: SetupWizardProps) {
       <WizardStepsNav current={step} />
 
       {step === "basics" && <BasicsStep startup={startup} onChange={setStartup} />}
-      {step === "sources" && <SourcesStep />}
+      {step === "sources" && <SourcesStep analysisId={analysis.id} />}
       {step === "options" && <OptionsStep options={options} onChange={setOptions} />}
       {step === "review" && <ReviewStep startup={startup} options={options} />}
 

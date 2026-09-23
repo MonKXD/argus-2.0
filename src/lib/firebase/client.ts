@@ -2,13 +2,16 @@
 
 import { getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { connectAuthEmulator, getAuth, type Auth } from "firebase/auth";
+import { connectStorageEmulator, getStorage, type FirebaseStorage } from "firebase/storage";
 
 import { clientEnv } from "@/lib/env";
 
-/** Client-side Firebase app/Auth singleton (TRD section 8: Firebase Auth on the client). */
+/** Client-side Firebase app/Auth/Storage singletons (TRD section 8: Firebase Auth on the client; T-3.06: direct-to-Storage uploads). */
 let cachedApp: FirebaseApp | undefined;
 let cachedAuth: Auth | undefined;
-let emulatorConnected = false;
+let cachedStorage: FirebaseStorage | undefined;
+let authEmulatorConnected = false;
+let storageEmulatorConnected = false;
 
 function getFirebaseApp(): FirebaseApp {
   if (cachedApp) return cachedApp;
@@ -35,10 +38,24 @@ export function getFirebaseAuth(): Auth {
 
   // connectAuthEmulator must be called exactly once, before any other Auth
   // use, or it throws — guarded here rather than at every call site.
-  if (clientEnv.NEXT_PUBLIC_USE_FIREBASE_EMULATORS && !emulatorConnected) {
+  if (clientEnv.NEXT_PUBLIC_USE_FIREBASE_EMULATORS && !authEmulatorConnected) {
     connectAuthEmulator(cachedAuth, "http://127.0.0.1:9099", { disableWarnings: true });
-    emulatorConnected = true;
+    authEmulatorConnected = true;
   }
 
   return cachedAuth;
+}
+
+export function getFirebaseStorage(): FirebaseStorage {
+  if (cachedStorage) return cachedStorage;
+
+  cachedStorage = getStorage(getFirebaseApp());
+
+  // Same one-time-before-any-use guard as connectAuthEmulator, for Storage's own emulator connection.
+  if (clientEnv.NEXT_PUBLIC_USE_FIREBASE_EMULATORS && !storageEmulatorConnected) {
+    connectStorageEmulator(cachedStorage, "127.0.0.1", 9199);
+    storageEmulatorConnected = true;
+  }
+
+  return cachedStorage;
 }

@@ -68,13 +68,21 @@ describe("SetupWizard", () => {
   it("does not call PATCH when leaving the Sources step (nothing to save)", async () => {
     currentStep = "sources";
     const user = userEvent.setup();
-    const fetchMock = vi.fn();
+    // SourcesStep's own useSourceUpload GET-on-mount is real, legitimate
+    // fetch activity — this test only asserts that leaving the step never
+    // triggers a save (PATCH).
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({ sources: [] }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
 
     render(<SetupWizard analysis={draftAnalysis} />);
     await user.click(screen.getByRole("button", { name: "Next" }));
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ method: "PATCH" }),
+    );
     expect(push).toHaveBeenCalledWith(`/app/analyses/${draftAnalysis.id}/setup?step=options`);
 
     vi.unstubAllGlobals();

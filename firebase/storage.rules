@@ -1,9 +1,25 @@
 rules_version = '2';
 
-// Deny-by-default (R-SEC-02). Upload paths get their own rules, written
-// alongside T-3.06 (upload flow), with an emulator rules test (R-TST-05).
+// Deny-by-default (R-SEC-02). SCHEMA.md section 6. The 25 MB cap here must
+// stay in step with MAX_UPLOAD_MB (src/lib/env.ts) — rules can't read env,
+// so it's a literal here, matched by src/lib/analysis/ingest/file-signature.ts
+// (T-3.06) on the server side, which is the check that actually decides
+// whether a file is usable: rules gate the Storage write, the server
+// re-validates by content regardless of what the rules allowed.
 service firebase.storage {
   match /b/{bucket}/o {
+    match /uploads/{uid}/{analysisId}/{fileName} {
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.size < 25 * 1024 * 1024
+        && request.resource.contentType.matches(
+          'application/pdf|text/plain|text/markdown|text/csv|application/vnd.ms-excel|application/vnd.openxmlformats-officedocument.*');
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow update, delete: if false; // removal is server-side (cascade, R-DAT-05)
+    }
+    match /exports/{uid}/{fileName} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
     match /{allPaths=**} {
       allow read, write: if false;
     }

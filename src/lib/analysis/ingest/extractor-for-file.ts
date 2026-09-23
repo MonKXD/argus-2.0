@@ -12,25 +12,33 @@ export class UnsupportedFileTypeError extends Error {
   }
 }
 
-const EXTENSION_EXTRACTORS: Record<string, () => Extractor> = {
-  pdf: () => new PdfExtractor(),
-  docx: () => new DocxExtractor(),
-  xlsx: () => new XlsxExtractor(),
-  csv: () => new CsvExtractor(),
-  txt: () => new TextExtractor(),
-  md: () => new TextExtractor(),
-};
-
 /**
  * File-extension dispatch to the right `Extractor` (T-2.03/T-2.04). The
  * real upload flow's actual content-type allowlist (magic bytes, not
- * extension — R-SEC-05) is T-3.06's job; this is the simpler "which
- * library parses this file" lookup the CLI/eval pipeline (T-2.16/T-2.17)
- * needs for already-trusted local fixture/CLI-argument files.
+ * extension — R-SEC-05) is T-3.06's job (file-signature.ts, run before
+ * this); this is the simpler "which library parses this file" lookup the
+ * CLI/eval pipeline (T-2.16/T-2.17) and the sources API both need.
  */
-export function extractorForFilename(filename: string): Extractor {
+export function extractorForFilename(
+  filename: string,
+  options?: { maxPdfPages?: number },
+): Extractor {
   const ext = filename.split(".").pop()?.toLowerCase();
-  const factory = ext ? EXTENSION_EXTRACTORS[ext] : undefined;
-  if (!factory) throw new UnsupportedFileTypeError(filename);
-  return factory();
+  switch (ext) {
+    case "pdf":
+      return options?.maxPdfPages !== undefined
+        ? new PdfExtractor(options.maxPdfPages)
+        : new PdfExtractor();
+    case "docx":
+      return new DocxExtractor();
+    case "xlsx":
+      return new XlsxExtractor();
+    case "csv":
+      return new CsvExtractor();
+    case "txt":
+    case "md":
+      return new TextExtractor();
+    default:
+      throw new UnsupportedFileTypeError(filename);
+  }
 }
