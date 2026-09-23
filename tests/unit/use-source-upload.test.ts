@@ -235,4 +235,105 @@ describe("useSourceUpload", () => {
 
     vi.unstubAllGlobals();
   });
+
+  it("addUrl registers a URL source", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ sources: [] }), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ source: { id: "src_url", url: "https://example.com" } }), {
+          status: 201,
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() => useSourceUpload(ANALYSIS_ID));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.addUrl("https://example.com");
+    });
+
+    expect(result.current.sources).toHaveLength(1);
+    expect(result.current.actionError).toBeNull();
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      `/api/analyses/${ANALYSIS_ID}/sources`,
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ origin: "URL", url: "https://example.com" }),
+      }),
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("addUrl sets actionError when registration fails", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ sources: [] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({}), { status: 400 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() => useSourceUpload(ANALYSIS_ID));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.addUrl("not-a-real-url");
+    });
+
+    expect(result.current.sources).toHaveLength(0);
+    expect(result.current.actionError).toMatch(/couldn.t add this url/i);
+
+    vi.unstubAllGlobals();
+  });
+
+  it("addText registers a pasted-text source", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ sources: [] }), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ source: { id: "src_text", title: "Founder notes" } }), {
+          status: 201,
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() => useSourceUpload(ANALYSIS_ID));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.addText("Founder notes here.");
+    });
+
+    expect(result.current.sources).toHaveLength(1);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      `/api/analyses/${ANALYSIS_ID}/sources`,
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ origin: "TEXT", text: "Founder notes here." }),
+      }),
+    );
+
+    vi.unstubAllGlobals();
+  });
+
+  it("addText sets actionError when registration fails", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ sources: [] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({}), { status: 500 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() => useSourceUpload(ANALYSIS_ID));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.addText("Founder notes here.");
+    });
+
+    expect(result.current.sources).toHaveLength(0);
+    expect(result.current.actionError).toMatch(/couldn.t save this text/i);
+
+    vi.unstubAllGlobals();
+  });
 });

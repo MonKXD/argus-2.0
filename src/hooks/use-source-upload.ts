@@ -20,7 +20,10 @@ interface UseSourceUploadResult {
   uploading: UploadEntry[];
   loading: boolean;
   loadError: string | null;
+  actionError: string | null;
   uploadFiles: (files: FileList | File[], type: SourceType) => void;
+  addUrl: (url: string) => Promise<void>;
+  addText: (text: string) => Promise<void>;
   removeSource: (sourceId: string) => Promise<void>;
 }
 
@@ -67,6 +70,7 @@ export function useSourceUpload(analysisId: string): UseSourceUploadResult {
   const [uploading, setUploading] = React.useState<UploadEntry[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [actionError, setActionError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -94,7 +98,7 @@ export function useSourceUpload(analysisId: string): UseSourceUploadResult {
         const response = await fetch(`/api/analyses/${analysisId}/sources`, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ type, filename: file.name, storagePath }),
+          body: JSON.stringify({ origin: "UPLOAD", type, filename: file.name, storagePath }),
         });
         if (!response.ok) throw new Error("Registration failed.");
         const body = (await response.json()) as { source: Source };
@@ -183,6 +187,44 @@ export function useSourceUpload(analysisId: string): UseSourceUploadResult {
     [analysisId, registerUpload],
   );
 
+  const addUrl = React.useCallback(
+    async (url: string) => {
+      setActionError(null);
+      try {
+        const response = await fetch(`/api/analyses/${analysisId}/sources`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ origin: "URL", url }),
+        });
+        if (!response.ok) throw new Error("Registration failed.");
+        const body = (await response.json()) as { source: Source };
+        setSources((prev) => [...prev, body.source]);
+      } catch {
+        setActionError("Couldn't add this URL. Check that it's valid and try again.");
+      }
+    },
+    [analysisId],
+  );
+
+  const addText = React.useCallback(
+    async (text: string) => {
+      setActionError(null);
+      try {
+        const response = await fetch(`/api/analyses/${analysisId}/sources`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ origin: "TEXT", text }),
+        });
+        if (!response.ok) throw new Error("Registration failed.");
+        const body = (await response.json()) as { source: Source };
+        setSources((prev) => [...prev, body.source]);
+      } catch {
+        setActionError("Couldn't save this text. Try again.");
+      }
+    },
+    [analysisId],
+  );
+
   const removeSource = React.useCallback(
     async (sourceId: string) => {
       await fetch(`/api/analyses/${analysisId}/sources/${sourceId}`, { method: "DELETE" });
@@ -191,5 +233,15 @@ export function useSourceUpload(analysisId: string): UseSourceUploadResult {
     [analysisId],
   );
 
-  return { sources, uploading, loading, loadError, uploadFiles, removeSource };
+  return {
+    sources,
+    uploading,
+    loading,
+    loadError,
+    actionError,
+    uploadFiles,
+    addUrl,
+    addText,
+    removeSource,
+  };
 }

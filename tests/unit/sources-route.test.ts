@@ -71,6 +71,7 @@ function getRequest(): Request {
 }
 
 const validBody = {
+  origin: "UPLOAD",
   type: "PITCH_DECK",
   filename: "deck.pdf",
   storagePath: `uploads/${loopwellAnalysis.ownerId}/${loopwellAnalysis.id}/deck.pdf`,
@@ -181,6 +182,109 @@ describe("POST /api/analyses/[id]/sources", () => {
 
   it("rejects an invalid body", async () => {
     const response = await POST(postRequest({ type: "PITCH_DECK" }), context());
+    expect(response.status).toBe(400);
+  });
+});
+
+describe("POST /api/analyses/[id]/sources (URL origin)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireUser.mockResolvedValue(OWNER);
+    analysisGet.mockResolvedValue(loopwellAnalysis);
+    sourceCreate.mockResolvedValue(undefined);
+  });
+
+  it("registers a WEBSITE source on a successful crawl", async () => {
+    ingestSource.mockResolvedValue({
+      source: { ...loopwellSources[1]!, url: "https://example.com" },
+      evidence: [{ id: "ev_1" }],
+      injectionMatches: [],
+    });
+
+    const response = await POST(
+      postRequest({ origin: "URL", url: "https://example.com" }),
+      context(),
+    );
+
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body.source.status).toBe("PARSED");
+    expect(ingestSource).toHaveBeenCalledWith(
+      loopwellAnalysis.id,
+      expect.objectContaining({ origin: "URL", type: "WEBSITE", url: "https://example.com" }),
+    );
+  });
+
+  it("registers a FAILED source when the crawl throws (SSRF-blocked, unreachable, etc.)", async () => {
+    ingestSource.mockRejectedValue(new Error("safeFetch: target resolves to a private address"));
+
+    const response = await POST(
+      postRequest({ origin: "URL", url: "https://example.com" }),
+      context(),
+    );
+
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body.source.status).toBe("FAILED");
+    expect(body.source.error.code).toBe("FETCH_FAILED");
+    expect(sourceCreate).toHaveBeenCalledWith(expect.objectContaining({ status: "FAILED" }), []);
+  });
+
+  it("rejects an invalid URL", async () => {
+    const response = await POST(postRequest({ origin: "URL", url: "not-a-url" }), context());
+    expect(response.status).toBe(400);
+    expect(ingestSource).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/analyses/[id]/sources (TEXT origin)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireUser.mockResolvedValue(OWNER);
+    analysisGet.mockResolvedValue(loopwellAnalysis);
+    sourceCreate.mockResolvedValue(undefined);
+  });
+
+  it("registers a USER_NOTES source titled from the first line", async () => {
+    ingestSource.mockResolvedValue({
+      source: { ...loopwellSources[0]!, type: "USER_NOTES", origin: "TEXT", title: "Founder notes" },
+      evidence: [{ id: "ev_1" }],
+      injectionMatches: [],
+    });
+
+    const response = await POST(
+      postRequest({ origin: "TEXT", text: "Founder notes\n\nARR reached 2M in Q4." }),
+      context(),
+    );
+
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body.source.status).toBe("PARSED");
+    expect(ingestSource).toHaveBeenCalledWith(
+      loopwellAnalysis.id,
+      expect.objectContaining({ origin: "TEXT", type: "USER_NOTES", title: "Founder notes" }),
+    );
+  });
+
+  it("registers a FAILED source when extraction yields no evidence (e.g. zero-width-only content survives Zod's trim check but sanitize.ts strips it to nothing)", async () => {
+    ingestSource.mockResolvedValue({ source: {}, evidence: [], injectionMatches: [] });
+
+    const response = await POST(postRequest({ origin: "TEXT", text: "​​" }), context());
+
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body.source.status).toBe("FAILED");
+    expect(body.source.error.code).toBe("EMPTY_CONTENT");
+  });
+
+  it("rejects whitespace-only text before ever calling ingestSource", async () => {
+    const response = await POST(postRequest({ origin: "TEXT", text: "   \n\n   " }), context());
+    expect(response.status).toBe(400);
+    expect(ingestSource).not.toHaveBeenCalled();
+  });
+
+  it("rejects an empty text body", async () => {
+    const response = await POST(postRequest({ origin: "TEXT", text: "" }), context());
     expect(response.status).toBe(400);
   });
 });

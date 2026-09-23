@@ -32,12 +32,32 @@ const MIME_TYPES: Record<string, string> = {
 };
 
 const RegisterUploadBody = z.object({
+  origin: z.literal("UPLOAD"),
   type: SourceType,
   filename: z.string().min(1).max(255),
   storagePath: z.string().min(1),
 });
 
-function failedSource(
+// URL/text sources (T-3.07) don't expose a type selector — same
+// auto-suggestion-only simplification T-3.06 already made for uploads
+// (D-061): a URL is always WEBSITE, pasted text is always USER_NOTES.
+const RegisterUrlBody = z.object({
+  origin: z.literal("URL"),
+  url: z.url(),
+});
+
+const RegisterTextBody = z.object({
+  origin: z.literal("TEXT"),
+  text: z.string().trim().min(1, "Paste some text first.").max(20_000),
+});
+
+const RegisterSourceBody = z.discriminatedUnion("origin", [
+  RegisterUploadBody,
+  RegisterUrlBody,
+  RegisterTextBody,
+]);
+
+function failedUploadSource(
   id: string,
   analysisId: string,
   body: z.infer<typeof RegisterUploadBody>,
@@ -61,15 +81,20 @@ function failedSource(
   };
 }
 
+function textTitle(text: string): string {
+  return text.split("\n")[0]!.slice(0, 60).trim() || "Pasted notes";
+}
+
 /**
- * FR-INT-02/FR-INT-05, R-SEC-05: fetches the already direct-to-Storage
- * uploaded object, validates it by content (never the client-declared
- * mimeType), and — per APP_FLOW 5.3's "the server then validates and
- * registers each file" — runs the real INGEST extraction now rather than
- * deferring it to the eventual run, so the wizard can show a per-file
- * Parsed/Failed status immediately (APP_FLOW's "Wizard sources" state
- * catalogue). T-3.08's run orchestrator treats an already-`PARSED` source
- * as done (R-ARC-03 idempotency) instead of re-extracting it.
+ * FR-INT-02/FR-INT-05, R-SEC-05: registers a source from a direct-to-Storage
+ * upload (validated by content, never the client-declared mimeType), a URL
+ * (T-3.07, crawled with the same SSRF-safe `WebsiteExtractor` T-2.05
+ * built), or pasted text (T-3.07). Per APP_FLOW 5.3's "the server then
+ * validates and registers each file" — runs the real INGEST extraction now
+ * rather than deferring it to the eventual run, so the wizard can show a
+ * per-source Parsed/Failed status immediately (APP_FLOW's "Wizard sources"
+ * state catalogue). T-3.08's run orchestrator treats an already-`PARSED`
+ * source as done (R-ARC-03 idempotency) instead of re-extracting it.
  */
 export async function POST(request: Request, { params }: RouteContext): Promise<NextResponse> {
   try {
@@ -81,78 +106,136 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
     if (!analysis) throw new NotFoundError("Analysis not found.");
     assertOwns(analysis.ownerId, user);
 
-    const body = RegisterUploadBody.parse(await request.json());
-
-    const expectedPrefix = `uploads/${user.uid}/${analysisId}/`;
-    if (!body.storagePath.startsWith(expectedPrefix)) {
-      throw new ValidationError("storagePath does not belong to this analysis.");
-    }
-
-    const file = getAdminStorageBucket().file(body.storagePath);
-    const [exists] = await file.exists();
-    if (!exists) throw new NotFoundError("Uploaded file not found. Try uploading it again.");
-
-    const [buffer] = await file.download();
-    const maxUploadBytes = env.MAX_UPLOAD_MB * 1024 * 1024;
+    const body = RegisterSourceBody.parse(await request.json());
     const sourceId = newId("src");
     const now = new Date().toISOString();
 
     let source: Source;
     let evidence: Evidence[] = [];
 
-    if (buffer.length > maxUploadBytes) {
-      source = failedSource(
-        sourceId,
-        analysisId,
-        body,
-        buffer.length,
-        {
-          code: "FILE_TOO_LARGE",
-          message: `"${body.filename}" is larger than the ${env.MAX_UPLOAD_MB} MB limit.`,
-        },
-        now,
-      );
-    } else {
-      try {
-        const kind = sniffFileKind(body.filename, buffer, {
-          maxDecompressedBytes: maxUploadBytes * MAX_DECOMPRESSED_MULTIPLIER,
-        });
+    if (body.origin === "UPLOAD") {
+      const expectedPrefix = `uploads/${user.uid}/${analysisId}/`;
+      if (!body.storagePath.startsWith(expectedPrefix)) {
+        throw new ValidationError("storagePath does not belong to this analysis.");
+      }
 
-        const result = await ingestSource(analysisId, {
-          id: sourceId,
-          type: body.type,
-          origin: "UPLOAD",
-          title: body.filename,
-          file: { filename: body.filename, buffer },
-          maxPdfPages: env.MAX_PDF_PAGES,
-        });
+      const file = getAdminStorageBucket().file(body.storagePath);
+      const [exists] = await file.exists();
+      if (!exists) throw new NotFoundError("Uploaded file not found. Try uploading it again.");
 
-        source = {
-          ...result.source,
-          storagePath: body.storagePath,
-          mimeType: MIME_TYPES[kind],
-          sizeBytes: buffer.length,
-        };
-        evidence = result.evidence;
-      } catch (error) {
-        const message =
-          error instanceof FileSignatureError
-            ? error.message
-            : error instanceof PdfPageLimitExceededError
-              ? `"${body.filename}" has too many pages (max ${env.MAX_PDF_PAGES}).`
-              : // APP_FLOW 5.3's own microcopy for an unreadable file.
-                "This file could not be read. It may be password-protected or damaged. Upload an unlocked copy.";
-        source = failedSource(
+      const [buffer] = await file.download();
+      const maxUploadBytes = env.MAX_UPLOAD_MB * 1024 * 1024;
+
+      if (buffer.length > maxUploadBytes) {
+        source = failedUploadSource(
           sourceId,
           analysisId,
           body,
           buffer.length,
           {
-            code: error instanceof FileSignatureError ? "INVALID_FILE" : "PARSE_FAILED",
-            message,
+            code: "FILE_TOO_LARGE",
+            message: `"${body.filename}" is larger than the ${env.MAX_UPLOAD_MB} MB limit.`,
           },
           now,
         );
+      } else {
+        try {
+          const kind = sniffFileKind(body.filename, buffer, {
+            maxDecompressedBytes: maxUploadBytes * MAX_DECOMPRESSED_MULTIPLIER,
+          });
+
+          const result = await ingestSource(analysisId, {
+            id: sourceId,
+            type: body.type,
+            origin: "UPLOAD",
+            title: body.filename,
+            file: { filename: body.filename, buffer },
+            maxPdfPages: env.MAX_PDF_PAGES,
+          });
+
+          source = {
+            ...result.source,
+            storagePath: body.storagePath,
+            mimeType: MIME_TYPES[kind],
+            sizeBytes: buffer.length,
+          };
+          evidence = result.evidence;
+        } catch (error) {
+          const message =
+            error instanceof FileSignatureError
+              ? error.message
+              : error instanceof PdfPageLimitExceededError
+                ? `"${body.filename}" has too many pages (max ${env.MAX_PDF_PAGES}).`
+                : // APP_FLOW 5.3's own microcopy for an unreadable file.
+                  "This file could not be read. It may be password-protected or damaged. Upload an unlocked copy.";
+          source = failedUploadSource(
+            sourceId,
+            analysisId,
+            body,
+            buffer.length,
+            {
+              code: error instanceof FileSignatureError ? "INVALID_FILE" : "PARSE_FAILED",
+              message,
+            },
+            now,
+          );
+        }
+      }
+    } else if (body.origin === "URL") {
+      try {
+        const result = await ingestSource(analysisId, {
+          id: sourceId,
+          type: "WEBSITE",
+          origin: "URL",
+          title: body.url,
+          url: body.url,
+        });
+        source = result.source;
+        evidence = result.evidence;
+      } catch {
+        source = {
+          id: sourceId,
+          analysisId,
+          type: "WEBSITE",
+          origin: "URL",
+          title: body.url,
+          url: body.url,
+          status: "FAILED",
+          reliability: "FIRST_PARTY",
+          error: {
+            code: "FETCH_FAILED",
+            message: "Couldn't read this URL. Check that it's public and try again.",
+          },
+          addedAt: now,
+        };
+      }
+    } else {
+      const title = textTitle(body.text);
+      try {
+        const result = await ingestSource(analysisId, {
+          id: sourceId,
+          type: "USER_NOTES",
+          origin: "TEXT",
+          title,
+          text: body.text,
+        });
+        if (result.evidence.length === 0) {
+          throw new Error("No usable content after extraction.");
+        }
+        source = result.source;
+        evidence = result.evidence;
+      } catch {
+        source = {
+          id: sourceId,
+          analysisId,
+          type: "USER_NOTES",
+          origin: "TEXT",
+          title,
+          status: "FAILED",
+          reliability: "PROVIDED",
+          error: { code: "EMPTY_CONTENT", message: "This text has no content to analyze." },
+          addedAt: now,
+        };
       }
     }
 

@@ -4,6 +4,7 @@ import {
   type InjectionMatch,
 } from "@/lib/analysis/ingest/build-evidence";
 import { extractorForFilename } from "@/lib/analysis/ingest/extractor-for-file";
+import { TextExtractor } from "@/lib/analysis/ingest/text-extractor";
 import { WebsiteExtractor } from "@/lib/analysis/ingest/website-extractor";
 import type { SourceOrigin, SourceType } from "@/lib/schema/enums";
 import type { Evidence, Source } from "@/lib/schema/evidence";
@@ -13,9 +14,10 @@ export interface IngestSourceInput {
   type: SourceType;
   origin: SourceOrigin;
   title: string;
-  /** Exactly one of `file` or `url` — a local buffer to run through an `Extractor`, or a page to crawl with `WebsiteExtractor`. */
+  /** Exactly one of `file`, `url` or `text` — a local buffer to run through an `Extractor`, a page to crawl with `WebsiteExtractor`, or pasted text (T-3.07) run through the same paragraph-splitting `TextExtractor` already used for .txt/.md uploads. */
   file?: { filename: string; buffer: Buffer };
   url?: string;
+  text?: string;
   companyDomain?: string;
   /** Mirrors env.MAX_PDF_PAGES (T-3.06's real caller passes it through); omitted callers (CLI/eval fixtures) keep PdfExtractor's own default. */
   maxPdfPages?: number;
@@ -31,10 +33,11 @@ export interface IngestSourceResult {
 
 /**
  * INGEST for one source (AI_SPEC 3.1): picks the right `Extractor` by file
- * extension or crawls the URL with `WebsiteExtractor`, then runs the
- * result through `buildEvidence()` (T-2.06). Assembles the `Source` record
- * itself too — the CLI/eval pipeline (T-2.16/T-2.17) is the first caller
- * that needs a real `Source`, not just `Evidence`.
+ * extension, crawls the URL with `WebsiteExtractor`, or (T-3.07) splits
+ * pasted text into paragraphs with `TextExtractor`, then runs the result
+ * through `buildEvidence()` (T-2.06). Assembles the `Source` record itself
+ * too — the CLI/eval pipeline (T-2.16/T-2.17) is the first caller that
+ * needs a real `Source`, not just `Evidence`.
  */
 export async function ingestSource(
   analysisId: string,
@@ -50,7 +53,9 @@ export async function ingestSource(
       ? await extractorForFilename(input.file.filename, { maxPdfPages: input.maxPdfPages }).extract(
           input.file.buffer,
         )
-      : missingContent(input.id);
+      : input.text !== undefined
+        ? await new TextExtractor().extract(Buffer.from(input.text, "utf-8"))
+        : missingContent(input.id);
 
   const reliability = reliabilityForSource(input.type, input.url, input.companyDomain);
 
@@ -81,5 +86,5 @@ export async function ingestSource(
 }
 
 function missingContent(sourceId: string): never {
-  throw new Error(`ingestSource: source "${sourceId}" has neither a file nor a url`);
+  throw new Error(`ingestSource: source "${sourceId}" has no file, url or text`);
 }
