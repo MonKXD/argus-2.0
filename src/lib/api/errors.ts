@@ -72,6 +72,22 @@ export class ValidationError extends ApiError {
   }
 }
 
+/** T-3.08: concurrent-run and daily-run limits (TRD section 7). */
+export class LimitExceededError extends ApiError {
+  constructor(message: string, details?: Record<string, unknown>) {
+    super("LIMIT_EXCEEDED", message, details);
+    this.name = "LimitExceededError";
+  }
+}
+
+/** T-3.08: acting on a run that isn't in a state that allows it (e.g. resuming a still-RUNNING run). */
+export class ConflictError extends ApiError {
+  constructor(message: string, details?: Record<string, unknown>) {
+    super("CONFLICT", message, details);
+    this.name = "ConflictError";
+  }
+}
+
 /** The standard error envelope (TRD section 7). */
 export function toErrorEnvelope(error: ApiError): {
   error: { code: ApiErrorCode; message: string; details: Record<string, unknown> };

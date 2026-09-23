@@ -2,6 +2,7 @@ import { Budget } from "@/lib/ai/budget";
 import type { LLM } from "@/lib/ai/llm";
 import { SCORING_VERSION, stageProfileFor } from "@/lib/analysis/config";
 import { ingestSource, type IngestSourceInput } from "@/lib/analysis/ingest/ingest-source";
+import { detectInjectionPattern } from "@/lib/analysis/ingest/injection-detection";
 import { buildInjectionFlags } from "@/lib/analysis/ingest/injection-flags";
 import { SYNTHESIS_PROMPT_VERSION } from "@/lib/analysis/prompts/synthesis";
 import { computeDimensionScore, type ScoredCriterionInput } from "@/lib/analysis/scoring/dimension-score";
@@ -32,13 +33,33 @@ export interface RunAnalysisPipelineArgs {
   stageProfileOverride?: StageProfile;
   analystFocus?: string;
   companyDomain?: string;
-  sources: IngestSourceInput[];
+  /** Used unless `preIngested` is given — the CLI/eval harness's own path (T-2.16/T-2.17). */
+  sources?: IngestSourceInput[];
+  /**
+   * T-3.08's production path: sources are already ingested (extracted,
+   * sanitised, persisted as `Evidence`) at registration time (T-3.06/T-3.07),
+   * so the production orchestrator must not re-run `ingestSource()` — that
+   * would redo real extraction work and cost, and violate the idempotency
+   * every other step already respects (R-ARC-03). When given, INGEST uses
+   * this directly and skips the `sources` loop entirely. Injection matches
+   * are re-derived from the already-persisted `Evidence.text` with the same
+   * `detectInjectionPattern()` used at registration time, since T-3.06/T-3.07's
+   * registration route has nowhere durable to store them (no `Report` exists
+   * yet to attach a `Flag` to) — see PROJECT_MEMORY D-063.
+   */
+  preIngested?: { sources: Source[]; evidence: Evidence[] };
   llm: LLM;
   tokenBudgetLimit?: number;
   concurrency?: number;
   signal?: AbortSignal;
-  /** Called as each step completes — the CLI (T-2.17) uses this for progress output; the eval harness ignores it. */
-  onProgress?: (step: StepName) => void;
+  /**
+   * Called as each step completes — the CLI (T-2.17) uses this for progress
+   * output (fire-and-forget); T-3.08's production orchestrator returns a
+   * promise from it (a real Firestore write) and this is awaited at every
+   * call site so a run's progress writes land in step order rather than
+   * racing each other.
+   */
+  onProgress?: (step: StepName) => void | Promise<void>;
 }
 
 export interface RunAnalysisPipelineResult {
@@ -83,15 +104,27 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
   const sources: Source[] = [];
   const evidence: Evidence[] = [];
   let flags: Flag[] = [];
-  for (const sourceInput of args.sources) {
-    const result = await ingestSource(args.analysisId, sourceInput);
-    sources.push(result.source);
-    evidence.push(...result.evidence);
-    const injection = buildInjectionFlags(result.injectionMatches);
+  if (args.preIngested) {
+    sources.push(...args.preIngested.sources);
+    evidence.push(...args.preIngested.evidence);
+    const injectionMatches = args.preIngested.evidence.flatMap((item) => {
+      const pattern = detectInjectionPattern(item.text);
+      return pattern ? [{ evidenceId: item.id, pattern }] : [];
+    });
+    const injection = buildInjectionFlags(injectionMatches);
     flags.push(...injection.flags);
     warnings.push(...injection.warnings);
+  } else {
+    for (const sourceInput of args.sources ?? []) {
+      const result = await ingestSource(args.analysisId, sourceInput);
+      sources.push(result.source);
+      evidence.push(...result.evidence);
+      const injection = buildInjectionFlags(result.injectionMatches);
+      flags.push(...injection.flags);
+      warnings.push(...injection.warnings);
+    }
   }
-  args.onProgress?.("INGEST");
+  await args.onProgress?.("INGEST");
 
   // EXTRACT_FACTS
   const factsResult = await extractFacts({
@@ -106,7 +139,7 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
   warnings.push(...factsResult.warnings);
   usage.push(...factsResult.usage);
   factsResult.usage.forEach((u) => budget.record(u));
-  args.onProgress?.("EXTRACT_FACTS");
+  await args.onProgress?.("EXTRACT_FACTS");
 
   // CONSISTENCY
   const consistencyResult = await runConsistency({ llm: args.llm, facts: factsResult.facts, signal: args.signal });
@@ -116,7 +149,7 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
     usage.push(consistencyResult.usage);
     budget.record(consistencyResult.usage);
   }
-  args.onProgress?.("CONSISTENCY");
+  await args.onProgress?.("CONSISTENCY");
 
   // ANALYZE
   const analyzeResult = await analyzeAllDimensions({
@@ -136,14 +169,14 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
   warnings.push(...analyzeResult.warnings);
   usage.push(...analyzeResult.usage);
   analyzeResult.usage.forEach((u) => budget.record(u));
-  args.onProgress?.("ANALYZE");
+  await args.onProgress?.("ANALYZE");
 
   const stageProfile = stageProfileFor(args.stage, args.stageProfileOverride);
   const evidenceInfoOf = makeEvidenceInfoOf(evidence);
 
   let dimensions = analyzeResult.dimensions;
   let overall = computeOverall(toDimensionResults(dimensions), stageProfile, flags);
-  args.onProgress?.("SCORE");
+  await args.onProgress?.("SCORE");
 
   // SYNTHESIZE
   let synthResult = await runSynthesis({
@@ -158,7 +191,7 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
   warnings.push(...synthResult.warnings);
   usage.push(synthResult.usage);
   budget.record(synthResult.usage);
-  args.onProgress?.("SYNTHESIZE");
+  await args.onProgress?.("SYNTHESIZE");
 
   // VERIFY
   let verifyResult = runVerify({
@@ -171,14 +204,14 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
     evidence,
   });
   warnings.push(...verifyResult.warnings);
-  args.onProgress?.("VERIFY");
+  await args.onProgress?.("VERIFY");
 
   // "If any dimension claim changes, re-run SCORE and SYNTHESIZE once" (AI_SPEC 3.8).
   if (verifyResult.changedDimensions.length > 0) {
     dimensions = recomputeDimensionScores(verifyResult.dimensions, evidenceInfoOf, dimensions);
     flags = verifyResult.flags;
     overall = computeOverall(toDimensionResults(dimensions), stageProfile, flags);
-    args.onProgress?.("SCORE");
+    await args.onProgress?.("SCORE");
 
     synthResult = await runSynthesis({
       startupName: args.startupName,
@@ -192,7 +225,7 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
     warnings.push(...synthResult.warnings);
     usage.push(synthResult.usage);
     budget.record(synthResult.usage);
-    args.onProgress?.("SYNTHESIZE");
+    await args.onProgress?.("SYNTHESIZE");
 
     verifyResult = runVerify({
       dimensions,
@@ -204,7 +237,7 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
       evidence,
     });
     warnings.push(...verifyResult.warnings);
-    args.onProgress?.("VERIFY");
+    await args.onProgress?.("VERIFY");
   } else {
     dimensions = verifyResult.dimensions;
     flags = verifyResult.flags;
@@ -230,7 +263,7 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
     evidenceStats: verifyResult.evidenceStats,
     warnings,
   };
-  args.onProgress?.("FINALIZE");
+  await args.onProgress?.("FINALIZE");
 
   return {
     report,
