@@ -11,27 +11,18 @@ const nextConfig: NextConfig = {
   // are force-included too rather than waiting to hit the same failure
   // there next.
   //
-  // Scoped to only the routes that actually import firebase-admin (every
-  // /api/* route, per grep, plus one server-rendered page), not a global
-  // '/*' — that first attempt applied the same ~250MB+ of extra files to
-  // every route including fully static ones (/login, /signup, /sample,
-  // /dev/ui, /) that never touch it, and blew past Vercel's per-deployment
-  // size limit during the deploy step (build itself succeeded; the failure
-  // was in "Deploying outputs..."). Dynamic-segment route keys need their
-  // brackets escaped for picomatch, per Next's own documented example.
+  // Minimal test case (diagnosing a Vercel-deploy-step-only failure that
+  // doesn't reproduce locally and isn't explained by byte size): just
+  // firebase-admin itself, just the one route that needs it fixed most.
+  // A prior attempt scoped to every /api/* route plus firebase-admin's
+  // Firestore/grpc/gax dependencies built fine locally and even measured
+  // well under Vercel's per-function size limit, but still failed during
+  // Vercel's own "Deploying outputs..." step with no visible error message
+  // anywhere reachable (build log, runtime log, deployment overview) —
+  // reverting to no outputFileTracingIncludes at all deploys fine, so the
+  // option itself is the trigger, not anything else in this commit.
   outputFileTracingIncludes: {
-    "/api/**": [
-      "./node_modules/firebase-admin/**/*",
-      "./node_modules/@google-cloud/firestore/**/*",
-      "./node_modules/@grpc/grpc-js/**/*",
-      "./node_modules/google-gax/**/*",
-    ],
-    "/app/analyses/\\[id\\]/setup": [
-      "./node_modules/firebase-admin/**/*",
-      "./node_modules/@google-cloud/firestore/**/*",
-      "./node_modules/@grpc/grpc-js/**/*",
-      "./node_modules/google-gax/**/*",
-    ],
+    "/api/auth/session": ["./node_modules/firebase-admin/**/*"],
   },
 };
 
