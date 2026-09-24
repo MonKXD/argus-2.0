@@ -9,11 +9,24 @@ const nextConfig: NextConfig = {
   // isn't a factor). firebase-admin's Firestore/Storage services also pull
   // in @google-cloud/firestore, @grpc/grpc-js and google-gax, so all three
   // are force-included too rather than waiting to hit the same failure
-  // there next. Scoped to every route ('/*') since firebase-admin is used
-  // from both API route handlers and at least one server-rendered page
-  // (src/app/app/analyses/[id]/setup/page.tsx).
+  // there next.
+  //
+  // Scoped to only the routes that actually import firebase-admin (every
+  // /api/* route, per grep, plus one server-rendered page), not a global
+  // '/*' — that first attempt applied the same ~250MB+ of extra files to
+  // every route including fully static ones (/login, /signup, /sample,
+  // /dev/ui, /) that never touch it, and blew past Vercel's per-deployment
+  // size limit during the deploy step (build itself succeeded; the failure
+  // was in "Deploying outputs..."). Dynamic-segment route keys need their
+  // brackets escaped for picomatch, per Next's own documented example.
   outputFileTracingIncludes: {
-    "/*": [
+    "/api/**": [
+      "./node_modules/firebase-admin/**/*",
+      "./node_modules/@google-cloud/firestore/**/*",
+      "./node_modules/@grpc/grpc-js/**/*",
+      "./node_modules/google-gax/**/*",
+    ],
+    "/app/analyses/\\[id\\]/setup": [
       "./node_modules/firebase-admin/**/*",
       "./node_modules/@google-cloud/firestore/**/*",
       "./node_modules/@grpc/grpc-js/**/*",
