@@ -1,4 +1,5 @@
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
 
 import { ForbiddenError } from "./errors";
 
@@ -9,7 +10,13 @@ import { ForbiddenError } from "./errors";
  */
 export function assertSameOrigin(request: Request): void {
   const origin = request.headers.get("origin");
-  if (!origin || origin !== new URL(env.APP_URL).origin) {
+  const expected = new URL(env.APP_URL).origin;
+  if (!origin || origin !== expected) {
+    // Both sides are public hostnames (never a secret or document content),
+    // and this is the one place a mismatched APP_URL vs. actual deployment
+    // domain would otherwise fail silently as a generic 403 — R-SEC-04
+    // doesn't cover logging them.
+    logger.warn({ origin, expected }, "assertSameOrigin: origin mismatch");
     throw new ForbiddenError("Request origin not allowed.");
   }
 }
