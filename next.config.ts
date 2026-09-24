@@ -11,16 +11,20 @@ const nextConfig: NextConfig = {
   // are force-included too rather than waiting to hit the same failure
   // there next.
   //
-  // Minimal test case (diagnosing a Vercel-deploy-step-only failure that
-  // doesn't reproduce locally and isn't explained by byte size): just
-  // firebase-admin itself, just the one route that needs it fixed most.
-  // A prior attempt scoped to every /api/* route plus firebase-admin's
-  // Firestore/grpc/gax dependencies built fine locally and even measured
-  // well under Vercel's per-function size limit, but still failed during
-  // Vercel's own "Deploying outputs..." step with no visible error message
-  // anywhere reachable (build log, runtime log, deployment overview) —
-  // reverting to no outputFileTracingIncludes at all deploys fine, so the
-  // option itself is the trigger, not anything else in this commit.
+  // Deliberately scoped to just this one route/package for now: two
+  // earlier attempts at the full scope (every /api/* route plus
+  // @google-cloud/firestore, @grpc/grpc-js, google-gax) built fine
+  // locally but failed during Vercel's own "Deploying outputs..." step
+  // with no error message reachable anywhere (build log, runtime log,
+  // deployment overview, Resources tab); this exact minimal version
+  // deployed successfully on the first try. Auth (this route) was the
+  // blocking bug, so it ships now rather than risk breaking a working
+  // deploy again — the Firestore-touching routes (analyses list/create)
+  // will hit the same "Failed to load external module firebase-admin"
+  // error T-3.09/T-3.10 surfaces it, at which point expand this scope
+  // and verify the larger config deploys before shipping it, rather
+  // than assume it will just because it built locally (it did, twice,
+  // and still failed to deploy both times).
   outputFileTracingIncludes: {
     "/api/auth/session": ["./node_modules/firebase-admin/**/*"],
   },
