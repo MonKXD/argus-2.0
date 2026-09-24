@@ -31,15 +31,17 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     const auth = getAdminAuth();
     const decoded = await auth.verifyIdToken(body.data.idToken, true).catch((error: unknown) => {
-      // Firebase Admin's own error code/name is operational status, not
-      // document content or a credential — R-SEC-04 doesn't cover it, and
-      // without this the real cause (expired token vs. a misconfigured
+      // Firebase Admin's own error code/name/message is operational status,
+      // not document content or a credential — R-SEC-04 doesn't cover it,
+      // and without this the real cause (expired token vs. a misconfigured
       // service account vs. a project mismatch) is otherwise unrecoverable
-      // from logs.
+      // from logs. `auth/argument-error` alone (the code) covers several
+      // distinct failures — the message is what actually distinguishes them.
       logger.warn(
         {
           errorCode: error && typeof error === "object" && "code" in error ? error.code : undefined,
           errorName: error instanceof Error ? error.name : "unknown",
+          errorMessage: error instanceof Error ? error.message : undefined,
         },
         "verifyIdToken failed",
       );
