@@ -29,6 +29,40 @@ export async function POST(request: Request): Promise<NextResponse> {
       throw new ApiError("VALIDATION_FAILED", "A Firebase ID token is required.");
     }
 
+    // One-time diagnostic: a real ID token from the real project verifies
+    // successfully every time when tested directly against this exact
+    // dependency set outside Vercel (both a REST-API-issued token and a
+    // real firebase/auth SDK-issued token), so something about *this*
+    // request in *this* runtime must differ. The JWT header (alg, kid) and
+    // structural claims (aud, iss, exp, iat) are not secrets — logging them
+    // plus the token's own length is the only way left to see whether the
+    // token is arriving intact and whether this runtime really is what it
+    // claims to be.
+    try {
+      const [headerB64, payloadB64] = body.data.idToken.split(".");
+      const header = JSON.parse(Buffer.from(headerB64 ?? "", "base64url").toString());
+      const payload = JSON.parse(Buffer.from(payloadB64 ?? "", "base64url").toString());
+      logger.warn(
+        {
+          tokenLength: body.data.idToken.length,
+          tokenSegments: body.data.idToken.split(".").length,
+          header,
+          aud: payload.aud,
+          iss: payload.iss,
+          exp: payload.exp,
+          iat: payload.iat,
+          nodeVersion: process.version,
+          configuredProjectId: env.FIREBASE_PROJECT_ID,
+        },
+        "verifyIdToken diagnostic",
+      );
+    } catch (decodeError) {
+      logger.warn(
+        { errorName: decodeError instanceof Error ? decodeError.name : "unknown" },
+        "verifyIdToken diagnostic: could not decode token for inspection",
+      );
+    }
+
     const auth = getAdminAuth();
     const decoded = await auth.verifyIdToken(body.data.idToken, true).catch((error: unknown) => {
       // Firebase Admin's own error code/name/message is operational status,
