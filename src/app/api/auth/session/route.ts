@@ -1,3 +1,5 @@
+import { createPublicKey, verify as cryptoVerify, type JsonWebKeyInput } from "node:crypto";
+
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -12,6 +14,35 @@ const FIVE_MINUTES_MS = 5 * 60 * 1000;
 const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;
 
 const SessionRequestBody = z.object({ idToken: z.string().min(1) });
+
+/**
+ * One-time diagnostic only (see the call site): verifies a token's RSA
+ * signature using nothing but Node's own built-in `crypto` — no jose, no
+ * jwks-rsa, no firebase-admin — to isolate whether the failure is really in
+ * one of those libraries on this runtime, or something even more
+ * fundamental. Fetches Google's public keys directly.
+ */
+async function manualVerifySignature(idToken: string): Promise<{ ok: boolean; detail: string }> {
+  const [headerB64, payloadB64, signatureB64] = idToken.split(".");
+  if (!headerB64 || !payloadB64 || !signatureB64) {
+    return { ok: false, detail: "token did not split into 3 segments" };
+  }
+  const header = JSON.parse(Buffer.from(headerB64, "base64url").toString()) as { kid?: string };
+  const res = await fetch("https://www.googleapis.com/robot/v1/metadata/jwk/securetoken@system.gserviceaccount.com");
+  if (!res.ok) {
+    return { ok: false, detail: `JWKS fetch failed: ${res.status}` };
+  }
+  const jwks = (await res.json()) as { keys: { kid: string }[] };
+  const jwk = jwks.keys.find((k) => k.kid === header.kid);
+  if (!jwk) {
+    return { ok: false, detail: `no matching kid among ${jwks.keys.length} fetched keys` };
+  }
+  const publicKey = createPublicKey({ key: jwk, format: "jwk" } as JsonWebKeyInput);
+  const signedData = Buffer.from(`${headerB64}.${payloadB64}`);
+  const signature = Buffer.from(signatureB64, "base64url");
+  const valid = cryptoVerify("RSA-SHA256", signedData, publicKey, signature);
+  return { ok: valid, detail: valid ? "signature valid" : "signature INVALID via native crypto too" };
+}
 
 /**
  * TRD section 8: exchange a client-side Firebase ID token for a server-set,
@@ -42,6 +73,10 @@ export async function POST(request: Request): Promise<NextResponse> {
       const [headerB64, payloadB64] = body.data.idToken.split(".");
       const header = JSON.parse(Buffer.from(headerB64 ?? "", "base64url").toString());
       const payload = JSON.parse(Buffer.from(payloadB64 ?? "", "base64url").toString());
+      const manual = await manualVerifySignature(body.data.idToken).catch((manualError: unknown) => ({
+        ok: false,
+        detail: manualError instanceof Error ? `threw: ${manualError.message}` : "threw: unknown",
+      }));
       logger.warn(
         {
           tokenLength: body.data.idToken.length,
@@ -53,6 +88,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           iat: payload.iat,
           nodeVersion: process.version,
           configuredProjectId: env.FIREBASE_PROJECT_ID,
+          manualSignatureCheck: manual,
         },
         "verifyIdToken diagnostic",
       );
