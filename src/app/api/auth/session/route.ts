@@ -42,7 +42,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       logger.warn(
         {
           errorName: error instanceof Error ? error.name : "unknown",
-          errorMessage: error instanceof IdTokenVerificationError ? error.message : undefined,
+          errorMessage: error instanceof Error ? error.message : undefined,
+          isVerificationError: error instanceof IdTokenVerificationError,
         },
         "verifyIdTokenManually failed",
       );
