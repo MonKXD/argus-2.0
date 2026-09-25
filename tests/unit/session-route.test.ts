@@ -1,17 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const verifyIdToken = vi.fn();
 const createSessionCookie = vi.fn();
 const verifySessionCookie = vi.fn();
 const revokeRefreshTokens = vi.fn();
 const cookiesGet = vi.fn();
+const verifyIdTokenManually = vi.fn();
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(async () => ({ get: cookiesGet })),
 }));
 
 vi.mock("@/lib/firebase/admin", () => ({
-  getAdminAuth: () => ({ verifyIdToken, createSessionCookie, verifySessionCookie, revokeRefreshTokens }),
+  getAdminAuth: () => ({ createSessionCookie, verifySessionCookie, revokeRefreshTokens }),
+}));
+
+vi.mock("@/lib/firebase/verify-id-token", () => ({
+  verifyIdTokenManually,
+  IdTokenVerificationError: class IdTokenVerificationError extends Error {},
 }));
 
 const { POST, DELETE } = await import("@/app/api/auth/session/route");
@@ -44,7 +49,7 @@ describe("POST /api/auth/session", () => {
     expect(response.status).toBe(403);
     const body = await response.json();
     expect(body.error.code).toBe("FORBIDDEN");
-    expect(verifyIdToken).not.toHaveBeenCalled();
+    expect(verifyIdTokenManually).not.toHaveBeenCalled();
   });
 
   it("rejects a request with no origin header", async () => {
@@ -60,20 +65,20 @@ describe("POST /api/auth/session", () => {
   });
 
   it("rejects when the ID token fails verification", async () => {
-    verifyIdToken.mockRejectedValue(new Error("invalid token"));
+    verifyIdTokenManually.mockRejectedValue(new Error("invalid token"));
     const response = await POST(postRequest({ idToken: "bad" }));
     expect(response.status).toBe(401);
   });
 
   it("rejects an ID token issued too long ago", async () => {
-    verifyIdToken.mockResolvedValue({ uid: "user_1", auth_time: Date.now() / 1000 - 60 * 60 });
+    verifyIdTokenManually.mockResolvedValue({ uid: "user_1", authTime: Date.now() / 1000 - 60 * 60 });
     const response = await POST(postRequest({ idToken: "stale" }));
     expect(response.status).toBe(401);
     expect(createSessionCookie).not.toHaveBeenCalled();
   });
 
   it("mints and sets a session cookie for a fresh, valid ID token", async () => {
-    verifyIdToken.mockResolvedValue({ uid: "user_1", auth_time: Date.now() / 1000 });
+    verifyIdTokenManually.mockResolvedValue({ uid: "user_1", authTime: Date.now() / 1000 });
     createSessionCookie.mockResolvedValue("signed-session-cookie");
 
     const response = await POST(postRequest({ idToken: "fresh" }));
@@ -87,7 +92,7 @@ describe("POST /api/auth/session", () => {
   });
 
   it("clamps expiresIn between 5 minutes and 14 days", async () => {
-    verifyIdToken.mockResolvedValue({ uid: "user_1", auth_time: Date.now() / 1000 });
+    verifyIdTokenManually.mockResolvedValue({ uid: "user_1", authTime: Date.now() / 1000 });
     createSessionCookie.mockResolvedValue("cookie");
 
     await POST(postRequest({ idToken: "fresh" }));

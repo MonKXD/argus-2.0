@@ -27,9 +27,6 @@ const nextConfig: NextConfig = {
   // and still failed to deploy both times).
   outputFileTracingIncludes: {
     "/api/auth/session": ["./node_modules/firebase-admin/**/*"],
-    // Temporary diagnostic route (src/app/api/debug/verify-test), same
-    // package need — delete this entry when that route is deleted.
-    "/api/debug/verify-test": ["./node_modules/firebase-admin/**/*"],
   },
 };
 
