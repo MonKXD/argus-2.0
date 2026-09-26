@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { DeleteAnalysisButton } from "@/components/argus/delete-analysis-button";
 import { RunProgress } from "@/components/argus/run-progress";
 import { requireUser } from "@/lib/api/auth";
 import { confidenceLabel } from "@/lib/confidence";
@@ -122,6 +123,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
           <Link href="/app" className="text-ui-sm text-mist hover:text-foreground hover:underline">
             Back to dashboard
           </Link>
+          <DeleteAnalysisButton analysisId={id} startupName={analysis.startup.name} />
         </div>
       </div>
     );
@@ -145,6 +147,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
           <Link href="/app" className="text-ui-sm text-mist hover:text-foreground hover:underline">
             Back to dashboard
           </Link>
+          <DeleteAnalysisButton analysisId={id} startupName={analysis.startup.name} />
         </div>
       </div>
     );
@@ -164,6 +167,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
         <Link href="/app" className="text-ui-sm text-mist hover:text-foreground hover:underline">
           Back to dashboard
         </Link>
+        <DeleteAnalysisButton analysisId={id} startupName={analysis.startup.name} />
       </div>
     </div>
   );
