@@ -110,6 +110,20 @@ describe("ReportShell", () => {
     expect(toggles).toHaveLength(2);
   });
 
+  it("shows the market dimension's own criterion breakdown in section 6", () => {
+    render(<ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />);
+
+    const section = screen.getByRole("heading", { name: /6\. Market opportunity/ }).closest("section")!;
+    expect(within(section).getByText("Show criteria")).toBeInTheDocument();
+  });
+
+  it("shows the competitive dimension's own criterion breakdown in section 8", () => {
+    render(<ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />);
+
+    const section = screen.getByRole("heading", { name: /8\. Competitive landscape/ }).closest("section")!;
+    expect(within(section).getByText("Show criteria")).toBeInTheDocument();
+  });
+
   it("renders a partial notice when one is passed", () => {
     render(
       <ReportShell

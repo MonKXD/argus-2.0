@@ -267,7 +267,7 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
           <section id="market-opportunity">
             <h2 className="font-serif text-h3 text-foreground">6. Market opportunity</h2>
             <div className="mt-4">
-              <DimensionSection dimension={byKey.get("market")} />
+              <DimensionSection dimension={byKey.get("market")} showCriteria />
             </div>
           </section>
 
@@ -281,7 +281,7 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
           <section id="competitive-landscape">
             <h2 className="font-serif text-h3 text-foreground">8. Competitive landscape</h2>
             <div className="mt-4">
-              <DimensionSection dimension={byKey.get("competitive")} />
+              <DimensionSection dimension={byKey.get("competitive")} showCriteria />
             </div>
           </section>
 
