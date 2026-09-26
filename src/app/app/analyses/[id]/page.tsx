@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { DeleteAnalysisButton } from "@/components/argus/delete-analysis-button";
+import { ResumeRunButton } from "@/components/argus/resume-run-button";
 import { RunProgress } from "@/components/argus/run-progress";
 import { requireUser } from "@/lib/api/auth";
 import { confidenceLabel } from "@/lib/confidence";
@@ -10,6 +11,7 @@ import { getAdminFirestore } from "@/lib/repos/admin-firestore";
 import { AnalysisRepo } from "@/lib/repos/analysis-repo";
 import { zodConverter } from "@/lib/repos/converter";
 import { Run } from "@/lib/schema/run";
+import { failedStepLabels } from "@/lib/step-labels";
 
 interface AnalysisPageProps {
   params: Promise<{ id: string }>;
@@ -22,9 +24,7 @@ const STAGE_LABELS: Record<string, string> = {
   SERIES_B_PLUS: "Series B+",
 };
 
-async function loadFailureReason(analysisId: string, runId: string | null): Promise<string> {
-  const fallback = "The last run of this analysis failed.";
-  if (!runId) return fallback;
+async function loadRun(analysisId: string, runId: string): Promise<Run | null> {
   const snapshot = await getAdminFirestore()
     .collection("analyses")
     .doc(analysisId)
@@ -32,7 +32,7 @@ async function loadFailureReason(analysisId: string, runId: string | null): Prom
     .doc(runId)
     .withConverter(zodConverter(Run))
     .get();
-  return snapshot.data()?.error?.message ?? fallback;
+  return snapshot.data() ?? null;
 }
 
 /**
@@ -42,6 +42,13 @@ async function loadFailureReason(analysisId: string, runId: string | null): Prom
  * "temporary result summary": the numbers already on the `Analysis`
  * document (`latest`), no claim-level detail, honestly labelled as
  * temporary rather than presented as the finished report.
+ *
+ * T-3.13 (failure UX) wires "Resume"/"Retry" into the `PARTIAL`, `FAILED`
+ * and cancelled-`READY` states via the already-built resume endpoint
+ * (T-3.08/D-063: re-runs EXTRACT_FACTS onward on the same run, not a
+ * literal per-step retry) — distinct from "Run again"/"Start a new run",
+ * which goes through the wizard to create a brand-new run (APP_FLOW's own
+ * lifecycle diagram draws both `resume` and `re-run` out of `PARTIAL`).
  */
 export default async function AnalysisPage({ params }: AnalysisPageProps) {
   const { id } = await params;
@@ -68,6 +75,9 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
 
   if (analysis.status === "COMPLETE" || analysis.status === "PARTIAL") {
     const { latest } = analysis;
+    const run = analysis.status === "PARTIAL" && analysis.currentRunId ? await loadRun(id, analysis.currentRunId) : null;
+    const failed = run ? failedStepLabels(run) : [];
+
     return (
       <div className="mx-auto flex max-w-[640px] flex-col gap-6 p-6">
         <div className="flex flex-col gap-1">
@@ -80,8 +90,11 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
 
         {analysis.status === "PARTIAL" && (
           <p className="rounded-panel border border-hairline bg-panel p-4 text-ui-sm text-foreground">
-            This report is partial. Some steps couldn&rsquo;t complete; the claims that were analysed
-            are reflected in the numbers below.
+            This report is partial.{" "}
+            {failed.length > 0
+              ? `Not analysed: ${failed.join(", ")}.`
+              : "Some steps couldn't complete."}{" "}
+            The claims that were analysed are reflected in the numbers below.
           </p>
         )}
 
@@ -113,12 +126,16 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
           soon for claim-by-claim evidence.
         </p>
 
+        {analysis.status === "PARTIAL" && analysis.currentRunId && (
+          <ResumeRunButton analysisId={id} runId={analysis.currentRunId} label="Resume analysis" />
+        )}
+
         <div className="flex gap-4">
           <Link
             href={`/app/analyses/${id}/setup?step=review`}
             className="text-ui-sm text-mist hover:text-foreground hover:underline"
           >
-            Run again
+            Start a new run
           </Link>
           <Link href="/app" className="text-ui-sm text-mist hover:text-foreground hover:underline">
             Back to dashboard
@@ -130,19 +147,26 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
   }
 
   if (analysis.status === "FAILED") {
-    const reason = await loadFailureReason(id, analysis.currentRunId);
+    const run = analysis.currentRunId ? await loadRun(id, analysis.currentRunId) : null;
+    const reason = run?.error?.message ?? "The last run of this analysis failed.";
+
     return (
       <div className="mx-auto flex max-w-[640px] flex-col gap-4 p-6">
         <h1 className="font-serif text-h2 text-foreground">{analysis.startup.name}</h1>
         <p role="alert" className="text-ui-sm text-destructive">
           {reason}
         </p>
+
+        {analysis.currentRunId && (
+          <ResumeRunButton analysisId={id} runId={analysis.currentRunId} label="Retry analysis" />
+        )}
+
         <div className="flex gap-4">
           <Link
-            href={`/app/analyses/${id}/setup?step=review`}
+            href={`/app/analyses/${id}/setup?step=sources`}
             className="text-ui-sm text-mist hover:text-foreground hover:underline"
           >
-            Try again
+            Edit sources
           </Link>
           <Link href="/app" className="text-ui-sm text-mist hover:text-foreground hover:underline">
             Back to dashboard
@@ -153,16 +177,27 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
     );
   }
 
+  const cancelledRun =
+    analysis.status === "READY" && analysis.currentRunId ? await loadRun(id, analysis.currentRunId) : null;
+  const resumable = cancelledRun?.status === "CANCELLED";
+
   return (
     <div className="mx-auto flex max-w-[640px] flex-col gap-4 p-6">
       <h1 className="font-serif text-h2 text-foreground">{analysis.startup.name}</h1>
-      <p className="text-ui-sm text-mist">This analysis hasn&rsquo;t been run yet.</p>
+      <p className="text-ui-sm text-mist">
+        {resumable ? "This analysis was cancelled partway through." : "This analysis hasn't been run yet."}
+      </p>
+
+      {resumable && analysis.currentRunId && (
+        <ResumeRunButton analysisId={id} runId={analysis.currentRunId} label="Resume analysis" />
+      )}
+
       <div className="flex gap-4">
         <Link
           href={`/app/analyses/${id}/setup?step=review`}
           className="text-ui-sm text-mist hover:text-foreground hover:underline"
         >
-          Go to review and run
+          {resumable ? "Start a new run instead" : "Go to review and run"}
         </Link>
         <Link href="/app" className="text-ui-sm text-mist hover:text-foreground hover:underline">
           Back to dashboard
