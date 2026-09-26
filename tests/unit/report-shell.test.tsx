@@ -1,0 +1,92 @@
+import { render, screen, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
+import { ReportShell } from "@/components/argus/report/report-shell";
+import { demoDimensions, demoReport, loopwellAnalysis } from "@/demo";
+
+// ReportHeader renders DeleteAnalysisButton, which needs a router.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}));
+
+describe("ReportShell", () => {
+  it("renders the header with the startup name and report version", () => {
+    render(<ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />);
+
+    expect(screen.getByRole("heading", { level: 1, name: loopwellAnalysis.startup.name })).toBeInTheDocument();
+    expect(screen.getByText(`Version ${demoReport.version}`, { exact: false })).toBeInTheDocument();
+  });
+
+  it("renders every one of the 16 sections with its number and title", () => {
+    render(<ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />);
+
+    expect(screen.getByRole("heading", { name: /1\. Executive summary/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /16\. Missing information/ })).toBeInTheDocument();
+  });
+
+  it("renders real executive-summary claim text", () => {
+    const { container } = render(
+      <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,
+    );
+
+    const claim = demoReport.narrative.executiveSummary[0]!;
+    expect(container.textContent).toContain(claim.text);
+  });
+
+  it("shows the overall score", () => {
+    render(<ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />);
+
+    if (demoReport.overall.score !== null) {
+      expect(screen.getByText(String(demoReport.overall.score))).toBeInTheDocument();
+    }
+  });
+
+  it("renders real flags with their severity in the risks section", () => {
+    render(<ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />);
+
+    const flag = demoReport.flags[0]!;
+    const section = screen.getByRole("heading", { name: /11\. Risks/ }).closest("section")!;
+    expect(within(section).getByText(flag.title)).toBeInTheDocument();
+    expect(within(section).getByText(flag.severity)).toBeInTheDocument();
+  });
+
+  it("renders the checklist questions in the missing-information section", () => {
+    render(<ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />);
+
+    const item = demoReport.checklist[0]!;
+    const section = screen.getByRole("heading", { name: /16\. Missing information/ }).closest("section")!;
+    expect(within(section).getByText(item.question)).toBeInTheDocument();
+  });
+
+  it("resolves strength and weakness claim ids into real claim text", () => {
+    render(<ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />);
+
+    const dimensionWithStrength = demoDimensions.find((d) => d.strengthIds.length > 0);
+    if (dimensionWithStrength) {
+      const claim = dimensionWithStrength.claims.find((c) => c.id === dimensionWithStrength.strengthIds[0]);
+      const section = screen.getByRole("heading", { name: /12\. Strengths/ }).closest("section")!;
+      expect(within(section).getByText(new RegExp(claim!.text.slice(0, 20)))).toBeInTheDocument();
+    }
+  });
+
+  it("shows a defensive empty state when a dimension is missing from the run", () => {
+    const withoutFounder = demoDimensions.filter((d) => d.dimension !== "founder");
+    render(<ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={withoutFounder} />);
+
+    const section = screen.getByRole("heading", { name: /4\. Founder/ }).closest("section")!;
+    expect(within(section).getByText("This dimension could not be analysed in this run.")).toBeInTheDocument();
+  });
+
+  it("renders a partial notice when one is passed", () => {
+    render(
+      <ReportShell
+        analysis={loopwellAnalysis}
+        report={demoReport}
+        dimensions={demoDimensions}
+        partialNotice={<p>This report is partial.</p>}
+      />,
+    );
+
+    expect(screen.getByText("This report is partial.")).toBeInTheDocument();
+  });
+});

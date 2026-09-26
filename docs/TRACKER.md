@@ -8,9 +8,9 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 ## Current focus
 
-- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18. Phase 3 (auth, persistence, intake, orchestration) is now complete (14/14).
+- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18. Phase 3 complete (14/14). Phase 4 (Report UI, Alpha) 1/14 done (T-4.01).
 - Task: none in progress
-- Next up: Phase 4 (Report UI, Alpha) begins at T-4.01 (report shell: header, sticky section nav, scroll-spy, deep links). T-2.18 (phase gate) stays blocked in parallel — see below. T-3.14's own finding (Hobby-plan duration ceiling well under a real run's length) is worth flagging to the project owner as a possible reason to prioritize T-6.03 or a plan upgrade sooner than Phase 6.
+- Next up: T-4.02 (Sections 1 to 3: executive summary, investment overview, score with explain-the-score panel) upgrades T-4.01's already-real-data section 3 with the criterion-level breakdown; then T-4.03 onward upgrade each dimension section's presentation. T-2.18 (phase gate) stays blocked in parallel — see below. T-3.14's own finding (Hobby-plan duration ceiling well under a real run's length) is worth flagging to the project owner as a possible reason to prioritize T-6.03 or a plan upgrade sooner than Phase 6.
 - Blockers: T-2.18 needs the project owner to run `pnpm eval` with a real `ANTHROPIC_API_KEY` (none configured in this sandbox) and share the result; an agent session can't complete it alone. Production Firebase (real Google OAuth provider config, real `dev`/`prod` projects, real Admin SDK credentials) still needs the project owner — T-3.01 re-examined this blocker and found it only applies to *production*: `src/lib/env.ts`'s own `USE_FIREBASE_EMULATORS` design (from T-0.05) already makes local dev, and every T-3.01 automated/manual verification, work fully against the Firebase Emulator Suite with no real project. `pnpm build`/`pnpm dev` also need a local `.env.local` (gitignored, never committed) with at least placeholder values for the full server env schema — see PROJECT_MEMORY D-056.
 
 ## Phase progress
@@ -21,7 +21,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 | 1 | Design system, landing, shell, dashboard (demo data) | 17 | 17 | Done |
 | 2 | Engine spike (CLI-first) | 18 | 17 | In progress (blocked on T-2.18) |
 | 3 | Auth, persistence, intake, orchestration | 14 | 14 | Done |
-| 4 | Report UI (Alpha) | 14 | 0 | Not started |
+| 4 | Report UI (Alpha) | 14 | 1 | In progress |
 | 5 | Compare, export, watchlist, activity (Beta) | 13 | 0 | Not started |
 | 6 | Monitoring, hardening, launch (1.0) | 15 | 0 | Not started |
 
@@ -101,7 +101,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 ## Phase 4 — Report UI (Alpha)
 
-- [ ] **T-4.01** Report shell: header, sticky section nav, scroll-spy, deep links · M · FR-RPT-15
+- [x] **T-4.01** Report shell: header, sticky section nav, scroll-spy, deep links · M · FR-RPT-15 — new `ReportRepo` (`getReport`/`listDimensions`, the first read methods on the report/dimensions subcollections) backs a real `ReportShell` that replaces T-3.10's temporary summary for `COMPLETE`/`PARTIAL` analyses. All 16 of PRD section 10's sections render with real data using already-built components (`ClaimInline`, `ScoreGauge`, `DimensionRadar`) rather than placeholders — see PROJECT_MEMORY D-071 for the scope reasoning and what's still non-interactive (evidence rail, explain-the-score, `ClaimRow`+gutter, status filter — later Phase 4 tasks' jobs). `ReportSectionNav` implements DESIGN's sticky/scroll-spy/keyboard-J-K nav plus the 768-1023px "top select" breakpoint and URL-hash deep links; `activeSectionId`/`adjacentSectionId` (`src/lib/report-sections.ts`) are pure and unit-tested, the DOM/scroll wiring verified with a real Playwright-style screenshot pass at 1440/768/390 (R-UI-12) via a temporary preview route, deleted after use. Extracted `STAGE_LABEL`/`SEVERITY_CLASS` shared helpers (the latter from DESIGN 3.2's own severity-color mapping) while wiring the header and risks section.
 - [ ] **T-4.02** Sections 1 to 3: executive summary, investment overview, score with explain-the-score · L · FR-RPT-01, FR-RPT-02, FR-RPT-03, FR-RPT-22
 - [ ] **T-4.03** Sections 4 and 5: founder and team, product and business model · M · FR-RPT-04, FR-RPT-05
 - [ ] **T-4.04** Sections 6 to 8: market opportunity, trends, competitive landscape · L · FR-RPT-06, FR-RPT-07, FR-RPT-08

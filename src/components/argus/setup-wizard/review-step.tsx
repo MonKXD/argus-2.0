@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import type { Analysis } from "@/lib/schema/analysis";
+import { STAGE_LABEL } from "@/lib/stage-labels";
 
 interface ReviewStepProps {
   startup: Analysis["startup"];
@@ -8,14 +9,6 @@ interface ReviewStepProps {
   starting: boolean;
   onStart: () => void;
 }
-
-const STAGE_LABELS: Record<Analysis["startup"]["stage"], string> = {
-  UNKNOWN: "Not specified",
-  PRE_SEED: "Pre-seed",
-  SEED: "Seed",
-  SERIES_A: "Series A",
-  SERIES_B_PLUS: "Series B+",
-};
 
 /**
  * APP_FLOW 5.3 step 4: summary, what's sent to the model provider, expected
@@ -38,7 +31,7 @@ function ReviewStep({ startup, options, hasUsableSource, starting, onStart }: Re
           <dt className="text-mist">Website</dt>
           <dd className="text-foreground">{startup.website || "Not set"}</dd>
           <dt className="text-mist">Stage</dt>
-          <dd className="text-foreground">{STAGE_LABELS[startup.stage]}</dd>
+          <dd className="text-foreground">{STAGE_LABEL[startup.stage]}</dd>
           <dt className="text-mist">Sector</dt>
           <dd className="text-foreground">{startup.sector || "Not set"}</dd>
         </dl>

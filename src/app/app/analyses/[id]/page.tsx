@@ -2,27 +2,20 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { DeleteAnalysisButton } from "@/components/argus/delete-analysis-button";
+import { ReportShell } from "@/components/argus/report/report-shell";
 import { ResumeRunButton } from "@/components/argus/resume-run-button";
 import { RunProgress } from "@/components/argus/run-progress";
 import { requireUser } from "@/lib/api/auth";
-import { confidenceLabel } from "@/lib/confidence";
-import { formatDate } from "@/lib/format";
 import { getAdminFirestore } from "@/lib/repos/admin-firestore";
 import { AnalysisRepo } from "@/lib/repos/analysis-repo";
 import { zodConverter } from "@/lib/repos/converter";
+import { ReportRepo } from "@/lib/repos/report-repo";
 import { Run } from "@/lib/schema/run";
 import { failedStepLabels } from "@/lib/step-labels";
 
 interface AnalysisPageProps {
   params: Promise<{ id: string }>;
 }
-
-const STAGE_LABELS: Record<string, string> = {
-  PRE_SEED: "Pre-seed",
-  SEED: "Seed",
-  SERIES_A: "Series A",
-  SERIES_B_PLUS: "Series B+",
-};
 
 async function loadRun(analysisId: string, runId: string): Promise<Run | null> {
   const snapshot = await getAdminFirestore()
@@ -37,11 +30,10 @@ async function loadRun(analysisId: string, runId: string): Promise<Run | null> {
 
 /**
  * APP_FLOW 5.4/5.5: this route shows the processing view while `PROCESSING`
- * and a report once `COMPLETE`/`PARTIAL` — same URL, different content by
- * status. The real report is Phase 4 (T-4.01 onward); this is T-3.10's
- * "temporary result summary": the numbers already on the `Analysis`
- * document (`latest`), no claim-level detail, honestly labelled as
- * temporary rather than presented as the finished report.
+ * and the real report (T-4.01's `ReportShell`) once `COMPLETE`/`PARTIAL` —
+ * same URL, different content by status. T-3.10's own "temporary result
+ * summary" (score/confidence/date only, no claim detail) is now only the
+ * defensive fallback for the case a report can't be loaded at all.
  *
  * T-3.13 (failure UX) wires "Resume"/"Retry" into the `PARTIAL`, `FAILED`
  * and cancelled-`READY` states via the already-built resume endpoint
@@ -74,74 +66,48 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
   }
 
   if (analysis.status === "COMPLETE" || analysis.status === "PARTIAL") {
-    const { latest } = analysis;
-    const run = analysis.status === "PARTIAL" && analysis.currentRunId ? await loadRun(id, analysis.currentRunId) : null;
-    const failed = run ? failedStepLabels(run) : [];
+    const reportRepo = new ReportRepo(getAdminFirestore());
+    const report = analysis.latest ? await reportRepo.getReport(id, analysis.latest.reportId) : null;
 
+    if (report) {
+      const dimensions = await reportRepo.listDimensions(id, report.id);
+      const run = analysis.status === "PARTIAL" && analysis.currentRunId ? await loadRun(id, analysis.currentRunId) : null;
+      const failed = run ? failedStepLabels(run) : [];
+
+      return (
+        <ReportShell
+          analysis={analysis}
+          report={report}
+          dimensions={dimensions}
+          partialNotice={
+            analysis.status === "PARTIAL" ? (
+              <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-3 rounded-panel border border-hairline bg-panel p-4 text-ui-sm text-foreground">
+                <p>
+                  This report is partial.{" "}
+                  {failed.length > 0 ? `Not analysed: ${failed.join(", ")}.` : "Some steps couldn't complete."}
+                </p>
+                {analysis.currentRunId && (
+                  <ResumeRunButton analysisId={id} runId={analysis.currentRunId} label="Resume analysis" />
+                )}
+              </div>
+            ) : undefined
+          }
+        />
+      );
+    }
+
+    // Defensive fallback: `analysis.latest.reportId` names a report that
+    // couldn't be loaded (should not happen in practice — the orchestrator
+    // sets `latest` and saves the report in the same run, T-3.08).
     return (
-      <div className="mx-auto flex max-w-[640px] flex-col gap-6 p-6">
-        <div className="flex flex-col gap-1">
-          <p className="text-ui-sm text-mist">
-            {[STAGE_LABELS[analysis.startup.stage], analysis.startup.sector].filter(Boolean).join(" · ") ||
-              undefined}
-          </p>
-          <h1 className="font-serif text-h2 text-foreground">{analysis.startup.name}</h1>
-        </div>
-
-        {analysis.status === "PARTIAL" && (
-          <p className="rounded-panel border border-hairline bg-panel p-4 text-ui-sm text-foreground">
-            This report is partial.{" "}
-            {failed.length > 0
-              ? `Not analysed: ${failed.join(", ")}.`
-              : "Some steps couldn't complete."}{" "}
-            The claims that were analysed are reflected in the numbers below.
-          </p>
-        )}
-
-        {latest && (
-          <div className="rounded-panel border border-hairline p-4">
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-ui-sm">
-              <dt className="text-mist">Score</dt>
-              <dd className="tabular-nums text-foreground">
-                {latest.label === "INSUFFICIENT_EVIDENCE" || latest.overallScore === null
-                  ? "Not enough evidence to score"
-                  : latest.overallScore}
-              </dd>
-              <dt className="text-mist">Confidence</dt>
-              <dd className="text-foreground">{confidenceLabel(latest.confidence)}</dd>
-              <dt className="text-mist">Generated</dt>
-              <dd className="text-foreground">{formatDate(latest.generatedAt)}</dd>
-              {latest.topFlagSeverity && (
-                <>
-                  <dt className="text-mist">Open flag</dt>
-                  <dd className="text-foreground">{latest.topFlagSeverity}</dd>
-                </>
-              )}
-            </dl>
-          </div>
-        )}
-
-        <p className="text-ui-sm text-mist">
-          The full report page isn&rsquo;t built yet &mdash; this is a temporary summary. Check back
-          soon for claim-by-claim evidence.
+      <div className="mx-auto flex max-w-[640px] flex-col gap-4 p-6">
+        <h1 className="font-serif text-h2 text-foreground">{analysis.startup.name}</h1>
+        <p role="alert" className="text-ui-sm text-destructive">
+          This analysis&rsquo;s report couldn&rsquo;t be loaded.
         </p>
-
-        {analysis.status === "PARTIAL" && analysis.currentRunId && (
-          <ResumeRunButton analysisId={id} runId={analysis.currentRunId} label="Resume analysis" />
-        )}
-
-        <div className="flex gap-4">
-          <Link
-            href={`/app/analyses/${id}/setup?step=review`}
-            className="text-ui-sm text-mist hover:text-foreground hover:underline"
-          >
-            Start a new run
-          </Link>
-          <Link href="/app" className="text-ui-sm text-mist hover:text-foreground hover:underline">
-            Back to dashboard
-          </Link>
-          <DeleteAnalysisButton analysisId={id} startupName={analysis.startup.name} />
-        </div>
+        <Link href="/app" className="text-ui-sm text-mist hover:text-foreground hover:underline">
+          Back to dashboard
+        </Link>
       </div>
     );
   }
