@@ -1,8 +1,10 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { ReportShell } from "@/components/argus/report/report-shell";
 import { demoDimensions, demoReport, loopwellAnalysis } from "@/demo";
+import { DIMENSION_LABEL } from "@/lib/dimension-labels";
 
 // ReportHeader renders DeleteAnalysisButton, which needs a router.
 vi.mock("next/navigation", () => ({
@@ -75,6 +77,18 @@ describe("ReportShell", () => {
 
     const section = screen.getByRole("heading", { name: /4\. Founder/ }).closest("section")!;
     expect(within(section).getByText("This dimension could not be analysed in this run.")).toBeInTheDocument();
+  });
+
+  it("shows an explain-the-score panel with every dimension's weight and contribution", async () => {
+    const user = userEvent.setup();
+    render(<ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />);
+
+    await user.click(screen.getByText("Explain this score"));
+
+    const scoreSection = screen.getByRole("heading", { name: /3\. Investment score/ }).closest("section")!;
+    for (const dim of demoDimensions) {
+      expect(within(scoreSection).getAllByText(DIMENSION_LABEL[dim.dimension]).length).toBeGreaterThan(0);
+    }
   });
 
   it("renders a partial notice when one is passed", () => {

@@ -1,10 +1,10 @@
-
 import { ClaimInline } from "@/components/argus/claim-inline";
 import { EmptyState } from "@/components/argus/empty-state";
 import { ReportHeader } from "@/components/argus/report/report-header";
 import { ReportSectionNav } from "@/components/argus/report/report-section-nav";
 import { DimensionRadar } from "@/components/charts/dimension-radar";
 import { ScoreGauge } from "@/components/charts/score-gauge";
+import { dimensionContributions } from "@/lib/analysis/scoring/contribution";
 import { confidenceLabel } from "@/lib/confidence";
 import { DIMENSION_LABEL } from "@/lib/dimension-labels";
 import { formatNumber } from "@/lib/format";
@@ -52,6 +52,88 @@ function DimensionSection({ dimension }: { dimension: DimensionAnalysis | undefi
   );
 }
 
+/** FR-RPT-22: "explain the score" — weights, criterion scores and each
+ * dimension's contribution to the overall score, as a `<details>`
+ * disclosure (the same pattern `DimensionRadar`'s own data-table text
+ * alternative already uses). */
+function ExplainScore({
+  overall,
+  dimensions,
+}: {
+  overall: Report["overall"];
+  dimensions: DimensionAnalysis[];
+}) {
+  const contributions = dimensionContributions(overall, dimensions);
+  const byKey = new Map(dimensions.map((d) => [d.dimension, d]));
+
+  return (
+    <details className="w-full min-w-0 text-ui-sm">
+      <summary className="cursor-pointer text-mist">Explain this score</summary>
+      <div className="mt-3 flex min-w-0 flex-col gap-4">
+        <div className="max-w-full min-w-0 overflow-x-auto">
+          <table
+            className="w-full text-left"
+            aria-label="Per-dimension weight, score and contribution to the overall score"
+          >
+            <thead>
+              <tr className="border-b border-hairline text-mist">
+                <th className="py-1 pr-4 font-medium">Dimension</th>
+                <th className="py-1 pr-4 font-medium">Weight</th>
+                <th className="py-1 pr-4 font-medium">Score</th>
+                <th className="py-1 pr-4 font-medium">Confidence</th>
+                <th className="py-1 font-medium">Contribution</th>
+              </tr>
+            </thead>
+            <tbody>
+              {contributions.map((c) => (
+                <tr key={c.dimension} className="border-b border-hairline last:border-0">
+                  <td className="py-1 pr-4">{c.label}</td>
+                  <td className="py-1 pr-4 tabular-nums">
+                    {formatNumber(c.weight * 100, { maximumFractionDigits: 0 })}%
+                  </td>
+                  <td className="py-1 pr-4 tabular-nums">
+                    {c.score === null ? "Not scored" : c.score}
+                  </td>
+                  <td className="py-1 pr-4 tabular-nums">
+                    {c.score === null ? "—" : confidenceLabel(c.confidence)}
+                  </td>
+                  <td className="py-1 tabular-nums">
+                    {c.contribution === null
+                      ? "—"
+                      : formatNumber(c.contribution, { maximumFractionDigits: 1 })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          {contributions
+            .map((c) => byKey.get(c.dimension))
+            .filter((d): d is DimensionAnalysis => d !== undefined)
+            .map((d) => (
+              <div key={d.dimension}>
+                <h4 className="text-ui font-medium text-foreground">
+                  {DIMENSION_LABEL[d.dimension]}
+                </h4>
+                <ul className="mt-1 flex flex-col gap-1">
+                  {d.criteria.map((criterion) => (
+                    <li key={criterion.id} className="text-mist">
+                      <span className="text-foreground">{criterion.label}:</span>{" "}
+                      {criterion.score === null ? "Not scored" : `${criterion.score}/4`}
+                      {criterion.rationale ? ` — ${criterion.rationale}` : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+        </div>
+      </div>
+    </details>
+  );
+}
+
 function claimsById(dimensions: DimensionAnalysis[]): Map<string, Claim> {
   const map = new Map<string, Claim>();
   for (const dimension of dimensions) {
@@ -79,11 +161,15 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
   ) as Partial<Record<DimensionKey, { score: number | null; confidence: number }>>;
   const allClaims = claimsById(dimensions);
 
-  const strengths = dimensions.flatMap((d) => d.strengthIds.map((id) => allClaims.get(id)).filter((c) => c !== undefined));
-  const weaknesses = dimensions.flatMap((d) => d.weaknessIds.map((id) => allClaims.get(id)).filter((c) => c !== undefined));
+  const strengths = dimensions.flatMap((d) =>
+    d.strengthIds.map((id) => allClaims.get(id)).filter((c) => c !== undefined),
+  );
+  const weaknesses = dimensions.flatMap((d) =>
+    d.weaknessIds.map((id) => allClaims.get(id)).filter((c) => c !== undefined),
+  );
 
   return (
-    <div className="mx-auto flex max-w-[1360px] flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full min-w-0 max-w-[1360px] flex-col gap-6 p-6">
       <ReportHeader analysis={analysis} report={report} />
 
       {partialNotice}
@@ -118,6 +204,9 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
               )}
               <DimensionRadar scores={dimensionScores} />
             </div>
+            <div className="mt-4">
+              <ExplainScore overall={report.overall} dimensions={dimensions} />
+            </div>
           </section>
 
           <section id="founder-team">
@@ -137,7 +226,9 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
                 </div>
               </div>
               <div>
-                <h3 className="text-ui font-medium text-foreground">{DIMENSION_LABEL.business_model}</h3>
+                <h3 className="text-ui font-medium text-foreground">
+                  {DIMENSION_LABEL.business_model}
+                </h3>
                 <div className="mt-2">
                   <DimensionSection dimension={byKey.get("business_model")} />
                 </div>
@@ -188,7 +279,10 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
               ) : (
                 <ul className="flex flex-col gap-2">
                   {report.flags.map((flag) => (
-                    <li key={flag.id} className="rounded-panel border border-hairline p-3 text-ui-sm">
+                    <li
+                      key={flag.id}
+                      className="rounded-panel border border-hairline p-3 text-ui-sm"
+                    >
                       <span className={SEVERITY_CLASS[flag.severity]}>{flag.severity}</span>
                       <span className="ml-2 font-medium text-foreground">{flag.title}</span>
                       <p className="mt-1 text-mist">{flag.description}</p>
@@ -236,21 +330,37 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
             <h2 className="font-serif text-h3 text-foreground">15. Evidence &amp; sources</h2>
             <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-ui-sm sm:grid-cols-4">
               <dt className="text-mist">Sources</dt>
-              <dd className="tabular-nums text-foreground">{formatNumber(report.evidenceStats.sources)}</dd>
+              <dd className="tabular-nums text-foreground">
+                {formatNumber(report.evidenceStats.sources)}
+              </dd>
               <dt className="text-mist">Evidence items</dt>
-              <dd className="tabular-nums text-foreground">{formatNumber(report.evidenceStats.evidenceItems)}</dd>
+              <dd className="tabular-nums text-foreground">
+                {formatNumber(report.evidenceStats.evidenceItems)}
+              </dd>
               <dt className="text-mist">Facts</dt>
-              <dd className="tabular-nums text-foreground">{formatNumber(report.evidenceStats.facts)}</dd>
+              <dd className="tabular-nums text-foreground">
+                {formatNumber(report.evidenceStats.facts)}
+              </dd>
               <dt className="text-mist">Downgraded</dt>
-              <dd className="tabular-nums text-foreground">{formatNumber(report.evidenceStats.downgraded)}</dd>
+              <dd className="tabular-nums text-foreground">
+                {formatNumber(report.evidenceStats.downgraded)}
+              </dd>
               <dt className="text-mist">Verified claims</dt>
-              <dd className="tabular-nums text-foreground">{formatNumber(report.evidenceStats.claims.VERIFIED)}</dd>
+              <dd className="tabular-nums text-foreground">
+                {formatNumber(report.evidenceStats.claims.VERIFIED)}
+              </dd>
               <dt className="text-mist">AI analysis claims</dt>
-              <dd className="tabular-nums text-foreground">{formatNumber(report.evidenceStats.claims.AI_ANALYSIS)}</dd>
+              <dd className="tabular-nums text-foreground">
+                {formatNumber(report.evidenceStats.claims.AI_ANALYSIS)}
+              </dd>
               <dt className="text-mist">Assumption claims</dt>
-              <dd className="tabular-nums text-foreground">{formatNumber(report.evidenceStats.claims.ASSUMPTION)}</dd>
+              <dd className="tabular-nums text-foreground">
+                {formatNumber(report.evidenceStats.claims.ASSUMPTION)}
+              </dd>
               <dt className="text-mist">Missing claims</dt>
-              <dd className="tabular-nums text-foreground">{formatNumber(report.evidenceStats.claims.MISSING)}</dd>
+              <dd className="tabular-nums text-foreground">
+                {formatNumber(report.evidenceStats.claims.MISSING)}
+              </dd>
             </dl>
           </section>
 
@@ -262,7 +372,10 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
               ) : (
                 <ul className="flex flex-col gap-3">
                   {report.checklist.map((item) => (
-                    <li key={item.id} className="rounded-panel border border-hairline p-3 text-ui-sm">
+                    <li
+                      key={item.id}
+                      className="rounded-panel border border-hairline p-3 text-ui-sm"
+                    >
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium text-foreground">{item.question}</span>
                         <span className="shrink-0 text-caption text-mist">{item.priority}</span>
