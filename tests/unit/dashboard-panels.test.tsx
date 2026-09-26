@@ -1,21 +1,39 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { InProgressPanel } from "@/components/dashboard/in-progress-panel";
+import { LiveInProgressPanel } from "@/components/dashboard/live-in-progress-panel";
 import { WatchlistPanel } from "@/components/dashboard/watchlist-panel";
-import { demoAnalyses, demoRuns } from "@/demo";
+import { demoAnalyses } from "@/demo";
 
-describe("InProgressPanel", () => {
-  it("shows the in-progress analysis with its run's step progress", () => {
-    render(<InProgressPanel analyses={demoAnalyses} runs={demoRuns} />);
-    expect(screen.getByText("Fernway Health")).toBeInTheDocument();
-    expect(screen.getByText("Check consistency")).toBeInTheDocument();
+const useRunProgress = vi.fn();
+vi.mock("@/hooks/use-run-progress", () => ({
+  useRunProgress: (...args: unknown[]) => useRunProgress(...args),
+}));
+
+describe("LiveInProgressPanel", () => {
+  it("shows a designed empty state when nothing is running", () => {
+    render(<LiveInProgressPanel analyses={[]} />);
+    expect(screen.getByText("Nothing is running right now.")).toBeInTheDocument();
   });
 
-  it("shows a designed empty state when nothing is running", () => {
-    const noneProcessing = demoAnalyses.map((a) => ({ ...a, status: "COMPLETE" as const }));
-    render(<InProgressPanel analyses={noneProcessing} runs={demoRuns} />);
-    expect(screen.getByText("Nothing is running right now.")).toBeInTheDocument();
+  it("shows the in-progress analysis with its run's live step progress", () => {
+    useRunProgress.mockReturnValue({
+      run: {
+        id: "run_1",
+        status: "RUNNING",
+        cancelRequested: false,
+        steps: { INGEST: { status: "DONE", attempt: 1 }, CONSISTENCY: { status: "PENDING", attempt: 0 } },
+      },
+      loading: false,
+      error: null,
+    });
+    render(
+      <LiveInProgressPanel
+        analyses={[{ ...demoAnalyses[0], status: "PROCESSING", currentRunId: "run_1" }]}
+      />,
+    );
+    expect(screen.getByText(demoAnalyses[0].startup.name)).toBeInTheDocument();
+    expect(screen.getByText("Analysing your sources.")).toBeInTheDocument();
   });
 });
 

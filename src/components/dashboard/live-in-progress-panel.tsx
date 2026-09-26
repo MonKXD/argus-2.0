@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyState } from "@/components/argus/empty-state";
 import { RunProgress } from "@/components/argus/run-progress";
 import type { Analysis } from "@/lib/schema/analysis";
 
@@ -12,29 +13,26 @@ interface LiveInProgressPanelProps {
 }
 
 /**
- * T-3.09's real-data counterpart to the demo-driven `InProgressPanel`
- * (T-1.13/T-1.15) below it on the dashboard. Deliberately scoped to just
- * this one module rather than converting the whole dashboard: T-3.10 owns
- * "dashboard on real data" for the KPI strip, analyses table, watchlist and
- * market intelligence panel, all of which still read `demoAnalyses`. Mixing
- * one real, live module into that demo section would either misrepresent
- * real data as part of the labelled demo dataset or vice versa (R-UI-09),
- * so this renders as its own section above it, and only when the signed-in
- * user actually has a real analysis running — an always-empty duplicate of
- * the demo panel's own empty state would add nothing.
+ * T-3.09 built this against real data from the start (D-066); T-3.10 makes
+ * it the dashboard's only "in progress" module, replacing the
+ * demo-`InProgressPanel`/`demoRuns` pair it used to sit above (D-067) —
+ * `RunProgress`'s own live Firestore listener replaces looking a static
+ * `Run` up out of a passed-in array.
  */
 function LiveInProgressPanel({ analyses }: LiveInProgressPanelProps) {
-  if (analyses.length === 0) return null;
-
   return (
     <div className="flex flex-col gap-4 rounded-panel border border-hairline p-4">
-      <h2 className="text-ui font-medium text-foreground">Running now</h2>
-      {analyses.map((analysis) => (
-        <div key={analysis.id} className="flex flex-col gap-2">
-          <span className="text-ui-sm text-foreground">{analysis.startup.name}</span>
-          <RunProgress analysisId={analysis.id} runId={analysis.currentRunId} />
-        </div>
-      ))}
+      <h3 className="text-ui font-medium text-foreground">In progress</h3>
+      {analyses.length === 0 ? (
+        <EmptyState message="Nothing is running right now." />
+      ) : (
+        analyses.map((analysis) => (
+          <div key={analysis.id} className="flex flex-col gap-2">
+            <span className="text-ui-sm text-foreground">{analysis.startup.name}</span>
+            <RunProgress analysisId={analysis.id} runId={analysis.currentRunId} />
+          </div>
+        ))
+      )}
     </div>
   );
 }
