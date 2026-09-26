@@ -9,7 +9,7 @@ import { confidenceLabel } from "@/lib/confidence";
 import { DIMENSION_LABEL } from "@/lib/dimension-labels";
 import { formatNumber } from "@/lib/format";
 import type { Analysis } from "@/lib/schema/analysis";
-import type { Claim, DimensionAnalysis } from "@/lib/schema/claims";
+import type { Claim, CriterionScore, DimensionAnalysis } from "@/lib/schema/claims";
 import type { DimensionKey } from "@/lib/schema/enums";
 import type { Report } from "@/lib/schema/report";
 import { SEVERITY_CLASS } from "@/lib/severity";
@@ -36,7 +36,33 @@ function ClaimList({ claims }: { claims: Claim[] }) {
   );
 }
 
-function DimensionSection({ dimension }: { dimension: DimensionAnalysis | undefined }) {
+/** Shared per-criterion 0-4 score + rationale list, used both by the
+ * global explain-the-score panel (every dimension at once) and by an
+ * individual dimension section that wants its own criteria surfaced
+ * inline (FR-RPT-04/FR-RPT-05's "criterion scores"). */
+function CriteriaList({ criteria }: { criteria: CriterionScore[] }) {
+  return (
+    <ul className="flex flex-col gap-1">
+      {criteria.map((criterion) => (
+        <li key={criterion.id} className="text-mist">
+          <span className="text-foreground">{criterion.label}:</span>{" "}
+          {criterion.score === null ? "Not scored" : `${criterion.score}/4`}
+          {criterion.rationale ? ` — ${criterion.rationale}` : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function DimensionSection({
+  dimension,
+  showCriteria = false,
+}: {
+  dimension: DimensionAnalysis | undefined;
+  /** FR-RPT-04/FR-RPT-05: show this dimension's own criterion breakdown
+   * inline, not just its aggregate score. */
+  showCriteria?: boolean;
+}) {
   if (!dimension) {
     return <EmptyState message="This dimension could not be analysed in this run." />;
   }
@@ -48,6 +74,14 @@ function DimensionSection({ dimension }: { dimension: DimensionAnalysis | undefi
           : `Score ${dimension.score} · ${confidenceLabel(dimension.confidence)} confidence`}
       </p>
       <ClaimList claims={dimension.claims} />
+      {showCriteria && (
+        <details className="text-ui-sm">
+          <summary className="cursor-pointer text-mist">Show criteria</summary>
+          <div className="mt-2">
+            <CriteriaList criteria={dimension.criteria} />
+          </div>
+        </details>
+      )}
     </div>
   );
 }
@@ -117,15 +151,9 @@ function ExplainScore({
                 <h4 className="text-ui font-medium text-foreground">
                   {DIMENSION_LABEL[d.dimension]}
                 </h4>
-                <ul className="mt-1 flex flex-col gap-1">
-                  {d.criteria.map((criterion) => (
-                    <li key={criterion.id} className="text-mist">
-                      <span className="text-foreground">{criterion.label}:</span>{" "}
-                      {criterion.score === null ? "Not scored" : `${criterion.score}/4`}
-                      {criterion.rationale ? ` — ${criterion.rationale}` : null}
-                    </li>
-                  ))}
-                </ul>
+                <div className="mt-1">
+                  <CriteriaList criteria={d.criteria} />
+                </div>
               </div>
             ))}
         </div>
@@ -212,7 +240,7 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
           <section id="founder-team">
             <h2 className="font-serif text-h3 text-foreground">4. Founder &amp; team</h2>
             <div className="mt-4">
-              <DimensionSection dimension={byKey.get("founder")} />
+              <DimensionSection dimension={byKey.get("founder")} showCriteria />
             </div>
           </section>
 
@@ -222,7 +250,7 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
               <div>
                 <h3 className="text-ui font-medium text-foreground">{DIMENSION_LABEL.product}</h3>
                 <div className="mt-2">
-                  <DimensionSection dimension={byKey.get("product")} />
+                  <DimensionSection dimension={byKey.get("product")} showCriteria />
                 </div>
               </div>
               <div>
@@ -230,7 +258,7 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
                   {DIMENSION_LABEL.business_model}
                 </h3>
                 <div className="mt-2">
-                  <DimensionSection dimension={byKey.get("business_model")} />
+                  <DimensionSection dimension={byKey.get("business_model")} showCriteria />
                 </div>
               </div>
             </div>

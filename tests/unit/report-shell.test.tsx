@@ -91,6 +91,25 @@ describe("ReportShell", () => {
     }
   });
 
+  it("shows the founder dimension's own criterion breakdown in section 4", async () => {
+    const user = userEvent.setup();
+    render(<ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />);
+
+    const section = screen.getByRole("heading", { name: /4\. Founder/ }).closest("section")!;
+    await user.click(within(section).getByText("Show criteria"));
+
+    const founder = demoDimensions.find((d) => d.dimension === "founder")!;
+    expect(within(section).getByText(`${founder.criteria[0]!.label}:`, { exact: false })).toBeInTheDocument();
+  });
+
+  it("shows product and business-model criterion breakdowns in section 5", () => {
+    render(<ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />);
+
+    const section = screen.getByRole("heading", { name: /5\. Product/ }).closest("section")!;
+    const toggles = within(section).getAllByText("Show criteria");
+    expect(toggles).toHaveLength(2);
+  });
+
   it("renders a partial notice when one is passed", () => {
     render(
       <ReportShell
