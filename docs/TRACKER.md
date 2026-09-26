@@ -8,9 +8,9 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 ## Current focus
 
-- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18. Phase 3 (auth, persistence, intake, orchestration) 13/14 done (T-3.01 through T-3.10 and T-3.12/T-3.13, plus T-3.11 built early as part of T-3.08).
+- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18. Phase 3 (auth, persistence, intake, orchestration) is now complete (14/14).
 - Task: none in progress
-- Next up: T-3.14 (hosting decision with verified request-duration limits) closes out Phase 3, then Phase 4 (report UI) begins at T-4.01. T-2.18 (phase gate) stays blocked in parallel — see below.
+- Next up: Phase 4 (Report UI, Alpha) begins at T-4.01 (report shell: header, sticky section nav, scroll-spy, deep links). T-2.18 (phase gate) stays blocked in parallel — see below. T-3.14's own finding (Hobby-plan duration ceiling well under a real run's length) is worth flagging to the project owner as a possible reason to prioritize T-6.03 or a plan upgrade sooner than Phase 6.
 - Blockers: T-2.18 needs the project owner to run `pnpm eval` with a real `ANTHROPIC_API_KEY` (none configured in this sandbox) and share the result; an agent session can't complete it alone. Production Firebase (real Google OAuth provider config, real `dev`/`prod` projects, real Admin SDK credentials) still needs the project owner — T-3.01 re-examined this blocker and found it only applies to *production*: `src/lib/env.ts`'s own `USE_FIREBASE_EMULATORS` design (from T-0.05) already makes local dev, and every T-3.01 automated/manual verification, work fully against the Firebase Emulator Suite with no real project. `pnpm build`/`pnpm dev` also need a local `.env.local` (gitignored, never committed) with at least placeholder values for the full server env schema — see PROJECT_MEMORY D-056.
 
 ## Phase progress
@@ -20,7 +20,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 | 0 | Foundation | 11 | 11 | Done (T-0.06 caveat: no real Firebase project yet) |
 | 1 | Design system, landing, shell, dashboard (demo data) | 17 | 17 | Done |
 | 2 | Engine spike (CLI-first) | 18 | 17 | In progress (blocked on T-2.18) |
-| 3 | Auth, persistence, intake, orchestration | 14 | 13 | In progress |
+| 3 | Auth, persistence, intake, orchestration | 14 | 14 | Done |
 | 4 | Report UI (Alpha) | 14 | 0 | Not started |
 | 5 | Compare, export, watchlist, activity (Beta) | 13 | 0 | Not started |
 | 6 | Monitoring, hardening, launch (1.0) | 15 | 0 | Not started |
@@ -97,7 +97,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 - [x] **T-3.11** Usage limits, run budget, daily limit, concurrency limit · S · FR-ENG-11, NFR-09 — built as part of T-3.08 (`src/lib/analysis/run-limits.ts`): `assertWithinRunLimits()` enforces `MAX_CONCURRENT_RUNS`/`DAILY_ANALYSIS_LIMIT` via `collectionGroup("runs")` queries, both returning `LIMIT_EXCEEDED`. `RUN_TOKEN_BUDGET` is tracked by the existing `Budget` accumulator and surfaced as a post-hoc `BUDGET_EXCEEDED` warning + `PARTIAL` status — not preemptive mid-run stopping (would need threading a stop-check into every already-shipped step loop; out of scope here, see D-063).
 - [x] **T-3.12** Deletion cascade (Firestore and Storage) · S · FR-SET-02 — `DELETE /api/analyses/:id` uses Firestore's own `db.recursiveDelete()` on the `analyses/{id}` document (walks every subcollection at any depth — sources, evidence, facts, runs, reports/dimensions — no per-collection code needed) plus `bucket.deleteFiles({ prefix: "uploads/{uid}/{id}/" })` for Storage. Rejects `PROCESSING` analyses with `CONFLICT` (409) since the orchestrator's `after()` callback (T-3.08) can still be writing to the same subcollections; APP_FLOW's own lifecycle diagram never draws a delete transition out of `PROCESSING` either. Exports/comparisons/activity are the rest of SCHEMA's documented cascade but don't exist yet (Phase 5/6) — nothing to clean up there. `DeleteAnalysisButton` (native-`<dialog>` confirm, APP_FLOW's own copy) wired into every non-`PROCESSING` state of `/app/analyses/[id]`; its fetch/navigate logic lives in `useDeleteAnalysis` so it's unit-testable without the Dialog itself (jsdom can't render native `<dialog>` — PROJECT_MEMORY's gotchas — the shared Playwright suite already covers open/close mechanics once for every Dialog user).
 - [x] **T-3.13** Failure UX: retry, resume, partial states · M · FR-ENG-09 — wires the already-built-but-unused `POST .../runs/:runId/resume` (T-3.08) into `/app/analyses/[id]`: `FAILED` gets "Retry analysis" (plus the run's own real error message, already fetched for T-3.10) and "Edit sources"; `PARTIAL` gets "Resume analysis" plus a "Not analysed: X, Y" list built from the run's `steps`/`dimensionStatus` (new `failedStepLabels()` in `src/lib/step-labels.ts`); a `READY` analysis whose `currentRunId` points at a `CANCELLED` run gets "Resume analysis" too, distinct from the generic "hasn't been run yet" case. Every state keeps its "start a new run" path (full wizard trip, a genuinely different operation from resume — APP_FLOW's lifecycle diagram draws both `resume` and `re-run` out of `PARTIAL`). `useResumeRun` (fetch + `router.refresh()`, no navigation needed since the resumed run keeps its `runId` on the same page) is unit-tested directly, same split as T-3.12's `useDeleteAnalysis`.
-- [ ] **T-3.14** Hosting decision with verified request-duration limits (TQ-3, OQ-7) · S · NFR-02
+- [x] **T-3.14** Hosting decision with verified request-duration limits (TQ-3, OQ-7) · S · NFR-02 — Vercel (already deployed since T-3.01; TRD's "pipeline must not depend on either" already holds — the pipeline itself has zero Vercel-specific code, only the two run-triggering routes' `maxDuration` export is host-specific). Set `export const maxDuration = 60` on `POST .../runs` and `.../resume` (previously unset, silently inheriting an undocumented, likely-shorter platform default). Real finding, not just a formality: this account is Hobby-plan (confirmed by the project owner — Vercel's own account-management API and vercel.com itself were both blocked from this sandbox, so this couldn't be self-verified end-to-end), and 60s is well short of TRD section 3's own documented 1-to-5-minute run time — flagged prominently as a reason to consider pulling T-6.03 (queue-based Mode B) forward from Phase 6, or upgrading the Vercel plan, rather than assuming Mode A quietly scales. See PROJECT_MEMORY D-070.
 
 ## Phase 4 — Report UI (Alpha)
 
@@ -158,7 +158,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 |---|---|---|---|
 | TQ-1 | PDF extraction library | T-2.03 | Resolved — D-039 |
 | TQ-2 | Zod version and JSON Schema conversion | T-2.01 | Resolved — D-037 |
-| TQ-3 / OQ-7 | Hosting: Firebase App Hosting or Vercel | T-3.14 | Open |
+| TQ-3 / OQ-7 | Hosting: Firebase App Hosting or Vercel | T-3.14 | Resolved — D-070 |
 | TQ-4 | Queue technology for mode B | T-6.03 | Open |
 | TQ-5 | Web research provider | T-2.14 | Resolved — D-052 |
 | OQ-1 | Pricing and packaging | Before public launch | Open |

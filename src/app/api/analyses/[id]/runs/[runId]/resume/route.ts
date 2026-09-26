@@ -18,6 +18,10 @@ interface RouteContext {
   params: Promise<{ id: string; runId: string }>;
 }
 
+/** T-3.14: same `after()`-runs-the-pipeline shape as `POST .../runs` — see
+ * that route's own comment for why 60 and what the real risk is. */
+export const maxDuration = 60;
+
 function resetSteps(): Record<string, StepState> {
   return Object.fromEntries(StepName.options.map((name) => [name, { status: "PENDING", attempt: 0 }]));
 }

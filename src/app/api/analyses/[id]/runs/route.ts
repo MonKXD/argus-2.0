@@ -19,6 +19,25 @@ import type { StepState, Usage } from "@/lib/schema/run";
 
 import type { Firestore } from "firebase-admin/firestore";
 
+/**
+ * T-3.14 (hosting decision, TQ-3/OQ-7): without this, the route inherits
+ * whatever silent per-plan default Vercel applies (undocumented here
+ * without one), which is guaranteed too short for `after()`'s pipeline
+ * run — `waitUntil()`/`after()` extend the invocation's lifetime but stay
+ * bound by the same `maxDuration`, not an independent budget (verified
+ * against Vercel's own current docs, not assumed). 60 is this project's
+ * Hobby-plan account's actual ceiling without Fluid Compute enabled; if a
+ * future deploy rejects this as too high, that failure is itself the
+ * verification this project didn't otherwise have a way to get, and the
+ * value should come down to whatever the build error reports. See
+ * PROJECT_MEMORY D-070 for the full decision and its known risk: a run
+ * that hits this ceiling is killed mid-flight with no chance to write
+ * `FAILED`, leaving the `Run`/`Analysis` stuck at `RUNNING`/`PROCESSING`
+ * — the real fix for genuinely long runs is T-6.03's queue-based Mode B
+ * (TRD's own documented escape hatch, D-009), not a bigger number here.
+ */
+export const maxDuration = 60;
+
 interface RouteContext {
   params: Promise<{ id: string }>;
 }

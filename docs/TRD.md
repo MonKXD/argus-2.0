@@ -61,7 +61,7 @@ Key architectural decisions:
 | Testing | Vitest, Testing Library, MSW, Playwright, Firebase emulators | |
 | Lint and format | ESLint, Prettier | |
 | CI | GitHub Actions | |
-| Hosting | Firebase App Hosting or Vercel | Decide by Phase 3 (OQ-7). Pipeline must not depend on either. |
+| Hosting | Vercel | Decided T-3.14 (TQ-3/OQ-7) — see section 3 and PROJECT_MEMORY D-070. |
 
 ## 3. Hosting and long-running work
 
@@ -69,8 +69,8 @@ A run takes roughly 1 to 5 minutes. Serverless timeouts and post-response CPU th
 
 | Mode | Description | Use |
 |---|---|---|
-| A. Inline | `POST /runs` creates the run and the handler keeps executing the pipeline to completion. UI follows the run document. The handler must ignore client disconnects. | Local dev and first deploy. Verify platform max duration and that CPU stays allocated until the handler finishes. |
-| B. Queued | Handler enqueues a job (Cloud Tasks, or a durable-step service such as Inngest) that calls a step endpoint. | Production hardening, Phase 6 (T-6.03). |
+| A. Inline | `POST /runs` creates the run and the handler keeps executing the pipeline to completion. UI follows the run document. The handler must ignore client disconnects. | Current (T-3.08 through T-3.13). Both run-triggering routes set `export const maxDuration = 60` (T-3.14) — this project's Vercel account is on the Hobby plan, and 60s is the highest ceiling confidently known to be safe there without Fluid Compute; `waitUntil()`/`after()` extend the invocation's life but stay bound by the same `maxDuration`, not a separate budget (verified against Vercel's current docs). |
+| B. Queued | Handler enqueues a job (Cloud Tasks, or a durable-step service such as Inngest) that calls a step endpoint. | Production hardening, Phase 6 (T-6.03). **T-3.14's finding: likely needed sooner than Phase 6.** A 60-second ceiling is well short of this section's own documented 1-to-5-minute run time — any real multi-source, 8-dimension analysis is a realistic candidate to be killed mid-flight on the current plan, which (unlike a normal failure) leaves the `Run`/`Analysis` stuck at `RUNNING`/`PROCESSING` with no `FAILED` write, since the platform kills the invocation rather than letting `run-pipeline.ts`'s own `catch` block run. Revisit this priority call once real usage data exists, or upgrade the Vercel plan (Pro/Enterprise raise the ceiling substantially) as a lower-effort interim fix. |
 
 Both modes call the same `runPipeline(ctx)` function. Choosing between them is a deployment concern only. Record the decision in PROJECT_MEMORY.
 
@@ -364,6 +364,6 @@ See `.env.example`. Server-only: `ANTHROPIC_API_KEY`, model role IDs, Firebase A
 |---|---|---|
 | TQ-1 | PDF extraction library | T-2.03 |
 | TQ-2 | Zod major version and JSON Schema conversion approach | T-2.01 |
-| TQ-3 | Hosting: Firebase App Hosting or Vercel | Phase 3 |
+| TQ-3 | ~~Hosting: Firebase App Hosting or Vercel~~ Resolved T-3.14 — Vercel | Phase 3 |
 | TQ-4 | Queue technology for mode B | T-6.03 |
 | TQ-5 | Web research provider: Anthropic web search tool or a dedicated search API | T-2.14 |
