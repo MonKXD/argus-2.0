@@ -6,12 +6,12 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useSourceUpload } from "@/hooks/use-source-upload";
+import type { UseSourceUploadResult } from "@/hooks/use-source-upload";
 import type { SourceType } from "@/lib/schema/enums";
 import { cn } from "@/lib/utils";
 
 interface SourcesStepProps {
-  analysisId: string;
+  source: UseSourceUploadResult;
 }
 
 const EXTENSION_TYPE_HINT: Record<string, SourceType> = {
@@ -50,20 +50,16 @@ function sourceIcon(source: { origin: string }) {
  * kinds are real: file upload (T-3.06, direct-to-Storage then server
  * validation) and URL/pasted text (T-3.07, both registered straight
  * through `POST /api/analyses/:id/sources`, crawled or split into
- * paragraphs, and status-checked the same way an upload is).
+ * paragraphs, and status-checked the same way an upload is). The hook
+ * itself is instantiated once, in `SetupWizard`, and passed down — the
+ * review step needs the same `sources` list to decide whether "Start
+ * analysis" is enabled (APP_FLOW 5.3 row 4: "Run disabled until valid"),
+ * and a second hook instance would double-fetch and could disagree with
+ * this one.
  */
-function SourcesStep({ analysisId }: SourcesStepProps) {
-  const {
-    sources,
-    uploading,
-    loading,
-    loadError,
-    actionError,
-    uploadFiles,
-    addUrl,
-    addText,
-    removeSource,
-  } = useSourceUpload(analysisId);
+function SourcesStep({ source }: SourcesStepProps) {
+  const { sources, uploading, loading, loadError, actionError, uploadFiles, addUrl, addText, removeSource } =
+    source;
   const [url, setUrl] = React.useState("");
   const [addingUrl, setAddingUrl] = React.useState(false);
   const [text, setText] = React.useState("");

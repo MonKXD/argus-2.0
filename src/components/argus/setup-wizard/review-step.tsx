@@ -4,6 +4,9 @@ import type { Analysis } from "@/lib/schema/analysis";
 interface ReviewStepProps {
   startup: Analysis["startup"];
   options: Analysis["options"];
+  hasUsableSource: boolean;
+  starting: boolean;
+  onStart: () => void;
 }
 
 const STAGE_LABELS: Record<Analysis["startup"]["stage"], string> = {
@@ -18,12 +21,13 @@ const STAGE_LABELS: Record<Analysis["startup"]["stage"], string> = {
  * APP_FLOW 5.3 step 4: summary, what's sent to the model provider, expected
  * duration, disclaimer. PRD section 15 requires the third-party-processing
  * disclosure "at upload time" — reiterated here since review is the last
- * point before anything is analysed. "Start analysis" (POST
- * /api/analyses/:id/runs) is T-3.08's run orchestrator, which doesn't exist
- * yet — disabled with an honest reason rather than a button that goes
- * nowhere (D-029's "don't hide not-built-yet behind a flag").
+ * point before anything is analysed. "Start analysis" now calls the real
+ * `POST /api/analyses/:id/runs` (T-3.08's orchestrator, T-3.09's wiring) and
+ * is disabled until at least one non-failed source exists, per APP_FLOW
+ * 5.3 row 4's "Run disabled until valid" (row 2's own validation: "at least
+ * one source or a website URL").
  */
-function ReviewStep({ startup, options }: ReviewStepProps) {
+function ReviewStep({ startup, options, hasUsableSource, starting, onStart }: ReviewStepProps) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
@@ -63,13 +67,17 @@ function ReviewStep({ startup, options }: ReviewStepProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Button type="button" disabled title="Starting an analysis isn't available yet.">
-          Start analysis
+        <Button
+          type="button"
+          onClick={onStart}
+          disabled={starting || !hasUsableSource}
+          title={hasUsableSource ? undefined : "Add at least one source or a website URL first."}
+        >
+          {starting ? "Starting…" : "Start analysis"}
         </Button>
-        <p className="text-ui-sm text-mist">
-          Starting a run isn&rsquo;t wired up yet. Your draft is saved — come back once this is
-          available.
-        </p>
+        {!hasUsableSource && (
+          <p className="text-ui-sm text-mist">Add at least one source or a website URL first.</p>
+        )}
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ import {
   type WizardStep,
 } from "@/components/argus/setup-wizard/wizard-steps-nav";
 import { Button } from "@/components/ui/button";
+import { useSourceUpload } from "@/hooks/use-source-upload";
 import type { Analysis } from "@/lib/schema/analysis";
 
 interface SetupWizardProps {
@@ -42,7 +43,15 @@ function SetupWizard({ analysis }: SetupWizardProps) {
   const [startup, setStartup] = React.useState(analysis.startup);
   const [options, setOptions] = React.useState(analysis.options);
   const [saving, setSaving] = React.useState(false);
+  const [starting, setStarting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const sourceState = useSourceUpload(analysis.id);
+  // A stable key for the lifetime of this wizard instance: if "Start
+  // analysis" is retried after a network error, the retry reuses the same
+  // key so `POST /runs` (T-3.08) treats it as the same request rather than
+  // starting a second run.
+  const idempotencyKeyRef = React.useRef<string>(undefined);
+  idempotencyKeyRef.current ??= crypto.randomUUID();
 
   const stepIndex = WIZARD_STEPS.indexOf(step);
 
@@ -94,6 +103,29 @@ function SetupWizard({ analysis }: SetupWizardProps) {
     if (previous) goToStep(previous);
   }
 
+  async function handleStart() {
+    setStarting(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/analyses/${analysis.id}/runs`, {
+        method: "POST",
+        headers: { "Idempotency-Key": idempotencyKeyRef.current! },
+      });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as {
+          error?: { message?: string };
+        } | null;
+        setError(body?.error?.message ?? "Couldn't start the analysis. Try again.");
+        setStarting(false);
+        return;
+      }
+      router.push(`/app/analyses/${analysis.id}`);
+    } catch {
+      setError("Couldn't start the analysis. Check your connection and try again.");
+      setStarting(false);
+    }
+  }
+
   return (
     <div className="mx-auto flex max-w-[640px] flex-col gap-8 p-6">
       <div className="flex flex-col gap-1">
@@ -106,9 +138,17 @@ function SetupWizard({ analysis }: SetupWizardProps) {
       <WizardStepsNav current={step} />
 
       {step === "basics" && <BasicsStep startup={startup} onChange={setStartup} />}
-      {step === "sources" && <SourcesStep analysisId={analysis.id} />}
+      {step === "sources" && <SourcesStep source={sourceState} />}
       {step === "options" && <OptionsStep options={options} onChange={setOptions} />}
-      {step === "review" && <ReviewStep startup={startup} options={options} />}
+      {step === "review" && (
+        <ReviewStep
+          startup={startup}
+          options={options}
+          hasUsableSource={sourceState.sources.some((s) => s.status !== "FAILED")}
+          starting={starting}
+          onStart={() => void handleStart()}
+        />
+      )}
 
       {error && (
         <p role="alert" className="text-ui-sm text-destructive">
@@ -121,7 +161,7 @@ function SetupWizard({ analysis }: SetupWizardProps) {
           type="button"
           variant="outline"
           onClick={handleBack}
-          disabled={stepIndex === 0 || saving}
+          disabled={stepIndex === 0 || saving || starting}
         >
           Back
         </Button>

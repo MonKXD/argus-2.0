@@ -5,9 +5,14 @@ import { DemoBanner } from "@/components/argus/demo-banner";
 import { NewAnalysisEmptyState } from "@/components/argus/new-analysis-empty-state";
 import { InProgressPanel } from "@/components/dashboard/in-progress-panel";
 import { KpiStrip } from "@/components/dashboard/kpi-strip";
+import { LiveInProgressPanel } from "@/components/dashboard/live-in-progress-panel";
 import { MarketIntelligencePanel } from "@/components/dashboard/market-intelligence-panel";
 import { WatchlistPanel } from "@/components/dashboard/watchlist-panel";
 import { demoAnalyses, demoRuns } from "@/demo";
+import { requireUser } from "@/lib/api/auth";
+import { getAdminFirestore } from "@/lib/repos/admin-firestore";
+import { AnalysisRepo } from "@/lib/repos/analysis-repo";
+import type { Analysis } from "@/lib/schema/analysis";
 
 // DESIGN section 5.2 / TRACKER T-1.13: KPI strip, analyses table (dominant
 // element), in-progress and watchlist panels, market intelligence. Every
@@ -18,11 +23,18 @@ import { demoAnalyses, demoRuns } from "@/demo";
 // shown: there's no Activity data model yet (deliberately not pulled
 // forward in T-1.08/D-026, and it's Phase 5 functionality) — showing a
 // panel with nothing behind it would be worse than not showing one.
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const user = await requireUser();
+  const realAnalyses = await new AnalysisRepo(getAdminFirestore()).listByOwner(user.uid);
+  const liveInProgress = realAnalyses.filter(
+    (a): a is Analysis & { currentRunId: string } => a.status === "PROCESSING" && a.currentRunId !== null,
+  );
+
   // APP_FLOW section 5.2: "Empty (no analyses): guided first-run panel with
   // the New analysis action and a link to the sample report." Never
-  // triggers with the current demo fixture (always 4 analyses), but the
-  // real condition once Phase 3 brings real per-user data.
+  // triggers for the demo modules below (the fixture always has 4 rows) —
+  // T-3.10 replaces `demoAnalyses` with `realAnalyses` throughout and makes
+  // this the real condition. `liveInProgress` above is already real.
   if (demoAnalyses.length === 0) {
     return (
       <div className="flex flex-col gap-6 p-6">
@@ -38,6 +50,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
+      <LiveInProgressPanel analyses={liveInProgress} />
       <DemoBanner />
       <h1 className="font-serif text-h2 text-foreground">Dashboard</h1>
 

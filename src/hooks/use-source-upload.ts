@@ -15,7 +15,7 @@ export interface UploadEntry {
   errorMessage?: string;
 }
 
-interface UseSourceUploadResult {
+export interface UseSourceUploadResult {
   sources: Source[];
   uploading: UploadEntry[];
   loading: boolean;
