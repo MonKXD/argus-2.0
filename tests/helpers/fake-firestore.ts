@@ -186,6 +186,25 @@ export class FakeCollectionGroupRef {
   }
 }
 
+/**
+ * A minimal fake of `Transaction` (T-4.12's checklist/flag read-modify-write
+ * methods, the first callers of `runTransaction`) — `get`/`set` just delegate
+ * straight to the real `FakeDocRef` methods, since the fake store has no
+ * actual concurrent access to guard against (single JS thread, no I/O); it
+ * exists to exercise the repo's own transaction *shape* (read, compute,
+ * write), not to simulate a real conflict-retry.
+ */
+export class FakeTransaction {
+  async get(docRef: FakeDocRef): Promise<{ exists: boolean; data(): unknown }> {
+    return docRef.get();
+  }
+
+  set(docRef: FakeDocRef, data: unknown, options?: { merge?: boolean }): FakeTransaction {
+    void docRef.set(data, options);
+    return this;
+  }
+}
+
 export class FakeBatch {
   private readonly ops: (() => Promise<void>)[] = [];
 
@@ -208,6 +227,8 @@ export function createFakeFirestore(): { db: Firestore; store: Map<string, unkno
     collection: (name: string) => new FakeCollectionRef(store, name, undefined),
     collectionGroup: (name: string) => new FakeCollectionGroupRef(store, name),
     batch: () => new FakeBatch(),
+    runTransaction: async <T>(updateFunction: (tx: FakeTransaction) => Promise<T>): Promise<T> =>
+      updateFunction(new FakeTransaction()),
   };
   return { db: db as unknown as Firestore, store };
 }

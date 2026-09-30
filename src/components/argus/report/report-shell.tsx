@@ -2,10 +2,12 @@
 
 import { createContext, useContext, useState } from "react";
 
+import { ChecklistItemControls } from "@/components/argus/checklist-item-controls";
 import { ClaimRow } from "@/components/argus/claim-row";
 import { EmptyState } from "@/components/argus/empty-state";
 import { EvidenceBar } from "@/components/argus/evidence-bar";
 import { STATUS_LABEL } from "@/components/argus/evidence-marker";
+import { FlagAcknowledgeControls } from "@/components/argus/flag-acknowledge-controls";
 import { ReliabilityChip } from "@/components/argus/reliability-chip";
 import { EvidencePanel } from "@/components/argus/report/evidence-panel";
 import { ReportHeader } from "@/components/argus/report/report-header";
@@ -480,6 +482,11 @@ function ReportShell({
                         <span className={SEVERITY_CLASS[flag.severity]}>{flag.severity}</span>
                         <span className="ml-2 font-medium text-foreground">{flag.title}</span>
                         <p className="mt-1 text-mist">{flag.description}</p>
+                        <FlagAcknowledgeControls
+                          analysisId={analysis.id}
+                          reportId={report.id}
+                          flag={flag}
+                        />
                       </li>
                     ))}
                   </ul>
@@ -629,6 +636,11 @@ function ReportShell({
                             Suggested source: {item.suggestedSource}
                           </p>
                         )}
+                        <ChecklistItemControls
+                          analysisId={analysis.id}
+                          reportId={report.id}
+                          item={item}
+                        />
                       </li>
                     ))}
                   </ul>

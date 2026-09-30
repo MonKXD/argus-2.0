@@ -1,5 +1,5 @@
 import { zodConverter } from "@/lib/repos/converter";
-import { DimensionAnalysis } from "@/lib/schema/claims";
+import { ChecklistItem, DimensionAnalysis, Flag } from "@/lib/schema/claims";
 import { Report } from "@/lib/schema/report";
 import { DIMENSION_KEYS } from "@/lib/schema/rubrics";
 
@@ -16,15 +16,73 @@ import type { Firestore } from "firebase-admin/firestore";
 export class ReportRepo {
   constructor(private readonly db: Firestore) {}
 
-  async getReport(analysisId: string, reportId: string): Promise<Report | null> {
-    const snapshot = await this.db
+  private reportDoc(analysisId: string, reportId: string) {
+    return this.db
       .collection("analyses")
       .doc(analysisId)
       .collection("reports")
       .doc(reportId)
-      .withConverter(zodConverter(Report))
-      .get();
+      .withConverter(zodConverter(Report));
+  }
+
+  async getReport(analysisId: string, reportId: string): Promise<Report | null> {
+    const snapshot = await this.reportDoc(analysisId, reportId).get();
     return snapshot.exists ? snapshot.data()! : null;
+  }
+
+  /**
+   * T-4.12 (FR-RPT-21: "checklist tracking with notes"). `checklist` is an
+   * array field on the `Report` document itself, not its own subcollection
+   * (SCHEMA.md), so updating one item means replacing the whole array —
+   * done inside a transaction (read, compute the new array, write) rather
+   * than a plain read-then-write, since two concurrent PATCHes to
+   * different items would otherwise race and silently drop one's change
+   * (the same class of correctness concern as D-063's cancellation design).
+   * Returns the updated item, or `null` if the report or the item doesn't
+   * exist — the route handler turns either into a 404.
+   */
+  async updateChecklistItem(
+    analysisId: string,
+    reportId: string,
+    itemId: string,
+    patch: Partial<Pick<ChecklistItem, "status" | "userNote">>,
+  ): Promise<ChecklistItem | null> {
+    const docRef = this.reportDoc(analysisId, reportId);
+    return this.db.runTransaction(async (tx) => {
+      const snapshot = await tx.get(docRef);
+      if (!snapshot.exists) return null;
+      const report = snapshot.data()!;
+      const index = report.checklist.findIndex((item) => item.id === itemId);
+      if (index === -1) return null;
+
+      const updated: ChecklistItem = { ...report.checklist[index]!, ...patch };
+      const checklist = report.checklist.map((item, i) => (i === index ? updated : item));
+      tx.set(docRef, { checklist }, { merge: true });
+      return updated;
+    });
+  }
+
+  /** T-4.12 (FR-RPT-21: "flag acknowledge"). Same array-field-on-`Report`,
+   * same transaction reasoning as `updateChecklistItem`. */
+  async updateFlagStatus(
+    analysisId: string,
+    reportId: string,
+    flagId: string,
+    status: Flag["status"],
+  ): Promise<Flag | null> {
+    const docRef = this.reportDoc(analysisId, reportId);
+    return this.db.runTransaction(async (tx) => {
+      const snapshot = await tx.get(docRef);
+      if (!snapshot.exists) return null;
+      const report = snapshot.data()!;
+      const index = report.flags.findIndex((flag) => flag.id === flagId);
+      if (index === -1) return null;
+
+      const updated: Flag = { ...report.flags[index]!, status };
+      const flags = report.flags.map((flag, i) => (i === index ? updated : flag));
+      tx.set(docRef, { flags }, { merge: true });
+      return updated;
+    });
   }
 
   /** Every version of this analysis's report, newest first (T-4.11: version

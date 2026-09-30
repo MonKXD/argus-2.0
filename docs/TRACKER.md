@@ -8,9 +8,9 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 ## Current focus
 
-- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18. Phase 3 complete (14/14). Phase 4 (Report UI, Alpha) 11/14 done (T-4.01 through T-4.11).
+- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18. Phase 3 complete (14/14). Phase 4 (Report UI, Alpha) 12/14 done (T-4.01 through T-4.12).
 - Task: none in progress
-- Next up: T-4.12 (checklist tracking and flag acknowledge). T-2.18 (phase gate) stays blocked in parallel — see below. T-3.14's own finding (Hobby-plan duration ceiling well under a real run's length) is worth flagging to the project owner as a possible reason to prioritize T-6.03 or a plan upgrade sooner than Phase 6.
+- Next up: T-4.13 (mobile report layout). T-2.18 (phase gate) stays blocked in parallel — see below. T-3.14's own finding (Hobby-plan duration ceiling well under a real run's length) is worth flagging to the project owner as a possible reason to prioritize T-6.03 or a plan upgrade sooner than Phase 6.
 - Blockers: T-2.18 needs the project owner to run `pnpm eval` with a real `ANTHROPIC_API_KEY` (none configured in this sandbox) and share the result; an agent session can't complete it alone. Production Firebase (real Google OAuth provider config, real `dev`/`prod` projects, real Admin SDK credentials) still needs the project owner — T-3.01 re-examined this blocker and found it only applies to *production*: `src/lib/env.ts`'s own `USE_FIREBASE_EMULATORS` design (from T-0.05) already makes local dev, and every T-3.01 automated/manual verification, work fully against the Firebase Emulator Suite with no real project. `pnpm build`/`pnpm dev` also need a local `.env.local` (gitignored, never committed) with at least placeholder values for the full server env schema — see PROJECT_MEMORY D-056.
 
 ## Phase progress
@@ -112,7 +112,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 - [x] **T-4.09** `ClaimRow` and `ClaimInline`; status filter (`ClaimInline` already exists from T-1.11/D-031; this adds `ClaimRow` for the report-page gutter and the status filter) · M · FR-RPT-23 — done 2026-09-30, see D-076. `ClaimRow` (full-width grid gutter) replaces `ClaimInline` in `ReportShell`'s `ClaimList`; a 5-tab status filter (Radix `Tabs`) rides `ClaimSelectionContext`, filtering all 16 sections at once. Found/fixed a 4th narrow-viewport overflow bug (`TabsList`).
 - [x] **T-4.10** Section evidence bars and coverage notes · S · FR-RPT-18 — done 2026-09-30, see D-077. New `SectionHeader` wires the existing `EvidenceBar` and `report.evidenceStats.bySection` into all 16 section headers, plus a coverage note when a section has missing claims. Fixed two pre-existing demo-fixture bugs (empty `bySection`, an off-by-one `MISSING` count) found while computing real data for it.
 - [x] **T-4.11** Report versions, version selector, re-run · M · FR-RPT-19 — done 2026-09-30, see D-078. `ReportRepo.list()` + `ReportVersionSelector` (shown only for 2+ versions, each option showing its score and delta from the previous); `?version=N` selects which saved report to view, with a read-only notice on a historical version. Re-run itself was already wired (T-4.01's "Run again" link); "versions created by re-runs" was already true at the data layer since T-3.08.
-- [ ] **T-4.12** Checklist tracking (status, notes) and flag acknowledge · M · FR-RPT-21
+- [x] **T-4.12** Checklist tracking (status, notes) and flag acknowledge · M · FR-RPT-21 — done 2026-09-30, see D-079. New `PATCH .../reports/:reportId/checklist/:itemId` and `.../flags/:flagId` routes (transactional array-field updates on `Report`); `ChecklistItemControls`/`FlagAcknowledgeControls` wired into sections 11 and 16.
 - [ ] **T-4.13** Mobile report layout · M · NFR-06
 - [ ] **T-4.14** Report e2e, visual review, dogfood on three startups; switch `/sample` to the full demo report · M · NFR-05
 

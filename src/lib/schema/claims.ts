@@ -63,6 +63,13 @@ export const DimensionAnalysis = z.object({
   promptVersion: z.string(),
 });
 
+/** Named separately from `Flag.shape.status` (rather than inlined) so
+ * T-4.12's "acknowledge or dismiss a flag" PATCH route can validate an
+ * incoming status against the same three values without also inheriting
+ * `Flag`'s own `.default("OPEN")` — a PATCH body with no `status` should
+ * fail validation, not silently mean "set it back to OPEN". */
+export const FlagStatus = z.enum(["OPEN", "ACKNOWLEDGED", "DISMISSED"]);
+
 export const Flag = z.object({
   id: idOf("flg"),
   category: FlagCategory,
@@ -72,8 +79,11 @@ export const Flag = z.object({
   evidenceIds: z.array(idOf("ev")),
   claimIds: z.array(idOf("clm")).default([]),
   detectedBy: z.enum(["INGEST", "CONSISTENCY", "DIMENSION", "VERIFIER"]),
-  status: z.enum(["OPEN", "ACKNOWLEDGED", "DISMISSED"]).default("OPEN"),
+  status: FlagStatus.default("OPEN"),
 });
+
+/** Same reasoning as `FlagStatus` above, for T-4.12's checklist PATCH route. */
+export const ChecklistStatus = z.enum(["OPEN", "REQUESTED", "RECEIVED", "WAIVED"]);
 
 export const ChecklistItem = z.object({
   id: idOf("chk"),
@@ -83,7 +93,7 @@ export const ChecklistItem = z.object({
   whyItMatters: z.string().max(400),
   suggestedSource: z.string().max(200),
   linkedClaimIds: z.array(idOf("clm")),
-  status: z.enum(["OPEN", "REQUESTED", "RECEIVED", "WAIVED"]).default("OPEN"),
+  status: ChecklistStatus.default("OPEN"),
   userNote: z.string().max(1000).optional(),
 });
 

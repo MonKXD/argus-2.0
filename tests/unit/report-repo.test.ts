@@ -75,4 +75,72 @@ describe("ReportRepo", () => {
 
     expect(result.map((r) => r.version)).toEqual([2, 1]);
   });
+
+  it("updates a checklist item's status and note, leaving other items untouched", async () => {
+    const { db } = createFakeFirestore();
+    await new FirestoreStore(db).saveReport(ANALYSIS_ID, demoReport);
+    const repo = new ReportRepo(db);
+    const target = demoReport.checklist[0]!;
+
+    const updated = await repo.updateChecklistItem(ANALYSIS_ID, demoReport.id, target.id, {
+      status: "RECEIVED",
+      userNote: "Got this from the founder call.",
+    });
+
+    expect(updated).toEqual({ ...target, status: "RECEIVED", userNote: "Got this from the founder call." });
+    const saved = await repo.getReport(ANALYSIS_ID, demoReport.id);
+    expect(saved!.checklist.find((item) => item.id === target.id)).toEqual(updated);
+    expect(saved!.checklist.filter((item) => item.id !== target.id)).toEqual(
+      demoReport.checklist.filter((item) => item.id !== target.id),
+    );
+  });
+
+  it("returns null updating a checklist item that doesn't exist", async () => {
+    const { db } = createFakeFirestore();
+    await new FirestoreStore(db).saveReport(ANALYSIS_ID, demoReport);
+    const repo = new ReportRepo(db);
+
+    await expect(
+      repo.updateChecklistItem(ANALYSIS_ID, demoReport.id, "chk_00000000000000000000099999", {
+        status: "WAIVED",
+      }),
+    ).resolves.toBeNull();
+  });
+
+  it("returns null updating a checklist item on a report that was never saved", async () => {
+    const { db } = createFakeFirestore();
+    const repo = new ReportRepo(db);
+
+    await expect(
+      repo.updateChecklistItem(ANALYSIS_ID, demoReport.id, demoReport.checklist[0]!.id, {
+        status: "WAIVED",
+      }),
+    ).resolves.toBeNull();
+  });
+
+  it("updates a flag's status, leaving other flags untouched", async () => {
+    const { db } = createFakeFirestore();
+    await new FirestoreStore(db).saveReport(ANALYSIS_ID, demoReport);
+    const repo = new ReportRepo(db);
+    const target = demoReport.flags[0]!;
+
+    const updated = await repo.updateFlagStatus(ANALYSIS_ID, demoReport.id, target.id, "ACKNOWLEDGED");
+
+    expect(updated).toEqual({ ...target, status: "ACKNOWLEDGED" });
+    const saved = await repo.getReport(ANALYSIS_ID, demoReport.id);
+    expect(saved!.flags.find((flag) => flag.id === target.id)).toEqual(updated);
+    expect(saved!.flags.filter((flag) => flag.id !== target.id)).toEqual(
+      demoReport.flags.filter((flag) => flag.id !== target.id),
+    );
+  });
+
+  it("returns null updating a flag that doesn't exist", async () => {
+    const { db } = createFakeFirestore();
+    await new FirestoreStore(db).saveReport(ANALYSIS_ID, demoReport);
+    const repo = new ReportRepo(db);
+
+    await expect(
+      repo.updateFlagStatus(ANALYSIS_ID, demoReport.id, "flg_00000000000000000000099999", "DISMISSED"),
+    ).resolves.toBeNull();
+  });
 });
