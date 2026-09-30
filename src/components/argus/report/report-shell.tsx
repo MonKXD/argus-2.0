@@ -196,7 +196,41 @@ function ExplainScore({
     <details className="w-full min-w-0 text-ui-sm">
       <summary className="cursor-pointer text-mist">Explain this score</summary>
       <div className="mt-3 flex min-w-0 flex-col gap-4">
-        <div className="max-w-full min-w-0 overflow-x-auto">
+        {/* DESIGN section 10: "Below 768: tables become stacked rows."
+         * A real table stays the desktop presentation (md and up); below
+         * that, the identical data renders as a list of labelled cards —
+         * the same "duplicate markup, toggle by breakpoint" pattern this
+         * report already uses for its section nav and evidence rail,
+         * rather than CSS-toggling one table's own display mode (T-4.13). */}
+        <ul className="flex flex-col gap-3 md:hidden">
+          {contributions.map((c) => (
+            <li key={c.dimension} className="rounded-panel border border-hairline p-3">
+              <p className="font-medium text-foreground">{c.label}</p>
+              <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 text-mist">
+                <dt>Weight</dt>
+                <dd className="tabular-nums text-foreground">
+                  {formatNumber(c.weight * 100, { maximumFractionDigits: 0 })}%
+                </dd>
+                <dt>Score</dt>
+                <dd className="tabular-nums text-foreground">
+                  {c.score === null ? "Not scored" : c.score}
+                </dd>
+                <dt>Confidence</dt>
+                <dd className="tabular-nums text-foreground">
+                  {c.score === null ? "—" : confidenceLabel(c.confidence)}
+                </dd>
+                <dt>Contribution</dt>
+                <dd className="tabular-nums text-foreground">
+                  {c.contribution === null
+                    ? "—"
+                    : formatNumber(c.contribution, { maximumFractionDigits: 1 })}
+                </dd>
+              </dl>
+            </li>
+          ))}
+        </ul>
+
+        <div className="hidden max-w-full min-w-0 overflow-x-auto md:block">
           <table
             className="w-full text-left"
             aria-label="Per-dimension weight, score and contribution to the overall score"
@@ -323,10 +357,10 @@ function ReportShell({
       <ClaimSelectionContext.Provider
         value={{ selectedId: selected?.id ?? null, onSelect: setSelected, statusFilter }}
       >
-        <div className="lg:grid lg:grid-cols-[220px_1fr_360px] lg:gap-12">
+        <div className="md:grid md:grid-cols-[220px_1fr] md:gap-12 xl:grid-cols-[220px_1fr_360px]">
           <ReportSectionNav />
 
-          <div className="mt-8 flex max-w-[760px] flex-col gap-12 lg:mt-0">
+          <div className="mt-8 flex max-w-[760px] flex-col gap-12 md:mt-0">
             <section id="executive-summary">
               <SectionHeader
                 title="1. Executive summary"

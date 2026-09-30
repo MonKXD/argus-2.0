@@ -20,15 +20,17 @@ interface EvidencePanelProps {
  * `EvidenceRailContent` is the same either way, only the wrapper differs —
  * and uses `useMediaQuery` (not CSS alone) to decide which one is actually
  * live, per D-032's own deferral: a bottom sheet that only `showModal()`s
- * below `lg` (1024px), never on desktop where the docked column already
- * shows the same content.
+ * below `xl` (1280px) — DESIGN section 10's responsive table draws the
+ * docked-column threshold at 1280 ("1280 and up: full three-column
+ * report"), not 1024 (T-4.13; the docked rail and the 3-column grid moved
+ * together from `lg` to `xl` in the same change).
  */
 function EvidencePanel({ selected, onClose, evidence, sources, facts }: EvidencePanelProps) {
-  const isNarrow = !useMediaQuery("(min-width: 1024px)");
+  const isNarrow = !useMediaQuery("(min-width: 1280px)");
 
   return (
     <>
-      <aside className="hidden lg:sticky lg:top-6 lg:block lg:h-fit lg:border-l lg:border-hairline lg:pl-8">
+      <aside className="hidden xl:sticky xl:top-6 xl:block xl:h-fit xl:border-l xl:border-hairline xl:pl-8">
         {selected ? (
           <EvidenceRailContent
             claim={selected}

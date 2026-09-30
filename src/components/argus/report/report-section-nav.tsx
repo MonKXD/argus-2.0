@@ -21,9 +21,12 @@ interface ReportSectionNavProps {
 
 /**
  * DESIGN section 6: "SectionNav | Sticky; scroll-spy; keyboard J/K." /
- * section 3.3's 768-1023px breakpoint: "Section nav becomes a top select."
- * Full mobile layout polish is T-4.13's job; this covers the two
- * breakpoints DESIGN actually names.
+ * section 10's responsive table: "768 to 1023 | Section nav becomes a top
+ * select; single reading column" — the full nav list stays visible from
+ * `md` (768) up, matching that table's next row up ("1024 to 1279 |
+ * Sidebar collapsed; evidence rail becomes an overlay sheet", where
+ * "sidebar" is the section nav staying as a plain list, not yet a select —
+ * only the evidence rail changes shape in that band, T-4.13).
  */
 function ReportSectionNav({ className }: ReportSectionNavProps) {
   const [activeId, setActiveId] = React.useState<string | null>(REPORT_SECTIONS[0]?.id ?? null);
@@ -76,7 +79,7 @@ function ReportSectionNav({ className }: ReportSectionNavProps) {
 
   return (
     <>
-      <div className={cn("lg:hidden", className)}>
+      <div className={cn("md:hidden", className)}>
         <Select value={activeId ?? undefined} onValueChange={goTo}>
           <SelectTrigger aria-label="Jump to section" className="w-full">
             <SelectValue placeholder="Jump to section" />
@@ -91,7 +94,7 @@ function ReportSectionNav({ className }: ReportSectionNavProps) {
         </Select>
       </div>
 
-      <nav aria-label="Report sections" className={cn("sticky top-6 hidden lg:block", className)}>
+      <nav aria-label="Report sections" className={cn("sticky top-6 hidden md:block", className)}>
         <ol className="flex flex-col gap-4">
           {GROUPS.map((group) => (
             <li key={group}>
