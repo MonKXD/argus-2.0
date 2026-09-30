@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { ReportShell } from "@/components/argus/report/report-shell";
-import { demoDimensions, demoReport, loopwellAnalysis } from "@/demo";
+import { demoDimensions, demoReport, demoSources, loopwellAnalysis } from "@/demo";
 import { DIMENSION_LABEL } from "@/lib/dimension-labels";
 
 // ReportHeader renders DeleteAnalysisButton, which needs a router.
@@ -81,6 +81,18 @@ describe("ReportShell", () => {
       .getByRole("heading", { name: /16\. Missing information/ })
       .closest("section")!;
     expect(within(section).getByText(item.question)).toBeInTheDocument();
+  });
+
+  it("shows the suggested source for a checklist item", () => {
+    render(
+      <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,
+    );
+
+    const item = demoReport.checklist.find((c) => c.suggestedSource)!;
+    const section = screen
+      .getByRole("heading", { name: /16\. Missing information/ })
+      .closest("section")!;
+    expect(within(section).getByText(item.suggestedSource, { exact: false })).toBeInTheDocument();
   });
 
   it("resolves strength and weakness claim ids into real claim text", () => {
@@ -193,6 +205,42 @@ describe("ReportShell", () => {
       .getByRole("heading", { name: /10\. Financial signals/ })
       .closest("section")!;
     expect(within(section).getByText("Show criteria")).toBeInTheDocument();
+  });
+
+  it("shows the reliability mix in the evidence and sources section", () => {
+    render(
+      <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,
+    );
+
+    const section = screen.getByRole("heading", { name: /15\. Evidence/ }).closest("section")!;
+    expect(within(section).getByText("Independent evidence")).toBeInTheDocument();
+    expect(within(section).getByText("Company evidence")).toBeInTheDocument();
+    expect(within(section).getByText("Provided evidence")).toBeInTheDocument();
+  });
+
+  it("renders a real source list when sources are passed", () => {
+    render(
+      <ReportShell
+        analysis={loopwellAnalysis}
+        report={demoReport}
+        dimensions={demoDimensions}
+        sources={demoSources}
+      />,
+    );
+
+    const section = screen.getByRole("heading", { name: /15\. Evidence/ }).closest("section")!;
+    const source = demoSources[0]!;
+    expect(within(section).getByText(source.title)).toBeInTheDocument();
+  });
+
+  it("omits the source list when no sources are passed", () => {
+    render(
+      <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,
+    );
+
+    const section = screen.getByRole("heading", { name: /15\. Evidence/ }).closest("section")!;
+    const source = demoSources[0]!;
+    expect(within(section).queryByText(source.title)).not.toBeInTheDocument();
   });
 
   it("renders a partial notice when one is passed", () => {

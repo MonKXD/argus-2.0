@@ -10,6 +10,7 @@ import { getAdminFirestore } from "@/lib/repos/admin-firestore";
 import { AnalysisRepo } from "@/lib/repos/analysis-repo";
 import { zodConverter } from "@/lib/repos/converter";
 import { ReportRepo } from "@/lib/repos/report-repo";
+import { SourceRepo } from "@/lib/repos/source-repo";
 import { Run } from "@/lib/schema/run";
 import { failedStepLabels } from "@/lib/step-labels";
 
@@ -67,11 +68,17 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
 
   if (analysis.status === "COMPLETE" || analysis.status === "PARTIAL") {
     const reportRepo = new ReportRepo(getAdminFirestore());
-    const report = analysis.latest ? await reportRepo.getReport(id, analysis.latest.reportId) : null;
+    const report = analysis.latest
+      ? await reportRepo.getReport(id, analysis.latest.reportId)
+      : null;
 
     if (report) {
       const dimensions = await reportRepo.listDimensions(id, report.id);
-      const run = analysis.status === "PARTIAL" && analysis.currentRunId ? await loadRun(id, analysis.currentRunId) : null;
+      const sources = await new SourceRepo(getAdminFirestore()).list(id);
+      const run =
+        analysis.status === "PARTIAL" && analysis.currentRunId
+          ? await loadRun(id, analysis.currentRunId)
+          : null;
       const failed = run ? failedStepLabels(run) : [];
 
       return (
@@ -79,15 +86,22 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
           analysis={analysis}
           report={report}
           dimensions={dimensions}
+          sources={sources}
           partialNotice={
             analysis.status === "PARTIAL" ? (
               <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-3 rounded-panel border border-hairline bg-panel p-4 text-ui-sm text-foreground">
                 <p>
                   This report is partial.{" "}
-                  {failed.length > 0 ? `Not analysed: ${failed.join(", ")}.` : "Some steps couldn't complete."}
+                  {failed.length > 0
+                    ? `Not analysed: ${failed.join(", ")}.`
+                    : "Some steps couldn't complete."}
                 </p>
                 {analysis.currentRunId && (
-                  <ResumeRunButton analysisId={id} runId={analysis.currentRunId} label="Resume analysis" />
+                  <ResumeRunButton
+                    analysisId={id}
+                    runId={analysis.currentRunId}
+                    label="Resume analysis"
+                  />
                 )}
               </div>
             ) : undefined
@@ -144,14 +158,18 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
   }
 
   const cancelledRun =
-    analysis.status === "READY" && analysis.currentRunId ? await loadRun(id, analysis.currentRunId) : null;
+    analysis.status === "READY" && analysis.currentRunId
+      ? await loadRun(id, analysis.currentRunId)
+      : null;
   const resumable = cancelledRun?.status === "CANCELLED";
 
   return (
     <div className="mx-auto flex max-w-[640px] flex-col gap-4 p-6">
       <h1 className="font-serif text-h2 text-foreground">{analysis.startup.name}</h1>
       <p className="text-ui-sm text-mist">
-        {resumable ? "This analysis was cancelled partway through." : "This analysis hasn't been run yet."}
+        {resumable
+          ? "This analysis was cancelled partway through."
+          : "This analysis hasn't been run yet."}
       </p>
 
       {resumable && analysis.currentRunId && (

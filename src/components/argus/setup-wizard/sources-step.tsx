@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { UseSourceUploadResult } from "@/hooks/use-source-upload";
 import type { SourceType } from "@/lib/schema/enums";
+import { SOURCE_TYPE_LABEL } from "@/lib/source-labels";
 import { cn } from "@/lib/utils";
 
 interface SourcesStepProps {
@@ -21,15 +22,6 @@ const EXTENSION_TYPE_HINT: Record<string, SourceType> = {
   docx: "COMPANY_DOC",
   txt: "USER_NOTES",
   md: "USER_NOTES",
-};
-
-const SOURCE_TYPE_LABEL: Record<SourceType, string> = {
-  PITCH_DECK: "Pitch deck",
-  FINANCIAL_DOC: "Financial document",
-  COMPANY_DOC: "Company document",
-  WEBSITE: "Website",
-  WEB_RESEARCH: "Web research",
-  USER_NOTES: "Notes",
 };
 
 const TEXT_MAX = 20_000;
@@ -58,8 +50,17 @@ function sourceIcon(source: { origin: string }) {
  * this one.
  */
 function SourcesStep({ source }: SourcesStepProps) {
-  const { sources, uploading, loading, loadError, actionError, uploadFiles, addUrl, addText, removeSource } =
-    source;
+  const {
+    sources,
+    uploading,
+    loading,
+    loadError,
+    actionError,
+    uploadFiles,
+    addUrl,
+    addText,
+    removeSource,
+  } = source;
   const [url, setUrl] = React.useState("");
   const [addingUrl, setAddingUrl] = React.useState(false);
   const [text, setText] = React.useState("");

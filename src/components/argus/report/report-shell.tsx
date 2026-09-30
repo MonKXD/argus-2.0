@@ -1,5 +1,6 @@
 import { ClaimInline } from "@/components/argus/claim-inline";
 import { EmptyState } from "@/components/argus/empty-state";
+import { ReliabilityChip } from "@/components/argus/reliability-chip";
 import { ReportHeader } from "@/components/argus/report/report-header";
 import { ReportSectionNav } from "@/components/argus/report/report-section-nav";
 import { DimensionRadar } from "@/components/charts/dimension-radar";
@@ -11,8 +12,10 @@ import { formatNumber } from "@/lib/format";
 import type { Analysis } from "@/lib/schema/analysis";
 import type { Claim, CriterionScore, DimensionAnalysis } from "@/lib/schema/claims";
 import type { DimensionKey } from "@/lib/schema/enums";
+import type { Source } from "@/lib/schema/evidence";
 import type { Report } from "@/lib/schema/report";
 import { SEVERITY_CLASS } from "@/lib/severity";
+import { SOURCE_TYPE_LABEL } from "@/lib/source-labels";
 
 import type { ReactNode } from "react";
 
@@ -20,6 +23,10 @@ interface ReportShellProps {
   analysis: Analysis;
   report: Report;
   dimensions: DimensionAnalysis[];
+  /** The analysis's registered sources (FR-RPT-15's "source list"). Omitted
+   * entirely in a context that hasn't loaded them (e.g. a unit test) — the
+   * section then just shows the aggregate stats it already had. */
+  sources?: Source[];
   /** A `PARTIAL`-status banner (with its own Resume action) rendered
    * between the header and the section nav/reading column. */
   partialNotice?: ReactNode;
@@ -182,7 +189,7 @@ function claimsById(dimensions: DimensionAnalysis[]): Map<string, Claim> {
  * don't need to build first-pass content from zero. See PROJECT_MEMORY
  * D-071.
  */
-function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShellProps) {
+function ReportShell({ analysis, report, dimensions, sources, partialNotice }: ReportShellProps) {
   const byKey = new Map(dimensions.map((d) => [d.dimension, d]));
   const dimensionScores = Object.fromEntries(
     dimensions.map((d) => [d.dimension, { score: d.score, confidence: d.confidence }]),
@@ -389,7 +396,36 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
               <dd className="tabular-nums text-foreground">
                 {formatNumber(report.evidenceStats.claims.MISSING)}
               </dd>
+              <dt className="text-mist">Independent evidence</dt>
+              <dd className="tabular-nums text-foreground">
+                {formatNumber(report.evidenceStats.reliabilityMix.INDEPENDENT)}
+              </dd>
+              <dt className="text-mist">Company evidence</dt>
+              <dd className="tabular-nums text-foreground">
+                {formatNumber(report.evidenceStats.reliabilityMix.FIRST_PARTY)}
+              </dd>
+              <dt className="text-mist">Provided evidence</dt>
+              <dd className="tabular-nums text-foreground">
+                {formatNumber(report.evidenceStats.reliabilityMix.PROVIDED)}
+              </dd>
             </dl>
+
+            {sources && sources.length > 0 && (
+              <ul className="mt-4 flex flex-col gap-2">
+                {sources.map((source) => (
+                  <li
+                    key={source.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-panel border border-hairline p-3 text-ui-sm"
+                  >
+                    <span className="text-foreground">{source.title}</span>
+                    <span className="flex items-center gap-2 text-mist">
+                      {SOURCE_TYPE_LABEL[source.type]}
+                      <ReliabilityChip reliability={source.reliability} />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           <section id="missing-information">
@@ -409,6 +445,11 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
                         <span className="shrink-0 text-caption text-mist">{item.priority}</span>
                       </div>
                       <p className="mt-1 text-mist">{item.whyItMatters}</p>
+                      {item.suggestedSource && (
+                        <p className="mt-1 text-caption text-mist">
+                          Suggested source: {item.suggestedSource}
+                        </p>
+                      )}
                     </li>
                   ))}
                 </ul>
