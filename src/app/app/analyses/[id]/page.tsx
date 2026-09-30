@@ -9,6 +9,7 @@ import { requireUser } from "@/lib/api/auth";
 import { getAdminFirestore } from "@/lib/repos/admin-firestore";
 import { AnalysisRepo } from "@/lib/repos/analysis-repo";
 import { zodConverter } from "@/lib/repos/converter";
+import { FactRepo } from "@/lib/repos/fact-repo";
 import { ReportRepo } from "@/lib/repos/report-repo";
 import { SourceRepo } from "@/lib/repos/source-repo";
 import { Run } from "@/lib/schema/run";
@@ -74,7 +75,10 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
 
     if (report) {
       const dimensions = await reportRepo.listDimensions(id, report.id);
-      const sources = await new SourceRepo(getAdminFirestore()).list(id);
+      const sourceRepo = new SourceRepo(getAdminFirestore());
+      const sources = await sourceRepo.list(id);
+      const evidence = await sourceRepo.listEvidence(id);
+      const facts = await new FactRepo(getAdminFirestore()).list(id);
       const run =
         analysis.status === "PARTIAL" && analysis.currentRunId
           ? await loadRun(id, analysis.currentRunId)
@@ -87,6 +91,8 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
           report={report}
           dimensions={dimensions}
           sources={sources}
+          evidence={evidence}
+          facts={facts}
           partialNotice={
             analysis.status === "PARTIAL" ? (
               <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-3 rounded-panel border border-hairline bg-panel p-4 text-ui-sm text-foreground">

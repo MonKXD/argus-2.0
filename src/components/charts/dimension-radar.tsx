@@ -59,7 +59,13 @@ function DimensionRadar({ scores, size = 280, className }: DimensionRadarProps) 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
       <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+        <svg
+          width={size}
+          height={size}
+          viewBox={`0 0 ${size} ${size}`}
+          className="overflow-visible"
+          aria-hidden="true"
+        >
           {RING_VALUES.map((ring) => (
             <path
               key={ring}

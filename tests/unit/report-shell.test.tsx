@@ -3,7 +3,14 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { ReportShell } from "@/components/argus/report/report-shell";
-import { demoDimensions, demoReport, demoSources, loopwellAnalysis } from "@/demo";
+import {
+  demoDimensions,
+  demoEvidence,
+  demoFacts,
+  demoReport,
+  demoSources,
+  loopwellAnalysis,
+} from "@/demo";
 import { DIMENSION_LABEL } from "@/lib/dimension-labels";
 
 // ReportHeader renders DeleteAnalysisButton, which needs a router.
@@ -241,6 +248,58 @@ describe("ReportShell", () => {
     const section = screen.getByRole("heading", { name: /15\. Evidence/ }).closest("section")!;
     const source = demoSources[0]!;
     expect(within(section).queryByText(source.title)).not.toBeInTheDocument();
+  });
+
+  it("opens the evidence rail with the selected claim's quote when a claim is clicked", async () => {
+    const user = userEvent.setup();
+    // Report this as a desktop viewport so EvidencePanel uses the plain
+    // docked aside, not the Sheet — jsdom has no real showModal(), so a
+    // native <dialog> can't be meaningfully driven here (PROJECT_MEMORY
+    // section 4); the responsive chrome itself is Playwright's job.
+    const matchMediaSpy = vi.spyOn(window, "matchMedia").mockImplementation((query: string) => ({
+      matches: true,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }));
+
+    const { container } = render(
+      <ReportShell
+        analysis={loopwellAnalysis}
+        report={demoReport}
+        dimensions={demoDimensions}
+        evidence={demoEvidence}
+        sources={demoSources}
+        facts={demoFacts}
+      />,
+    );
+
+    const claimIndex = demoReport.narrative.executiveSummary.findIndex(
+      (c) => c.status === "VERIFIED",
+    );
+    const claim = demoReport.narrative.executiveSummary[claimIndex] as Extract<
+      (typeof demoReport.narrative.executiveSummary)[number],
+      { status: "VERIFIED" }
+    >;
+    const aside = container.querySelector("aside")!;
+    expect(within(aside).getByText("Select a claim to see its evidence.")).toBeInTheDocument();
+
+    const execSummarySection = screen
+      .getByRole("heading", { name: /1\. Executive summary/ })
+      .closest("section")!;
+    await user.click(within(execSummarySection).getAllByRole("button")[claimIndex]!);
+
+    expect(
+      within(aside).queryByText("Select a claim to see its evidence."),
+    ).not.toBeInTheDocument();
+    const quoteEl = aside.querySelector("p.font-serif");
+    expect(quoteEl?.textContent).toContain(claim.quotes[0]!.quote);
+
+    matchMediaSpy.mockRestore();
   });
 
   it("renders a partial notice when one is passed", () => {

@@ -56,6 +56,12 @@ export class SourceRepo {
     return snapshot.docs.map((doc) => doc.data());
   }
 
+  /** Every evidence item across every source (T-4.08's evidence rail — resolving a `VERIFIED` claim's quote back to its source). */
+  async listEvidence(analysisId: string): Promise<Evidence[]> {
+    const snapshot = await this.evidence(analysisId).get();
+    return snapshot.docs.map((doc) => doc.data());
+  }
+
   async get(analysisId: string, sourceId: string): Promise<Source | null> {
     const snapshot = await this.sources(analysisId).doc(sourceId).get();
     return snapshot.exists ? snapshot.data()! : null;

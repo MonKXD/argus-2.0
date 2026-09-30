@@ -57,6 +57,19 @@ describe("SourceRepo", () => {
     );
   });
 
+  it("listEvidence returns every evidence item across every source", async () => {
+    const { db } = createFakeFirestore();
+    const repo = new SourceRepo(db);
+    await repo.create(deckSource, deckEvidence);
+    await repo.create(otherSource, otherEvidence);
+
+    const evidence = await repo.listEvidence(ANALYSIS_ID);
+
+    expect(evidence.map((e) => e.id).sort()).toEqual(
+      [...deckEvidence, ...otherEvidence].map((e) => e.id).sort(),
+    );
+  });
+
   it("delete on a source with no evidence does not error", async () => {
     const { db } = createFakeFirestore();
     const repo = new SourceRepo(db);
