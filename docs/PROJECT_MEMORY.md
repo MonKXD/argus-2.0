@@ -4,7 +4,7 @@ Version-controlled memory for this project: decisions, conventions, gotchas and 
 
 How to update: add a decision when you choose between real options; add a gotcha when something cost time; add a session note at the end of each working session. Never store secrets, real company data or document content here.
 
-Last updated: 2026-09-30 (T-4.05 sections 9-10)
+Last updated: 2026-09-30 (T-4.06 sections 11-13)
 
 ## 1. Snapshot
 
@@ -205,6 +205,7 @@ See TRACKER "Decisions needed" for the live list (TQ-1 to TQ-5, OQ-1, OQ-8) and 
 
 ## 6. Session log (newest first)
 
+- 2026-09-30: T-4.06 (sections 11-13: risks and flags, strengths and weaknesses, market gaps) — section 11 gained `showCriteria` for `risk`. Sections 12 (strengths/weaknesses roll-up, already resolving real `Claim` objects) and 13 (market gaps, synthesis-only) needed no change — both already fully satisfy PRD row 12/13's requirements since T-4.01. `pnpm check` (886 unit tests) and `pnpm build` both green; re-verified 1440/768/390px with every disclosure open, no overflow. Phase 4 is now 6/14. Next: T-4.07 (sections 14-16: AI insights, evidence and sources, checklist).
 - 2026-09-30: T-4.05 (sections 9-10: traction, financial signals) — direct continuation of D-073's `showCriteria` pattern, wired for `traction` (section 9) and `financial` (section 10); both dimensions' rubric criteria map cleanly onto PRD rows 9/10. `pnpm check` (885 unit tests) and `pnpm build` both green; re-verified 1440/768/390px with every disclosure open, no overflow. Phase 4 is now 5/14. Next: T-4.06 (sections 11-13: risks and flags, strengths and weaknesses, market gaps).
 - 2026-09-26: T-4.04 (sections 6-8: market opportunity, trends, competitive landscape) — direct continuation of D-073's `showCriteria` pattern, wired for `market` (section 6) and `competitive` (section 8); section 7 (Market Trends) is synthesis-only and needed no change. `pnpm check` (883 unit tests) and `pnpm build` both green; re-verified 1440/768/390px with every disclosure open, no overflow. Phase 4 is now 4/14. Next: T-4.05 (sections 9-10: traction, financial signals).
 - 2026-09-26: T-4.03 (sections 4-5: founder/team, product/business model) — see D-073. Extracted shared `CriteriaList`; `DimensionSection` gained a `showCriteria` prop, wired for founder, product and business_model — each shows its own "Show criteria" disclosure with 0-4 scores and rationale. `pnpm check` (881 unit tests, up from 879) and `pnpm build` both green; re-verified 1440/768/390px with every disclosure open, no overflow. Phase 4 is now 3/14. Next: T-4.04 (sections 6-8: market opportunity, trends, competitive landscape).

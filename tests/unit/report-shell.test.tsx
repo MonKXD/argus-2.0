@@ -62,6 +62,15 @@ describe("ReportShell", () => {
     expect(within(section).getByText(flag.severity)).toBeInTheDocument();
   });
 
+  it("shows the risk dimension's own criterion breakdown in section 11", () => {
+    render(
+      <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,
+    );
+
+    const section = screen.getByRole("heading", { name: /11\. Risks/ }).closest("section")!;
+    expect(within(section).getByText("Show criteria")).toBeInTheDocument();
+  });
+
   it("renders the checklist questions in the missing-information section", () => {
     render(
       <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,

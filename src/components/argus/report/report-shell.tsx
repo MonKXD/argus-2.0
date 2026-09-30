@@ -318,7 +318,7 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
                   ))}
                 </ul>
               )}
-              <DimensionSection dimension={byKey.get("risk")} />
+              <DimensionSection dimension={byKey.get("risk")} showCriteria />
             </div>
           </section>
 
