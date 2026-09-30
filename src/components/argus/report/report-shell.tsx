@@ -4,6 +4,7 @@ import { createContext, useContext, useState } from "react";
 
 import { ClaimRow } from "@/components/argus/claim-row";
 import { EmptyState } from "@/components/argus/empty-state";
+import { EvidenceBar } from "@/components/argus/evidence-bar";
 import { STATUS_LABEL } from "@/components/argus/evidence-marker";
 import { ReliabilityChip } from "@/components/argus/reliability-chip";
 import { EvidencePanel } from "@/components/argus/report/evidence-panel";
@@ -27,6 +28,9 @@ import { SOURCE_TYPE_LABEL } from "@/lib/source-labels";
 import type { ReactNode } from "react";
 
 type StatusFilter = ClaimStatus | "ALL";
+type StatusCounts = Report["evidenceStats"]["claims"];
+
+const EMPTY_COUNTS: StatusCounts = { VERIFIED: 0, AI_ANALYSIS: 0, ASSUMPTION: 0, MISSING: 0 };
 
 interface ReportShellProps {
   analysis: Analysis;
@@ -77,6 +81,42 @@ function ClaimList({ claims }: { claims: Claim[] }) {
           onSelect={selection?.onSelect}
         />
       ))}
+    </div>
+  );
+}
+
+/**
+ * FR-RPT-18: "Every section shows: an evidence-composition bar, claims with
+ * status markers, and a coverage note when the section has missing
+ * information" (PRD section 10). `report.evidenceStats.bySection` (built by
+ * VERIFY, D-051) already keys exactly this per-section breakdown — this
+ * reads it rather than recomputing counts from each section's own claim
+ * list, so it can never drift from the numbers section 15's own evidence
+ * stats table shows. No bar for a section with zero claims (e.g. section 3,
+ * Investment score — D-051's own "no claims live there" section).
+ */
+function SectionHeader({
+  title,
+  sectionKey,
+  evidenceStats,
+}: {
+  title: ReactNode;
+  sectionKey: string;
+  evidenceStats: Report["evidenceStats"];
+}) {
+  const counts = evidenceStats.bySection[sectionKey] ?? EMPTY_COUNTS;
+  const total = counts.VERIFIED + counts.AI_ANALYSIS + counts.ASSUMPTION + counts.MISSING;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <h2 className="font-serif text-h3 text-foreground">{title}</h2>
+      {total > 0 && <EvidenceBar counts={counts} className="max-w-60" />}
+      {counts.MISSING > 0 && (
+        <p className="text-ui-sm text-mist">
+          {counts.MISSING} of {total} {total === 1 ? "claim is" : "claims are"} missing — not
+          found in the sources provided.
+        </p>
+      )}
     </div>
   );
 }
@@ -280,21 +320,33 @@ function ReportShell({
 
           <div className="mt-8 flex max-w-[760px] flex-col gap-12 lg:mt-0">
             <section id="executive-summary">
-              <h2 className="font-serif text-h3 text-foreground">1. Executive summary</h2>
+              <SectionHeader
+                title="1. Executive summary"
+                sectionKey="executive_summary"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4">
                 <ClaimList claims={report.narrative.executiveSummary} />
               </div>
             </section>
 
             <section id="investment-overview">
-              <h2 className="font-serif text-h3 text-foreground">2. Investment overview</h2>
+              <SectionHeader
+                title="2. Investment overview"
+                sectionKey="investment_overview"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4">
                 <ClaimList claims={report.narrative.investmentOverview} />
               </div>
             </section>
 
             <section id="investment-score">
-              <h2 className="font-serif text-h3 text-foreground">3. Investment score</h2>
+              <SectionHeader
+                title="3. Investment score"
+                sectionKey="investment_score"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4 flex flex-wrap gap-8">
                 {report.overall.score === null ? (
                   <ScoreGauge notScoredReason="Not enough evidence to score this analysis." />
@@ -314,16 +366,22 @@ function ReportShell({
             </section>
 
             <section id="founder-team">
-              <h2 className="font-serif text-h3 text-foreground">4. Founder &amp; team</h2>
+              <SectionHeader
+                title="4. Founder & team"
+                sectionKey="founder_team"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4">
                 <DimensionSection dimension={byKey.get("founder")} showCriteria />
               </div>
             </section>
 
             <section id="product-business-model">
-              <h2 className="font-serif text-h3 text-foreground">
-                5. Product &amp; business model
-              </h2>
+              <SectionHeader
+                title="5. Product & business model"
+                sectionKey="product_business_model"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4 flex flex-col gap-6">
                 <div>
                   <h3 className="text-ui font-medium text-foreground">{DIMENSION_LABEL.product}</h3>
@@ -343,42 +401,66 @@ function ReportShell({
             </section>
 
             <section id="market-opportunity">
-              <h2 className="font-serif text-h3 text-foreground">6. Market opportunity</h2>
+              <SectionHeader
+                title="6. Market opportunity"
+                sectionKey="market_opportunity"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4">
                 <DimensionSection dimension={byKey.get("market")} showCriteria />
               </div>
             </section>
 
             <section id="market-trends">
-              <h2 className="font-serif text-h3 text-foreground">7. Market trends</h2>
+              <SectionHeader
+                title="7. Market trends"
+                sectionKey="market_trends"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4">
                 <ClaimList claims={report.narrative.marketTrends} />
               </div>
             </section>
 
             <section id="competitive-landscape">
-              <h2 className="font-serif text-h3 text-foreground">8. Competitive landscape</h2>
+              <SectionHeader
+                title="8. Competitive landscape"
+                sectionKey="competitive_landscape"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4">
                 <DimensionSection dimension={byKey.get("competitive")} showCriteria />
               </div>
             </section>
 
             <section id="traction-growth">
-              <h2 className="font-serif text-h3 text-foreground">9. Traction &amp; growth</h2>
+              <SectionHeader
+                title="9. Traction & growth"
+                sectionKey="traction_growth"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4">
                 <DimensionSection dimension={byKey.get("traction")} showCriteria />
               </div>
             </section>
 
             <section id="financial-signals">
-              <h2 className="font-serif text-h3 text-foreground">10. Financial signals</h2>
+              <SectionHeader
+                title="10. Financial signals"
+                sectionKey="financial_signals"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4">
                 <DimensionSection dimension={byKey.get("financial")} showCriteria />
               </div>
             </section>
 
             <section id="risks-flags">
-              <h2 className="font-serif text-h3 text-foreground">11. Risks &amp; red flags</h2>
+              <SectionHeader
+                title="11. Risks & red flags"
+                sectionKey="risks_red_flags"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4 flex flex-col gap-4">
                 {report.flags.length === 0 ? (
                   <EmptyState message="No flags raised in this run." />
@@ -401,7 +483,11 @@ function ReportShell({
             </section>
 
             <section id="strengths-weaknesses">
-              <h2 className="font-serif text-h3 text-foreground">12. Strengths &amp; weaknesses</h2>
+              <SectionHeader
+                title="12. Strengths & weaknesses"
+                sectionKey="strengths_weaknesses"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
                   <h3 className="text-ui font-medium text-foreground">Strengths</h3>
@@ -419,21 +505,33 @@ function ReportShell({
             </section>
 
             <section id="market-gaps">
-              <h2 className="font-serif text-h3 text-foreground">13. Market gaps</h2>
+              <SectionHeader
+                title="13. Market gaps"
+                sectionKey="market_gaps"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4">
                 <ClaimList claims={report.narrative.marketGaps} />
               </div>
             </section>
 
             <section id="ai-insights">
-              <h2 className="font-serif text-h3 text-foreground">14. AI insights</h2>
+              <SectionHeader
+                title="14. AI insights"
+                sectionKey="ai_insights"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4">
                 <ClaimList claims={report.narrative.aiInsights} />
               </div>
             </section>
 
             <section id="evidence-sources">
-              <h2 className="font-serif text-h3 text-foreground">15. Evidence &amp; sources</h2>
+              <SectionHeader
+                title="15. Evidence & sources"
+                sectionKey="evidence_sources"
+                evidenceStats={report.evidenceStats}
+              />
               <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-ui-sm sm:grid-cols-4">
                 <dt className="text-mist">Sources</dt>
                 <dd className="tabular-nums text-foreground">
@@ -500,7 +598,11 @@ function ReportShell({
             </section>
 
             <section id="missing-information">
-              <h2 className="font-serif text-h3 text-foreground">16. Missing information</h2>
+              <SectionHeader
+                title="16. Missing information"
+                sectionKey="missing_information"
+                evidenceStats={report.evidenceStats}
+              />
               <div className="mt-4">
                 {report.checklist.length === 0 ? (
                   <EmptyState message="Nothing outstanding from this run." />

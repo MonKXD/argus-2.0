@@ -334,6 +334,49 @@ describe("ReportShell", () => {
     expect(screen.getByText(nonVerified.text, { exact: false })).toBeInTheDocument();
   });
 
+  it("shows an evidence-composition bar in a section with claims", () => {
+    render(
+      <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,
+    );
+
+    const section = screen.getByRole("heading", { name: /1\. Executive summary/ }).closest("section")!;
+    expect(within(section).getByRole("img", { name: /Evidence:/ })).toBeInTheDocument();
+  });
+
+  it("omits the evidence bar for a section with no claims of its own", () => {
+    render(
+      <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,
+    );
+
+    const section = screen
+      .getByRole("heading", { name: /3\. Investment score/ })
+      .closest("section")!;
+    expect(within(section).queryByRole("img", { name: /Evidence:/ })).not.toBeInTheDocument();
+  });
+
+  it("shows a coverage note in a section with missing claims", () => {
+    render(
+      <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,
+    );
+
+    const missingCount = demoReport.evidenceStats.bySection.financial_signals!.MISSING;
+    const section = screen
+      .getByRole("heading", { name: /10\. Financial signals/ })
+      .closest("section")!;
+    expect(
+      within(section).getByText(new RegExp(`${missingCount} of \\d+ claim`)),
+    ).toBeInTheDocument();
+  });
+
+  it("omits the coverage note in a section with no missing claims", () => {
+    render(
+      <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,
+    );
+
+    const section = screen.getByRole("heading", { name: /4\. Founder/ }).closest("section")!;
+    expect(within(section).queryByText(/not found in the sources provided/)).not.toBeInTheDocument();
+  });
+
   it("renders a partial notice when one is passed", () => {
     render(
       <ReportShell
