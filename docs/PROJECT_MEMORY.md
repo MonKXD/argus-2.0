@@ -4,7 +4,7 @@ Version-controlled memory for this project: decisions, conventions, gotchas and 
 
 How to update: add a decision when you choose between real options; add a gotcha when something cost time; add a session note at the end of each working session. Never store secrets, real company data or document content here.
 
-Last updated: 2026-09-26 (T-4.04 sections 6-8)
+Last updated: 2026-09-30 (T-4.05 sections 9-10)
 
 ## 1. Snapshot
 
@@ -205,6 +205,7 @@ See TRACKER "Decisions needed" for the live list (TQ-1 to TQ-5, OQ-1, OQ-8) and 
 
 ## 6. Session log (newest first)
 
+- 2026-09-30: T-4.05 (sections 9-10: traction, financial signals) — direct continuation of D-073's `showCriteria` pattern, wired for `traction` (section 9) and `financial` (section 10); both dimensions' rubric criteria map cleanly onto PRD rows 9/10. `pnpm check` (885 unit tests) and `pnpm build` both green; re-verified 1440/768/390px with every disclosure open, no overflow. Phase 4 is now 5/14. Next: T-4.06 (sections 11-13: risks and flags, strengths and weaknesses, market gaps).
 - 2026-09-26: T-4.04 (sections 6-8: market opportunity, trends, competitive landscape) — direct continuation of D-073's `showCriteria` pattern, wired for `market` (section 6) and `competitive` (section 8); section 7 (Market Trends) is synthesis-only and needed no change. `pnpm check` (883 unit tests) and `pnpm build` both green; re-verified 1440/768/390px with every disclosure open, no overflow. Phase 4 is now 4/14. Next: T-4.05 (sections 9-10: traction, financial signals).
 - 2026-09-26: T-4.03 (sections 4-5: founder/team, product/business model) — see D-073. Extracted shared `CriteriaList`; `DimensionSection` gained a `showCriteria` prop, wired for founder, product and business_model — each shows its own "Show criteria" disclosure with 0-4 scores and rationale. `pnpm check` (881 unit tests, up from 879) and `pnpm build` both green; re-verified 1440/768/390px with every disclosure open, no overflow. Phase 4 is now 3/14. Next: T-4.04 (sections 6-8: market opportunity, trends, competitive landscape).
 - 2026-09-26: T-4.02 (explain-the-score panel, FR-RPT-22) — see D-072. `src/lib/analysis/scoring/contribution.ts`'s `dimensionContributions()`, golden-tested against AI_SPEC 5.4. `ExplainScore` (`<details>` disclosure in `ReportShell`'s Investment score section) shows weight/score/confidence/contribution per dimension and per-criterion rationale. Found and fixed a real narrow-viewport overflow bug during the mandatory R-UI-12 screenshot check (see section 4's new gotcha) — root cause was a missing `w-full` on `ReportShell`'s outer `mx-auto max-w-[1360px]` container, not the table itself. `pnpm check` (879 unit tests, up from 872) and `pnpm build` both green. Phase 4 is now 2/14. Next: continuing through Phase 4 (T-4.03 onward) per the standing "continue with all the phases" instruction.

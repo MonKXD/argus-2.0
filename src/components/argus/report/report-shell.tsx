@@ -288,14 +288,14 @@ function ReportShell({ analysis, report, dimensions, partialNotice }: ReportShel
           <section id="traction-growth">
             <h2 className="font-serif text-h3 text-foreground">9. Traction &amp; growth</h2>
             <div className="mt-4">
-              <DimensionSection dimension={byKey.get("traction")} />
+              <DimensionSection dimension={byKey.get("traction")} showCriteria />
             </div>
           </section>
 
           <section id="financial-signals">
             <h2 className="font-serif text-h3 text-foreground">10. Financial signals</h2>
             <div className="mt-4">
-              <DimensionSection dimension={byKey.get("financial")} />
+              <DimensionSection dimension={byKey.get("financial")} showCriteria />
             </div>
           </section>
 
