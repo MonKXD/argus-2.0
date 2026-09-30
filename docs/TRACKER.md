@@ -2,15 +2,15 @@
 
 Living status of the build. Update in the same commit as the work it describes.
 
-Last updated: 2026-09-26 (T-3.09)
+Last updated: 2026-09-30 (T-4.14 — Phase 4 complete)
 
 Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L (see IMPLEMENTATION_PLAN section 2). Each task lists the requirement IDs it satisfies.
 
 ## Current focus
 
-- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18. Phase 3 complete (14/14). Phase 4 (Report UI, Alpha) 13/14 done (T-4.01 through T-4.13).
+- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18. Phase 3 complete (14/14). Phase 4 (Report UI, Alpha) complete (14/14).
 - Task: none in progress
-- Next up: T-4.14 (report e2e, visual review, dogfood on three startups; switch `/sample` to the full demo report — the last Phase 4 task). T-2.18 (phase gate) stays blocked in parallel — see below. T-3.14's own finding (Hobby-plan duration ceiling well under a real run's length) is worth flagging to the project owner as a possible reason to prioritize T-6.03 or a plan upgrade sooner than Phase 6.
+- Next up: Phase 5 (Compare, export, watchlist, activity — Beta), starting at T-5.01. T-2.18 (phase gate) stays blocked in parallel — see below. T-3.14's own finding (Hobby-plan duration ceiling well under a real run's length) is worth flagging to the project owner as a possible reason to prioritize T-6.03 or a plan upgrade sooner than Phase 6. New from T-4.14: the e2e suite has no authenticated-session fixture — `a11y.spec.ts`'s "dashboard"/"analyses list" scans and `overlays.spec.ts`'s CommandPalette tests likely never actually exercised the signed-in app (confirmed `/app` 307-redirects to `/login` unauthenticated). Worth a real follow-up task (a Firebase-emulator sign-up fixture, same pattern T-3.01 already proved) before those tests can be trusted.
 - Blockers: T-2.18 needs the project owner to run `pnpm eval` with a real `ANTHROPIC_API_KEY` (none configured in this sandbox) and share the result; an agent session can't complete it alone. Production Firebase (real Google OAuth provider config, real `dev`/`prod` projects, real Admin SDK credentials) still needs the project owner — T-3.01 re-examined this blocker and found it only applies to *production*: `src/lib/env.ts`'s own `USE_FIREBASE_EMULATORS` design (from T-0.05) already makes local dev, and every T-3.01 automated/manual verification, work fully against the Firebase Emulator Suite with no real project. `pnpm build`/`pnpm dev` also need a local `.env.local` (gitignored, never committed) with at least placeholder values for the full server env schema — see PROJECT_MEMORY D-056.
 
 ## Phase progress
@@ -21,7 +21,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 | 1 | Design system, landing, shell, dashboard (demo data) | 17 | 17 | Done |
 | 2 | Engine spike (CLI-first) | 18 | 17 | In progress (blocked on T-2.18) |
 | 3 | Auth, persistence, intake, orchestration | 14 | 14 | Done |
-| 4 | Report UI (Alpha) | 14 | 1 | In progress |
+| 4 | Report UI (Alpha) | 14 | 14 | Done |
 | 5 | Compare, export, watchlist, activity (Beta) | 13 | 0 | Not started |
 | 6 | Monitoring, hardening, launch (1.0) | 15 | 0 | Not started |
 
@@ -114,7 +114,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 - [x] **T-4.11** Report versions, version selector, re-run · M · FR-RPT-19 — done 2026-09-30, see D-078. `ReportRepo.list()` + `ReportVersionSelector` (shown only for 2+ versions, each option showing its score and delta from the previous); `?version=N` selects which saved report to view, with a read-only notice on a historical version. Re-run itself was already wired (T-4.01's "Run again" link); "versions created by re-runs" was already true at the data layer since T-3.08.
 - [x] **T-4.12** Checklist tracking (status, notes) and flag acknowledge · M · FR-RPT-21 — done 2026-09-30, see D-079. New `PATCH .../reports/:reportId/checklist/:itemId` and `.../flags/:flagId` routes (transactional array-field updates on `Report`); `ChecklistItemControls`/`FlagAcknowledgeControls` wired into sections 11 and 16.
 - [x] **T-4.13** Mobile report layout · M · NFR-06 — done 2026-09-30, see D-080. Moved the 3-column grid/evidence-dock threshold from 1024 to 1280 and the section-nav select/list threshold from 1024 to 768, matching DESIGN section 10's exact width table (a real 1024-1279 "nav list, evidence sheet" band now exists). `ExplainScore`'s table gets a stacked-card variant below 768. Verified no overflow from 320 to 2560px.
-- [ ] **T-4.14** Report e2e, visual review, dogfood on three startups; switch `/sample` to the full demo report · M · NFR-05
+- [x] **T-4.14** Report e2e, visual review, dogfood on three startups; switch `/sample` to the full demo report · M · NFR-05 — done 2026-09-30, see D-081. **Phase 4 complete (14/14).** `/sample` now renders the real `ReportShell`; new `tests/e2e/report.spec.ts`; found/fixed a real WCAG 4.1.2 bug in the status-filter `Tabs` (broken `aria-controls`) via the first live axe scan of the full report. "Dogfood on three startups" already satisfied by Phase 1's dashboard-component tests against the existing varied-state demo portfolio.
 
 ## Phase 5 — Compare, export, watchlist, activity (Beta)
 

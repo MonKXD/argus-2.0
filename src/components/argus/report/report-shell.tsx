@@ -15,7 +15,7 @@ import { ReportSectionNav } from "@/components/argus/report/report-section-nav";
 import type { ReportVersionSummary } from "@/components/argus/report/report-version-selector";
 import { DimensionRadar } from "@/components/charts/dimension-radar";
 import { ScoreGauge } from "@/components/charts/score-gauge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { dimensionContributions } from "@/lib/analysis/scoring/contribution";
 import { confidenceLabel } from "@/lib/confidence";
 import { DIMENSION_LABEL } from "@/lib/dimension-labels";
@@ -352,6 +352,20 @@ function ReportShell({
           <TabsTrigger value="ASSUMPTION">{STATUS_LABEL.ASSUMPTION}</TabsTrigger>
           <TabsTrigger value="MISSING">{STATUS_LABEL.MISSING}</TabsTrigger>
         </TabsList>
+        {/* This toggle filters claims across the whole page below, not a
+         * single co-located panel — there's nothing for a real TabsContent
+         * to show. Radix's TabsTrigger still emits `aria-controls` pointing
+         * at a same-value TabsContent's id regardless, so an empty one per
+         * value is required to keep that id a valid reference (axe
+         * aria-valid-attr-value, WCAG 4.1.2) — found via a real axe scan of
+         * this page, T-4.14; D-076's "no TabsContent panels" precedent was
+         * itself wrong (report-tour.tsx, the cited precedent, has real
+         * content panels for each of its tabs). */}
+        <TabsContent value="ALL" />
+        <TabsContent value="VERIFIED" />
+        <TabsContent value="AI_ANALYSIS" />
+        <TabsContent value="ASSUMPTION" />
+        <TabsContent value="MISSING" />
       </Tabs>
 
       <ClaimSelectionContext.Provider
