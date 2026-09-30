@@ -2,27 +2,31 @@
 
 import { createContext, useContext, useState } from "react";
 
-import { ClaimInline } from "@/components/argus/claim-inline";
+import { ClaimRow } from "@/components/argus/claim-row";
 import { EmptyState } from "@/components/argus/empty-state";
+import { STATUS_LABEL } from "@/components/argus/evidence-marker";
 import { ReliabilityChip } from "@/components/argus/reliability-chip";
 import { EvidencePanel } from "@/components/argus/report/evidence-panel";
 import { ReportHeader } from "@/components/argus/report/report-header";
 import { ReportSectionNav } from "@/components/argus/report/report-section-nav";
 import { DimensionRadar } from "@/components/charts/dimension-radar";
 import { ScoreGauge } from "@/components/charts/score-gauge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { dimensionContributions } from "@/lib/analysis/scoring/contribution";
 import { confidenceLabel } from "@/lib/confidence";
 import { DIMENSION_LABEL } from "@/lib/dimension-labels";
 import { formatNumber } from "@/lib/format";
 import type { Analysis } from "@/lib/schema/analysis";
 import type { Claim, CriterionScore, DimensionAnalysis } from "@/lib/schema/claims";
-import type { DimensionKey } from "@/lib/schema/enums";
+import type { ClaimStatus, DimensionKey } from "@/lib/schema/enums";
 import type { Evidence, Fact, Source } from "@/lib/schema/evidence";
 import type { Report } from "@/lib/schema/report";
 import { SEVERITY_CLASS } from "@/lib/severity";
 import { SOURCE_TYPE_LABEL } from "@/lib/source-labels";
 
 import type { ReactNode } from "react";
+
+type StatusFilter = ClaimStatus | "ALL";
 
 interface ReportShellProps {
   analysis: Analysis;
@@ -43,22 +47,30 @@ interface ReportShellProps {
   partialNotice?: ReactNode;
 }
 
-/** "Selecting opens the evidence rail" (DESIGN section 6) has to reach
- * every `ClaimInline` across all 16 sections without threading a prop
- * through every intermediate component (`DimensionSection`, `ExplainScore`,
- * ...) — a context read once inside `ClaimList` does the same job. */
+/** "Selecting opens the evidence rail" (DESIGN section 6) has to reach every
+ * `ClaimRow` across all 16 sections without threading a prop through every
+ * intermediate component (`DimensionSection`, `ExplainScore`, ...) — a
+ * context read once inside `ClaimList` does the same job. The status
+ * filter (FR-RPT-23) rides the same context for the same reason. */
 const ClaimSelectionContext = createContext<{
   selectedId: string | null;
   onSelect: (claim: Claim) => void;
+  statusFilter: StatusFilter;
 } | null>(null);
 
 function ClaimList({ claims }: { claims: Claim[] }) {
   const selection = useContext(ClaimSelectionContext);
+  const filter = selection?.statusFilter ?? "ALL";
+  const visible = filter === "ALL" ? claims : claims.filter((c) => c.status === filter);
+
   if (claims.length === 0) return <EmptyState message="Not in the sources provided." />;
+  if (visible.length === 0 && filter !== "ALL") {
+    return <EmptyState message={`No ${STATUS_LABEL[filter].toLowerCase()} claims here.`} />;
+  }
   return (
     <div className="flex flex-col gap-3">
-      {claims.map((claim) => (
-        <ClaimInline
+      {visible.map((claim) => (
+        <ClaimRow
           key={claim.id}
           claim={claim}
           selected={selection?.selectedId === claim.id}
@@ -238,6 +250,7 @@ function ReportShell({
   );
 
   const [selected, setSelected] = useState<Claim | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-[1360px] flex-col gap-6 p-6">
@@ -245,8 +258,22 @@ function ReportShell({
 
       {partialNotice}
 
+      <Tabs
+        value={statusFilter}
+        onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+        className="min-w-0"
+      >
+        <TabsList aria-label="Filter claims by status" className="overflow-x-auto">
+          <TabsTrigger value="ALL">All</TabsTrigger>
+          <TabsTrigger value="VERIFIED">{STATUS_LABEL.VERIFIED}</TabsTrigger>
+          <TabsTrigger value="AI_ANALYSIS">{STATUS_LABEL.AI_ANALYSIS}</TabsTrigger>
+          <TabsTrigger value="ASSUMPTION">{STATUS_LABEL.ASSUMPTION}</TabsTrigger>
+          <TabsTrigger value="MISSING">{STATUS_LABEL.MISSING}</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       <ClaimSelectionContext.Provider
-        value={{ selectedId: selected?.id ?? null, onSelect: setSelected }}
+        value={{ selectedId: selected?.id ?? null, onSelect: setSelected, statusFilter }}
       >
         <div className="lg:grid lg:grid-cols-[220px_1fr_360px] lg:gap-12">
           <ReportSectionNav />

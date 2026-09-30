@@ -6,14 +6,14 @@ import { cn } from "@/lib/utils";
  * DESIGN section 6: "ClaimRow, ClaimInline | Marker in gutter or inline;
  * text; source count affordance; selecting opens the evidence rail."
  * R-UI-03: every claim renders through ClaimRow or ClaimInline with an
- * EvidenceMarker — this is the inline variant (marker before the sentence,
- * used in prose sections). ClaimRow (marker in a gutter, for the report
- * page's reading column) is T-4.09's job, once the report page exists to
- * put a gutter in.
+ * EvidenceMarker — this is the inline variant (marker and text bound as one
+ * flex unit, used in prose sections: the landing hero, `/sample`, and every
+ * narrative/criteria list in `ReportShell` that isn't the reading column's
+ * own claim rows). `ClaimRow` (`src/components/argus/claim-row.tsx`, a
+ * full-width grid gutter) is the report page's own variant, T-4.09.
  *
  * Pulled forward from T-4.09 (D-031, PROJECT_MEMORY): the landing hero and
  * /sample need a real ClaimInline, not a mockup, per DESIGN section 5.6.
- * T-4.09 extends this with the report page's status filter, not a rewrite.
  */
 
 function sourceCount(claim: Claim): number {

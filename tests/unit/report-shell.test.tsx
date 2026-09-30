@@ -302,6 +302,38 @@ describe("ReportShell", () => {
     matchMediaSpy.mockRestore();
   });
 
+  it("filters claims by status across the report when a filter tab is selected", async () => {
+    const user = userEvent.setup();
+    render(
+      <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,
+    );
+
+    const nonVerified = demoReport.narrative.executiveSummary.find((c) => c.status !== "VERIFIED");
+    const verified = demoReport.narrative.executiveSummary.find((c) => c.status === "VERIFIED");
+    expect(nonVerified).toBeDefined();
+    expect(verified).toBeDefined();
+
+    await user.click(screen.getByRole("tab", { name: "Verified" }));
+
+    expect(screen.queryByText(nonVerified!.text)).not.toBeInTheDocument();
+    expect(screen.getByText(verified!.text, { exact: false })).toBeInTheDocument();
+  });
+
+  it("shows every claim again after switching the filter back to All", async () => {
+    const user = userEvent.setup();
+    render(
+      <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,
+    );
+
+    const nonVerified = demoReport.narrative.executiveSummary.find((c) => c.status !== "VERIFIED")!;
+
+    await user.click(screen.getByRole("tab", { name: "Verified" }));
+    expect(screen.queryByText(nonVerified.text)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "All" }));
+    expect(screen.getByText(nonVerified.text, { exact: false })).toBeInTheDocument();
+  });
+
   it("renders a partial notice when one is passed", () => {
     render(
       <ReportShell
