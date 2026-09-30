@@ -52,4 +52,27 @@ describe("ReportRepo", () => {
     expect(result).toHaveLength(demoDimensions.length - 1);
     expect(result.some((d) => d.dimension === demoDimensions[0]!.dimension)).toBe(false);
   });
+
+  it("lists no versions for an analysis with no saved report", async () => {
+    const { db } = createFakeFirestore();
+    const repo = new ReportRepo(db);
+
+    await expect(repo.list(ANALYSIS_ID)).resolves.toEqual([]);
+  });
+
+  it("lists every saved report version, newest first", async () => {
+    const { db } = createFakeFirestore();
+    const store = new FirestoreStore(db);
+    const earlierVersion = { ...demoReport, id: "rpt_00000000000000000000000002", version: 1 };
+    const laterVersion = { ...demoReport, id: "rpt_00000000000000000000000003", version: 2 };
+    // Save out of order to prove the repo sorts by `version`, not by write
+    // or insertion order.
+    await store.saveReport(ANALYSIS_ID, earlierVersion);
+    await store.saveReport(ANALYSIS_ID, laterVersion);
+    const repo = new ReportRepo(db);
+
+    const result = await repo.list(ANALYSIS_ID);
+
+    expect(result.map((r) => r.version)).toEqual([2, 1]);
+  });
 });

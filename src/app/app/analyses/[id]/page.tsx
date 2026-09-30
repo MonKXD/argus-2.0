@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { DeleteAnalysisButton } from "@/components/argus/delete-analysis-button";
 import { ReportShell } from "@/components/argus/report/report-shell";
+import type { ReportVersionSummary } from "@/components/argus/report/report-version-selector";
 import { ResumeRunButton } from "@/components/argus/resume-run-button";
 import { RunProgress } from "@/components/argus/run-progress";
 import { requireUser } from "@/lib/api/auth";
@@ -17,6 +18,7 @@ import { failedStepLabels } from "@/lib/step-labels";
 
 interface AnalysisPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ version?: string }>;
 }
 
 async function loadRun(analysisId: string, runId: string): Promise<Run | null> {
@@ -44,8 +46,9 @@ async function loadRun(analysisId: string, runId: string): Promise<Run | null> {
  * which goes through the wizard to create a brand-new run (APP_FLOW's own
  * lifecycle diagram draws both `resume` and `re-run` out of `PARTIAL`).
  */
-export default async function AnalysisPage({ params }: AnalysisPageProps) {
+export default async function AnalysisPage({ params, searchParams }: AnalysisPageProps) {
   const { id } = await params;
+  const { version: versionParam } = await searchParams;
   const user = await requireUser();
 
   const analysis = await new AnalysisRepo(getAdminFirestore()).get(id);
@@ -69,11 +72,27 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
 
   if (analysis.status === "COMPLETE" || analysis.status === "PARTIAL") {
     const reportRepo = new ReportRepo(getAdminFirestore());
-    const report = analysis.latest
-      ? await reportRepo.getReport(id, analysis.latest.reportId)
-      : null;
+    // T-4.11: list every saved version once, then pick the one the
+    // `?version=` query param names (the version selector's own target
+    // URL) — defaulting to the newest when the param is absent, which is
+    // also `analysis.latest`'s own report (R-DAT-04: a run always creates
+    // a new report, never mutates a prior one, so the list's first entry
+    // and `analysis.latest` name the same document).
+    const versionHistory = await reportRepo.list(id);
+    const requestedVersion = versionParam ? Number(versionParam) : undefined;
+    const report =
+      requestedVersion !== undefined
+        ? (versionHistory.find((r) => r.version === requestedVersion) ?? null)
+        : (versionHistory[0] ?? null);
 
     if (report) {
+      const isLatestVersion = report.id === versionHistory[0]?.id;
+      const versions: ReportVersionSummary[] = versionHistory.map((r) => ({
+        id: r.id,
+        version: r.version,
+        generatedAt: r.generatedAt,
+        score: r.overall.score,
+      }));
       const dimensions = await reportRepo.listDimensions(id, report.id);
       const sourceRepo = new SourceRepo(getAdminFirestore());
       const sources = await sourceRepo.list(id);
@@ -93,8 +112,13 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
           sources={sources}
           evidence={evidence}
           facts={facts}
+          versions={versions}
           partialNotice={
-            analysis.status === "PARTIAL" ? (
+            // A historical version's own report is unaffected by a later
+            // run failing — the banner (and its Resume action) belongs
+            // only to the run that's actually PARTIAL, which is always
+            // the newest version.
+            analysis.status === "PARTIAL" && isLatestVersion ? (
               <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-3 rounded-panel border border-hairline bg-panel p-4 text-ui-sm text-foreground">
                 <p>
                   This report is partial.{" "}

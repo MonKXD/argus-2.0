@@ -10,6 +10,7 @@ import { ReliabilityChip } from "@/components/argus/reliability-chip";
 import { EvidencePanel } from "@/components/argus/report/evidence-panel";
 import { ReportHeader } from "@/components/argus/report/report-header";
 import { ReportSectionNav } from "@/components/argus/report/report-section-nav";
+import type { ReportVersionSummary } from "@/components/argus/report/report-version-selector";
 import { DimensionRadar } from "@/components/charts/dimension-radar";
 import { ScoreGauge } from "@/components/charts/score-gauge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,6 +47,10 @@ interface ReportShellProps {
    * `EvidenceRailContent`'s own "Unknown source" degradation. */
   evidence?: Evidence[];
   facts?: Fact[];
+  /** Every saved version of this report, newest first (T-4.11, FR-RPT-19).
+   * Omitted the same way `sources` can be — the header then shows a plain
+   * version number with no selector or history. */
+  versions?: ReportVersionSummary[];
   /** A `PARTIAL`-status banner (with its own Resume action) rendered
    * between the header and the section nav/reading column. */
   partialNotice?: ReactNode;
@@ -274,6 +279,7 @@ function ReportShell({
   sources = [],
   evidence = [],
   facts = [],
+  versions = [],
   partialNotice,
 }: ReportShellProps) {
   const byKey = new Map(dimensions.map((d) => [d.dimension, d]));
@@ -294,7 +300,7 @@ function ReportShell({
 
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-[1360px] flex-col gap-6 p-6">
-      <ReportHeader analysis={analysis} report={report} />
+      <ReportHeader analysis={analysis} report={report} versions={versions} />
 
       {partialNotice}
 

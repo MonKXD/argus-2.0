@@ -377,6 +377,51 @@ describe("ReportShell", () => {
     expect(within(section).queryByText(/not found in the sources provided/)).not.toBeInTheDocument();
   });
 
+  it("shows a plain version number with no selector for a single-version report", () => {
+    render(
+      <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,
+    );
+
+    expect(screen.getByText(`Version ${demoReport.version}`)).toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Report version" })).not.toBeInTheDocument();
+  });
+
+  it("shows a version selector and no read-only notice when viewing the latest of several versions", () => {
+    const versions = [
+      { id: demoReport.id, version: 2, generatedAt: demoReport.generatedAt, score: 70 },
+      { id: "rpt_00000000000000000000000002", version: 1, generatedAt: demoReport.generatedAt, score: 60 },
+    ];
+    render(
+      <ReportShell
+        analysis={loopwellAnalysis}
+        report={{ ...demoReport, version: 2 }}
+        dimensions={demoDimensions}
+        versions={versions}
+      />,
+    );
+
+    expect(screen.getByRole("combobox", { name: "Report version" })).toBeInTheDocument();
+    expect(screen.queryByText(/read-only historical report/)).not.toBeInTheDocument();
+  });
+
+  it("shows a read-only notice when viewing a historical (non-latest) version", () => {
+    const versions = [
+      { id: "rpt_00000000000000000000000002", version: 2, generatedAt: demoReport.generatedAt, score: 70 },
+      { id: demoReport.id, version: 1, generatedAt: demoReport.generatedAt, score: 60 },
+    ];
+    render(
+      <ReportShell
+        analysis={loopwellAnalysis}
+        report={{ ...demoReport, version: 1 }}
+        dimensions={demoDimensions}
+        versions={versions}
+      />,
+    );
+
+    expect(screen.getByText(/read-only historical report/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View the latest version" })).toBeInTheDocument();
+  });
+
   it("renders a partial notice when one is passed", () => {
     render(
       <ReportShell

@@ -27,6 +27,21 @@ export class ReportRepo {
     return snapshot.exists ? snapshot.data()! : null;
   }
 
+  /** Every version of this analysis's report, newest first (T-4.11: version
+   * history / selector, FR-RPT-19). One document per run (R-DAT-04: a
+   * re-run never mutates a prior report, it creates a new one), so this
+   * collection stays small and bounded — reading full `Report` docs is fine
+   * at this scale (same call as T-3.04's own list read, D-059). */
+  async list(analysisId: string): Promise<Report[]> {
+    const snapshot = await this.db
+      .collection("analyses")
+      .doc(analysisId)
+      .collection("reports")
+      .withConverter(zodConverter(Report))
+      .get();
+    return snapshot.docs.map((doc) => doc.data()).sort((a, b) => b.version - a.version);
+  }
+
   /** All 8 dimensions for a report, in `DIMENSION_KEYS`' canonical order — a
    * dimension that failed its run (`Run.dimensionStatus`) simply has no
    * document, so the result may have fewer than 8 entries. */

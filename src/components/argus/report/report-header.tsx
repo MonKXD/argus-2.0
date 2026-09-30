@@ -1,6 +1,10 @@
 import Link from "next/link";
 
 import { DeleteAnalysisButton } from "@/components/argus/delete-analysis-button";
+import {
+  ReportVersionSelector,
+  type ReportVersionSummary,
+} from "@/components/argus/report/report-version-selector";
 import { formatDate } from "@/lib/format";
 import type { Analysis } from "@/lib/schema/analysis";
 import type { Report } from "@/lib/schema/report";
@@ -9,6 +13,11 @@ import { STAGE_LABEL } from "@/lib/stage-labels";
 interface ReportHeaderProps {
   analysis: Analysis;
   report: Report;
+  /** Every saved version of this report, newest first (T-4.11, FR-RPT-19).
+   * Omitted entirely = old behaviour (no selector, no history), so no
+   * existing caller or test breaks — same optional-prop pattern as
+   * `sources`/`evidence`/`facts` (D-074/D-075). */
+  versions?: ReportVersionSummary[];
 }
 
 /**
@@ -19,7 +28,10 @@ interface ReportHeaderProps {
  * "Re-run" reuses the already-built setup-wizard entry point. PRD section
  * 15's disclaimer belongs wherever a report is shown, so it sits here too.
  */
-function ReportHeader({ analysis, report }: ReportHeaderProps) {
+function ReportHeader({ analysis, report, versions = [] }: ReportHeaderProps) {
+  const latestVersion = versions[0]?.version ?? report.version;
+  const isHistorical = report.version !== latestVersion;
+
   return (
     <div className="flex flex-col gap-4 border-b border-hairline pb-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -28,9 +40,18 @@ function ReportHeader({ analysis, report }: ReportHeaderProps) {
             {[STAGE_LABEL[analysis.startup.stage], analysis.startup.sector].filter(Boolean).join(" · ")}
           </p>
           <h1 className="font-serif text-h1 text-foreground">{analysis.startup.name}</h1>
-          <p className="text-ui-sm text-mist">
-            Version {report.version} · Generated {formatDate(report.generatedAt)}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {versions.length > 1 ? (
+              <ReportVersionSelector
+                analysisId={analysis.id}
+                versions={versions}
+                currentVersion={report.version}
+              />
+            ) : (
+              <p className="text-ui-sm text-mist">Version {report.version}</p>
+            )}
+            <p className="text-ui-sm text-mist">Generated {formatDate(report.generatedAt)}</p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <Link
@@ -45,6 +66,19 @@ function ReportHeader({ analysis, report }: ReportHeaderProps) {
           <DeleteAnalysisButton analysisId={analysis.id} startupName={analysis.startup.name} />
         </div>
       </div>
+
+      {isHistorical && (
+        <p className="rounded-panel border border-hairline bg-panel p-3 text-ui-sm text-foreground">
+          You&rsquo;re viewing version {report.version}, a read-only historical report.{" "}
+          <Link
+            href={`/app/analyses/${analysis.id}`}
+            className="text-mist underline hover:text-foreground"
+          >
+            View the latest version
+          </Link>
+          .
+        </p>
+      )}
 
       <p className="max-w-[68ch] text-ui-sm text-mist">
         ARGUS AI is a research and intelligence tool. It does not provide investment, legal, tax or
