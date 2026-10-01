@@ -86,4 +86,32 @@ describe("ComparisonView", () => {
     );
     expect(screen.queryByText("Dimension radar")).not.toBeInTheDocument();
   });
+
+  it("shows no comparability warning when stage profile and scoring version match", () => {
+    render(
+      <ComparisonView
+        name="Compare"
+        createdAt="2026-09-25T00:00:00.000Z"
+        items={[BASELINE, OTHER]}
+        hasDeletedItems={false}
+      />,
+    );
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("shows a comparability warning when stage profiles differ (FR-CMP-04)", () => {
+    const differentProfile: ComparisonItemView = {
+      ...OTHER,
+      report: { ...OTHER.report, stageProfile: "GROWTH" },
+    };
+    render(
+      <ComparisonView
+        name="Compare"
+        createdAt="2026-09-25T00:00:00.000Z"
+        items={[BASELINE, differentProfile]}
+        hasDeletedItems={false}
+      />,
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent("stage profiles");
+  });
 });

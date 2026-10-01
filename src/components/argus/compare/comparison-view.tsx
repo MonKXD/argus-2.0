@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { DimensionRadarOverlay, type RadarSeries } from "@/components/charts/dimension-radar-overlay";
 import { ScoreGauge } from "@/components/charts/score-gauge";
+import { comparabilityWarnings } from "@/lib/comparability-warnings";
 import {
   COMPARE_METRIC_KEYS,
   COMPARE_METRIC_LABEL,
@@ -41,12 +42,12 @@ interface ComparisonViewProps {
 /**
  * FR-CMP-02/FR-CMP-03 (APP_FLOW 5.6 "View"): header per startup with score
  * and confidence, a radar overlay, a dimension score table with deltas, and
- * a canonical-metric matrix with explicit "Not available" cells. A pure
- * presentational component (no Firestore reads of its own) so it's
- * unit-testable without mocking repos — `/app/compare/[id]/page.tsx` loads
- * the pinned snapshot data and passes it in. Comparability warnings
- * (differing stage profile or scoring version) are T-5.03's own scope, not
- * built here.
+ * a canonical-metric matrix with explicit "Not available" cells, and a
+ * comparability warning when stage profiles or scoring versions differ
+ * (FR-CMP-04 — T-5.03). A pure presentational component (no Firestore
+ * reads of its own) so it's unit-testable without mocking repos —
+ * `/app/compare/[id]/page.tsx` loads the pinned snapshot data and passes
+ * it in.
  */
 function ComparisonView({ name, createdAt, items, hasDeletedItems }: ComparisonViewProps) {
   const radarSeries: RadarSeries[] = items.map((item) => ({
@@ -57,6 +58,13 @@ function ComparisonView({ name, createdAt, items, hasDeletedItems }: ComparisonV
   }));
 
   const baselineScores = new Map(items[0]?.dimensions.map((d) => [d.dimension, d.score]) ?? []);
+
+  const warnings = comparabilityWarnings(
+    items.map((item) => ({
+      scoringVersion: item.report.scoringVersion,
+      stageProfile: item.report.stageProfile,
+    })),
+  );
 
   return (
     <div className="flex flex-col gap-10 p-6">
@@ -70,6 +78,16 @@ function ComparisonView({ name, createdAt, items, hasDeletedItems }: ComparisonV
           One or more startups in this comparison have since been deleted; they&rsquo;re shown
           below by their saved name only.
         </p>
+      )}
+
+      {warnings.length > 0 && (
+        <div role="alert" className="flex flex-col gap-1 rounded-panel border border-hairline bg-panel p-4">
+          {warnings.map((warning) => (
+            <p key={warning} className="text-ui-sm text-assumption">
+              {warning}
+            </p>
+          ))}
+        </div>
       )}
 
       <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">

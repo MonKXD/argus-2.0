@@ -2,15 +2,15 @@
 
 Living status of the build. Update in the same commit as the work it describes.
 
-Last updated: 2026-10-01 (T-5.02 — Compare view: radar overlay, score deltas, metric matrix)
+Last updated: 2026-10-01 (T-5.03 — Comparability warnings)
 
 Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L (see IMPLEMENTATION_PLAN section 2). Each task lists the requirement IDs it satisfies.
 
 ## Current focus
 
-- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18. Phase 3 complete (14/14). Phase 4 (Report UI, Alpha) complete (14/14). Phase 5 (Beta) 2/13.
+- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18. Phase 3 complete (14/14). Phase 4 (Report UI, Alpha) complete (14/14). Phase 5 (Beta) 3/13.
 - Task: none in progress
-- Next up: T-5.03 (comparability warnings). T-2.18 (phase gate) stays blocked in parallel — see below. T-3.14's own finding (Hobby-plan duration ceiling well under a real run's length) is worth flagging to the project owner as a possible reason to prioritize T-6.03 or a plan upgrade sooner than Phase 6. New from T-4.14: the e2e suite has no authenticated-session fixture — `a11y.spec.ts`'s "dashboard"/"analyses list" scans and `overlays.spec.ts`'s CommandPalette tests likely never actually exercised the signed-in app (confirmed `/app` 307-redirects to `/login` unauthenticated). Worth a real follow-up task (a Firebase-emulator sign-up fixture, same pattern T-3.01 already proved) before those tests can be trusted.
+- Next up: T-5.04 (grounded comparison narrative through the verifier). T-2.18 (phase gate) stays blocked in parallel — see below. T-3.14's own finding (Hobby-plan duration ceiling well under a real run's length) is worth flagging to the project owner as a possible reason to prioritize T-6.03 or a plan upgrade sooner than Phase 6. New from T-4.14: the e2e suite has no authenticated-session fixture — `a11y.spec.ts`'s "dashboard"/"analyses list" scans and `overlays.spec.ts`'s CommandPalette tests likely never actually exercised the signed-in app (confirmed `/app` 307-redirects to `/login` unauthenticated). Worth a real follow-up task (a Firebase-emulator sign-up fixture, same pattern T-3.01 already proved) before those tests can be trusted.
 - Blockers: T-2.18 needs the project owner to run `pnpm eval` with a real `ANTHROPIC_API_KEY` (none configured in this sandbox) and share the result; an agent session can't complete it alone. Production Firebase (real Google OAuth provider config, real `dev`/`prod` projects, real Admin SDK credentials) still needs the project owner — T-3.01 re-examined this blocker and found it only applies to *production*: `src/lib/env.ts`'s own `USE_FIREBASE_EMULATORS` design (from T-0.05) already makes local dev, and every T-3.01 automated/manual verification, work fully against the Firebase Emulator Suite with no real project. `pnpm build`/`pnpm dev` also need a local `.env.local` (gitignored, never committed) with at least placeholder values for the full server env schema — see PROJECT_MEMORY D-056.
 
 ## Phase progress
@@ -22,7 +22,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 | 2 | Engine spike (CLI-first) | 18 | 17 | In progress (blocked on T-2.18) |
 | 3 | Auth, persistence, intake, orchestration | 14 | 14 | Done |
 | 4 | Report UI (Alpha) | 14 | 14 | Done |
-| 5 | Compare, export, watchlist, activity (Beta) | 13 | 2 | In progress |
+| 5 | Compare, export, watchlist, activity (Beta) | 13 | 3 | In progress |
 | 6 | Monitoring, hardening, launch (1.0) | 15 | 0 | Not started |
 
 ---
@@ -120,7 +120,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 
 - [x] **T-5.01** Compare creator and comparison persistence · M · FR-CMP-01, FR-CMP-06 — done 2026-10-01, see D-082. New `ComparisonRepo` (`create`/`get`/`delete`/`listByOwner`, mirroring `AnalysisRepo`); `POST /api/comparisons` snapshots 2-4 completed analyses' current `latest` report into `items[]` plus the distinct `scoringVersions` seen (R-DAT-04: pinned at creation, never updated by a later re-run); `GET /api/comparisons` lists the owner's saved comparisons (TRD's own table is illustrative, not exhaustive, same precedent as T-4.11's report-version `list()`); `GET`/`DELETE /api/comparisons/:id` are ownership-checked. New `/app/compare` page (creator form: name + checkbox-select 2-4 completed analyses, plus the saved-comparisons list) and a minimal `/app/compare/[id]` placeholder (name + item list; the real radar/score-table/metric-matrix view is T-5.02's).
 - [x] **T-5.02** Compare view: radar overlay, score table with deltas, metric matrix · L · FR-CMP-02, FR-CMP-03 — done 2026-10-01, see D-083. New `DimensionRadarOverlay` (2-4 series superimposed on one radar, told apart by `stroke-dasharray` pattern only — no new colour, per D-012). New `src/lib/compare-metrics.ts` (curated canonical-key subset, `formatFactValue()` via `format.ts`) and `src/lib/dimension-delta.ts` (score delta vs the comparison's first item as baseline). `ComparisonView` is a new pure presentational component (`src/components/argus/compare/comparison-view.tsx`) — `/app/compare/[id]/page.tsx` now just loads the comparison's pinned snapshot data and renders it, replacing T-5.01's placeholder. Found and fixed a real duplicate-confidence-line bug (`ScoreGauge` already renders its own confidence caption) via the mandatory R-UI-12 screenshot check.
-- [ ] **T-5.03** Comparability warnings · S · FR-CMP-04
+- [x] **T-5.03** Comparability warnings · S · FR-CMP-04 — done 2026-10-01, see D-084. New `comparabilityWarnings()` (`src/lib/comparability-warnings.ts`) checks the compared items' pinned reports for differing `scoringVersion` or `stageProfile` (two independent, both-shown checks) and `ComparisonView` renders each as its own line in a bordered warning panel, right below the header. "Scores are not rescaled to match" is stated directly in the warning text per APP_FLOW 5.6's own wording — no rescaling logic was added, since none should exist.
 - [ ] **T-5.04** Grounded comparison narrative through the verifier · M · FR-CMP-05
 - [ ] **T-5.05** Markdown and JSON export · S · FR-EXP-01, FR-EXP-04
 - [ ] **T-5.06** Print stylesheet and `/print/report/[id]` · M · FR-EXP-02, FR-EXP-04
