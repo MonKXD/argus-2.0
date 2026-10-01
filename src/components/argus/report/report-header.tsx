@@ -5,6 +5,7 @@ import {
   ReportVersionSelector,
   type ReportVersionSummary,
 } from "@/components/argus/report/report-version-selector";
+import { DISCLAIMER_TEXT } from "@/lib/disclaimer";
 import { formatDate } from "@/lib/format";
 import type { Analysis } from "@/lib/schema/analysis";
 import type { Report } from "@/lib/schema/report";
@@ -22,11 +23,13 @@ interface ReportHeaderProps {
 
 /**
  * APP_FLOW 5.5's header row: "name, stage, sector, version, generated time
- * · Compare · Export · Watch · Re-run." Compare/Export/Watch are Phase 5/6
- * features (FR-CMP-*, FR-EXP-*, FR-DSH-06) that don't exist yet — omitted
- * rather than stubbed (D-060's "don't hide not-built-yet behind a flag").
- * "Re-run" reuses the already-built setup-wizard entry point. PRD section
- * 15's disclaimer belongs wherever a report is shown, so it sits here too.
+ * · Compare · Export · Watch · Re-run." Export is now real (T-5.05, plain
+ * `<a href>` downloads via `GET .../reports/:reportId/export?format=`, no
+ * client JS needed). Compare/Watch are still Phase 5/6 features that don't
+ * exist yet — omitted rather than stubbed (D-060's "don't hide
+ * not-built-yet behind a flag"). "Re-run" reuses the already-built
+ * setup-wizard entry point. PRD section 15's disclaimer belongs wherever a
+ * report is shown, so it sits here too.
  */
 function ReportHeader({ analysis, report, versions = [] }: ReportHeaderProps) {
   const latestVersion = versions[0]?.version ?? report.version;
@@ -54,6 +57,18 @@ function ReportHeader({ analysis, report, versions = [] }: ReportHeaderProps) {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-4">
+          <a
+            href={`/api/analyses/${analysis.id}/reports/${report.id}/export?format=md`}
+            className="text-ui-sm text-mist hover:text-foreground hover:underline"
+          >
+            Export Markdown
+          </a>
+          <a
+            href={`/api/analyses/${analysis.id}/reports/${report.id}/export?format=json`}
+            className="text-ui-sm text-mist hover:text-foreground hover:underline"
+          >
+            Export JSON
+          </a>
           <Link
             href={`/app/analyses/${analysis.id}/setup?step=review`}
             className="text-ui-sm text-mist hover:text-foreground hover:underline"
@@ -80,11 +95,7 @@ function ReportHeader({ analysis, report, versions = [] }: ReportHeaderProps) {
         </p>
       )}
 
-      <p className="max-w-[68ch] text-ui-sm text-mist">
-        ARGUS AI is a research and intelligence tool. It does not provide investment, legal, tax or
-        financial advice, and its outputs are not a substitute for professional due diligence. Verify
-        all material facts independently.
-      </p>
+      <p className="max-w-[68ch] text-ui-sm text-mist">{DISCLAIMER_TEXT}</p>
     </div>
   );
 }

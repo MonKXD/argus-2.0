@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { DISCLAIMER_TEXT } from "@/lib/disclaimer";
 import type { Analysis } from "@/lib/schema/analysis";
 import { STAGE_LABEL } from "@/lib/stage-labels";
 
@@ -52,11 +53,7 @@ function ReviewStep({ startup, options, hasUsableSource, starting, onStart }: Re
           Your sources and notes are sent to Anthropic, ARGUS&rsquo;s model provider, to extract and
           analyse evidence. A typical run takes a few minutes.
         </p>
-        <p className="mt-2">
-          ARGUS AI is a research and intelligence tool. It does not provide investment, legal, tax
-          or financial advice, and its outputs are not a substitute for professional due diligence.
-          Verify all material facts independently.
-        </p>
+        <p className="mt-2">{DISCLAIMER_TEXT}</p>
       </div>
 
       <div className="flex flex-col gap-2">
