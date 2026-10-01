@@ -49,4 +49,13 @@ describe("WatchlistPanel", () => {
     render(<WatchlistPanel analyses={noneWatchlisted} />);
     expect(screen.getByText("Nothing watchlisted yet.")).toBeInTheDocument();
   });
+
+  it("links to the full watchlist page only when something is watchlisted", () => {
+    const { rerender } = render(<WatchlistPanel analyses={demoAnalyses} />);
+    expect(screen.getByRole("link", { name: "View all" })).toHaveAttribute("href", "/app/watchlist");
+
+    const noneWatchlisted = demoAnalyses.map((a) => ({ ...a, isWatchlisted: false }));
+    rerender(<WatchlistPanel analyses={noneWatchlisted} />);
+    expect(screen.queryByRole("link", { name: "View all" })).not.toBeInTheDocument();
+  });
 });

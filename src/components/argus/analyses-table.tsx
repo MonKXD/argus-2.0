@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { WatchlistToggleButton } from "@/components/argus/watchlist-toggle-button";
 import { DataTable } from "@/components/ui/data-table";
 import { confidenceLabel } from "@/lib/confidence";
 import { formatDate } from "@/lib/format";
@@ -12,6 +13,10 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 // FR-DSH-01: "List analyses with name, stage, sector, score, confidence,
 // status, updated time." DESIGN section 5.2: table is the dominant element.
+// A leading, unlabelled watchlist-star column (FR-WCH-01/FR-DSH-06's
+// dashboard action "toggle watchlist") is shared by every page that reuses
+// this table — the dashboard's top-10, the full analyses list, and
+// /app/watchlist's own filtered view.
 
 const STATUS_LABEL: Record<AnalysisStatus, string> = {
   DRAFT: "Draft",
@@ -23,6 +28,13 @@ const STATUS_LABEL: Record<AnalysisStatus, string> = {
 };
 
 const columns: ColumnDef<Analysis>[] = [
+  {
+    id: "watchlist",
+    header: "",
+    cell: ({ row }) => (
+      <WatchlistToggleButton analysisId={row.original.id} isWatchlisted={row.original.isWatchlisted} />
+    ),
+  },
   {
     accessorKey: "startup.name",
     header: "Name",
