@@ -23,13 +23,14 @@ interface ReportHeaderProps {
 
 /**
  * APP_FLOW 5.5's header row: "name, stage, sector, version, generated time
- * · Compare · Export · Watch · Re-run." Export is now real (T-5.05, plain
- * `<a href>` downloads via `GET .../reports/:reportId/export?format=`, no
- * client JS needed). Compare/Watch are still Phase 5/6 features that don't
- * exist yet — omitted rather than stubbed (D-060's "don't hide
- * not-built-yet behind a flag"). "Re-run" reuses the already-built
- * setup-wizard entry point. PRD section 15's disclaimer belongs wherever a
- * report is shown, so it sits here too.
+ * · Compare · Export · Watch · Re-run." Export and print are now real
+ * (T-5.05/T-5.06): Export Markdown/JSON are plain `<a href>` downloads via
+ * `GET .../reports/:reportId/export?format=`, no client JS; "Print or save
+ * as PDF" opens `/print/report/:id` in a new tab. Compare/Watch are still
+ * Phase 5/6 features that don't exist yet — omitted rather than stubbed
+ * (D-060's "don't hide not-built-yet behind a flag"). "Re-run" reuses the
+ * already-built setup-wizard entry point. PRD section 15's disclaimer
+ * belongs wherever a report is shown, so it sits here too.
  */
 function ReportHeader({ analysis, report, versions = [] }: ReportHeaderProps) {
   const latestVersion = versions[0]?.version ?? report.version;
@@ -69,6 +70,14 @@ function ReportHeader({ analysis, report, versions = [] }: ReportHeaderProps) {
           >
             Export JSON
           </a>
+          <Link
+            href={`/print/report/${analysis.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-ui-sm text-mist hover:text-foreground hover:underline"
+          >
+            Print or save as PDF
+          </Link>
           <Link
             href={`/app/analyses/${analysis.id}/setup?step=review`}
             className="text-ui-sm text-mist hover:text-foreground hover:underline"
