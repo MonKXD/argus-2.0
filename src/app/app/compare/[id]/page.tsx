@@ -1,56 +1,50 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ComparisonView, type ComparisonItemView } from "@/components/argus/compare/comparison-view";
 import { requireUser } from "@/lib/api/auth";
 import { getAdminFirestore } from "@/lib/repos/admin-firestore";
 import { ComparisonRepo } from "@/lib/repos/comparison-repo";
+import { FactRepo } from "@/lib/repos/fact-repo";
+import { ReportRepo } from "@/lib/repos/report-repo";
 
 interface ComparePageProps {
   params: Promise<{ id: string }>;
 }
 
 /**
- * Minimal placeholder: name and the snapshotted items only. The real view
- * (radar overlay, score table with deltas, canonical-metric matrix —
- * FR-CMP-02/FR-CMP-03) is T-5.02's job; this page exists so "create, then
- * land somewhere real" (T-5.01's own scope) doesn't 404.
+ * Loads the comparison's pinned snapshot data (R-DAT-04: `item.reportId`,
+ * never the analysis's possibly-newer `latest`) and hands it to the pure
+ * `ComparisonView` for rendering (FR-CMP-02/FR-CMP-03).
  */
 export default async function ComparisonPage({ params }: ComparePageProps) {
   const { id } = await params;
   const user = await requireUser();
 
-  const comparison = await new ComparisonRepo(getAdminFirestore()).get(id);
+  const db = getAdminFirestore();
+  const comparison = await new ComparisonRepo(db).get(id);
   if (!comparison || comparison.ownerId !== user.uid) notFound();
 
+  const reportRepo = new ReportRepo(db);
+  const factRepo = new FactRepo(db);
+
+  const items: ComparisonItemView[] = [];
+  for (const item of comparison.items) {
+    if (item.deleted) continue;
+    const report = await reportRepo.getReport(item.analysisId, item.reportId);
+    if (!report) continue;
+    const [dimensions, facts] = await Promise.all([
+      reportRepo.listDimensions(item.analysisId, item.reportId),
+      factRepo.list(item.analysisId),
+    ]);
+    items.push({ analysisId: item.analysisId, label: item.label, report, dimensions, facts });
+  }
+
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div>
-        <h1 className="font-serif text-h2 text-foreground">{comparison.name}</h1>
-        <p className="text-ui-sm text-mist">
-          Created {new Date(comparison.createdAt).toLocaleDateString()}
-        </p>
-      </div>
-
-      <ul className="flex flex-col gap-2">
-        {comparison.items.map((item) => (
-          <li key={item.analysisId} className="flex items-center gap-2">
-            {item.deleted ? (
-              <span className="text-ui-sm text-mist">{item.label} (deleted)</span>
-            ) : (
-              <Link
-                href={`/app/analyses/${item.analysisId}`}
-                className="text-ui-sm text-foreground underline underline-offset-4"
-              >
-                {item.label}
-              </Link>
-            )}
-          </li>
-        ))}
-      </ul>
-
-      <p className="text-ui-sm text-mist">
-        The full comparison view (score deltas, radar overlay, metric matrix) is coming soon.
-      </p>
-    </div>
+    <ComparisonView
+      name={comparison.name}
+      createdAt={comparison.createdAt}
+      items={items}
+      hasDeletedItems={comparison.items.some((i) => i.deleted)}
+    />
   );
 }
