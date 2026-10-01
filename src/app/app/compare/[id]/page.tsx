@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { ComparisonView, type ComparisonItemView } from "@/components/argus/compare/comparison-view";
+import { GenerateNarrativeButton } from "@/components/argus/compare/generate-narrative-button";
 import { requireUser } from "@/lib/api/auth";
 import { getAdminFirestore } from "@/lib/repos/admin-firestore";
 import { ComparisonRepo } from "@/lib/repos/comparison-repo";
@@ -45,6 +46,12 @@ export default async function ComparisonPage({ params }: ComparePageProps) {
       createdAt={comparison.createdAt}
       items={items}
       hasDeletedItems={comparison.items.some((i) => i.deleted)}
+      narrative={comparison.narrative}
+      narrativeAction={
+        items.length >= 2 ? (
+          <GenerateNarrativeButton comparisonId={id} hasNarrative={!!comparison.narrative?.length} />
+        ) : undefined
+      }
     />
   );
 }

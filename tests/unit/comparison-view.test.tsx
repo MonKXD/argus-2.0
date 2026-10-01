@@ -114,4 +114,49 @@ describe("ComparisonView", () => {
     );
     expect(screen.getByRole("alert")).toHaveTextContent("stage profiles");
   });
+
+  it("omits the narrative section entirely when there's no narrative and no action", () => {
+    render(
+      <ComparisonView name="Compare" createdAt="2026-09-25T00:00:00.000Z" items={[BASELINE, OTHER]} hasDeletedItems={false} />,
+    );
+    expect(screen.queryByText("Comparison narrative")).not.toBeInTheDocument();
+  });
+
+  it("renders narrative claims through ClaimRow when a narrative is present (FR-CMP-05)", () => {
+    render(
+      <ComparisonView
+        name="Compare"
+        createdAt="2026-09-25T00:00:00.000Z"
+        items={[BASELINE, OTHER]}
+        hasDeletedItems={false}
+        narrative={[
+          {
+            id: "clm_00000000000000000000000099",
+            text: "Loopwell has a larger ARR than the other startup.",
+            confidence: 0.8,
+            entities: [],
+            status: "VERIFIED",
+            quotes: [{ evidenceId: "ev_00000000000000000000000001", quote: "ARR of $2,000,000" }],
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Comparison narrative")).toBeInTheDocument();
+    expect(screen.getByText(/Loopwell has a larger ARR/)).toBeInTheDocument();
+  });
+
+  it("shows the narrative action even with no narrative yet", () => {
+    render(
+      <ComparisonView
+        name="Compare"
+        createdAt="2026-09-25T00:00:00.000Z"
+        items={[BASELINE, OTHER]}
+        hasDeletedItems={false}
+        narrativeAction={<button type="button">Generate narrative</button>}
+      />,
+    );
+    expect(screen.getByText("Comparison narrative")).toBeInTheDocument();
+    expect(screen.getByText("No narrative yet.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Generate narrative" })).toBeInTheDocument();
+  });
 });

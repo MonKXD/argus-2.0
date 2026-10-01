@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ClaimRow } from "@/components/argus/claim-row";
 import { DimensionRadarOverlay, type RadarSeries } from "@/components/charts/dimension-radar-overlay";
 import { ScoreGauge } from "@/components/charts/score-gauge";
 import { comparabilityWarnings } from "@/lib/comparability-warnings";
@@ -11,11 +12,13 @@ import {
 } from "@/lib/compare-metrics";
 import { dimensionDelta } from "@/lib/dimension-delta";
 import { DIMENSION_LABEL, DIMENSION_ORDER } from "@/lib/dimension-labels";
-import type { DimensionAnalysis } from "@/lib/schema/claims";
+import type { Claim, DimensionAnalysis } from "@/lib/schema/claims";
 import type { Severity } from "@/lib/schema/enums";
 import type { Fact } from "@/lib/schema/evidence";
 import type { Report } from "@/lib/schema/report";
 import { SEVERITY_CLASS } from "@/lib/severity";
+
+import type { ReactNode } from "react";
 
 const SEVERITY_ORDER: Severity[] = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
 
@@ -37,6 +40,14 @@ interface ComparisonViewProps {
   createdAt: string;
   items: ComparisonItemView[];
   hasDeletedItems: boolean;
+  /** FR-CMP-05 (P2): the model-generated comparative narrative, if one has
+   * been generated — `undefined`/empty renders nothing (it's optional,
+   * never auto-generated at creation). */
+  narrative?: Claim[];
+  /** A client-only "Generate narrative" action, injected by the page
+   * rather than built here — keeps this component a pure server-renderable
+   * one with no fetch/router of its own. */
+  narrativeAction?: ReactNode;
 }
 
 /**
@@ -49,7 +60,14 @@ interface ComparisonViewProps {
  * `/app/compare/[id]/page.tsx` loads the pinned snapshot data and passes
  * it in.
  */
-function ComparisonView({ name, createdAt, items, hasDeletedItems }: ComparisonViewProps) {
+function ComparisonView({
+  name,
+  createdAt,
+  items,
+  hasDeletedItems,
+  narrative,
+  narrativeAction,
+}: ComparisonViewProps) {
   const radarSeries: RadarSeries[] = items.map((item) => ({
     label: item.label,
     scores: Object.fromEntries(
@@ -211,6 +229,26 @@ function ComparisonView({ name, createdAt, items, hasDeletedItems }: ComparisonV
           </table>
         </div>
       </section>
+
+      {(narrativeAction || (narrative && narrative.length > 0)) && (
+        <section className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-ui font-medium text-foreground">Comparison narrative</h2>
+            {narrativeAction}
+          </div>
+          {narrative && narrative.length > 0 ? (
+            <ul className="flex flex-col">
+              {narrative.map((claim) => (
+                <li key={claim.id}>
+                  <ClaimRow claim={claim} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-ui-sm text-mist">No narrative yet.</p>
+          )}
+        </section>
+      )}
     </div>
   );
 }

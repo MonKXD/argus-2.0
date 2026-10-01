@@ -1,8 +1,9 @@
 import { z } from "zod";
 
 import { renderFactBlock } from "@/lib/analysis/prompts/fact-block";
-import { escapeForPromptBlock, PROMPT_PREAMBLE } from "@/lib/analysis/prompts/preamble";
-import type { Claim, DimensionAnalysis, Flag } from "@/lib/schema/claims";
+import { renderDimensionBlock, renderFlagBlock } from "@/lib/analysis/prompts/narrative-blocks";
+import { PROMPT_PREAMBLE } from "@/lib/analysis/prompts/preamble";
+import type { DimensionAnalysis, Flag } from "@/lib/schema/claims";
 import { DimensionKey } from "@/lib/schema/enums";
 import type { Fact } from "@/lib/schema/evidence";
 import type { Overall } from "@/lib/schema/report";
@@ -116,32 +117,4 @@ export function buildSynthesisPrompt(args: {
   ].join("\n");
 
   return { system: PROMPT_PREAMBLE, user, cachePrefix: `${dimensionsBlock}\n${flagsBlock}\n${factsBlock}` };
-}
-
-function renderDimensionBlock(dimension: DimensionAnalysis): string {
-  const claims = dimension.claims.map(renderClaimForPrompt).join("\n");
-  return `<dimension key="${dimension.dimension}" score="${dimension.score ?? "null"}" confidence="${dimension.confidence}">\n${claims}\n</dimension>`;
-}
-
-function renderClaimForPrompt(claim: Claim): string {
-  const text = escapeForPromptBlock(claim.text);
-  const detail = claimDetail(claim);
-  return `<claim id="${claim.id}" status="${claim.status}">${text}${detail ? ` (${escapeForPromptBlock(detail)})` : ""}</claim>`;
-}
-
-function claimDetail(claim: Claim): string | undefined {
-  switch (claim.status) {
-    case "VERIFIED":
-      return `quote: "${claim.quotes.map((q) => q.quote).join('" / "')}"`;
-    case "MISSING":
-      return `needed: ${claim.missing.whatIsNeeded}`;
-    default:
-      return undefined;
-  }
-}
-
-function renderFlagBlock(flag: Flag): string {
-  const title = escapeForPromptBlock(flag.title);
-  const description = escapeForPromptBlock(flag.description);
-  return `<flag id="${flag.id}" category="${flag.category}" severity="${flag.severity}" status="${flag.status}">${title} — ${description}</flag>`;
 }

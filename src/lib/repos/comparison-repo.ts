@@ -25,6 +25,11 @@ export class ComparisonRepo {
     return snapshot.exists ? snapshot.data()! : null;
   }
 
+  /** T-5.04: saves the (optional, model-generated) comparison narrative. */
+  async update(id: string, patch: Partial<Comparison>): Promise<void> {
+    await this.collection().doc(id).set(patch, { merge: true });
+  }
+
   async delete(id: string): Promise<void> {
     await this.collection().doc(id).delete();
   }

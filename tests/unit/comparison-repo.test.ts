@@ -49,6 +49,29 @@ describe("ComparisonRepo", () => {
     await expect(repo.get(saved.id)).resolves.toEqual(saved);
   });
 
+  it("updates only the given fields, leaving the rest untouched", async () => {
+    const { db } = createFakeFirestore();
+    const repo = new ComparisonRepo(db);
+    const saved = comparison();
+    await repo.create(saved);
+    const narrative: Comparison["narrative"] = [
+      {
+        id: "clm_00000000000000000000000099",
+        text: "Loopwell has a larger ARR than the other startup.",
+        confidence: 0.8,
+        entities: [],
+        status: "VERIFIED",
+        quotes: [{ evidenceId: "ev_00000000000000000000000001", quote: "ARR of $2,000,000" }],
+      },
+    ];
+
+    await repo.update(saved.id, { narrative });
+
+    const updated = await repo.get(saved.id);
+    expect(updated?.narrative).toEqual(narrative);
+    expect(updated?.name).toBe(saved.name);
+  });
+
   it("deletes a comparison", async () => {
     const { db } = createFakeFirestore();
     const repo = new ComparisonRepo(db);
