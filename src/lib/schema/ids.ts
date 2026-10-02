@@ -17,6 +17,7 @@ export const ID_PREFIXES = {
   signal: "sig",
   export: "exp",
   note: "note",
+  feedback: "fbk",
 } as const;
 
 export const idOf = (prefix: string) =>

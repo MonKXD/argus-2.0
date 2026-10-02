@@ -12,7 +12,7 @@ The Zod schemas in `src/lib/schema/` are the source of truth. TypeScript types a
 
 ## 1. Conventions
 
-- IDs are prefixed ULIDs, for example `ana_01J8Z...`. Prefixes: `ana` analysis, `src` source, `ev` evidence, `fct` fact, `clm` claim, `run` run, `rpt` report, `flg` flag, `chk` checklist item, `cmp` comparison, `act` activity, `sig` signal, `exp` export, `note` note.
+- IDs are prefixed ULIDs, for example `ana_01J8Z...`. Prefixes: `ana` analysis, `src` source, `ev` evidence, `fct` fact, `clm` claim, `run` run, `rpt` report, `flg` flag, `chk` checklist item, `cmp` comparison, `act` activity, `sig` signal, `exp` export, `note` note, `fbk` feedback (T-6.11).
 - Field names are camelCase. Enums are UPPER_SNAKE strings.
 - Every top-level document carries `ownerId`. Documents that clients may read carry it explicitly (analysis, run).
 - Scores are 0 to 100 (`null` means not scored). Confidence is 0 to 1.
@@ -388,6 +388,7 @@ analyses/{analysisId}                   Analysis
 comparisons/{comparisonId}              Comparison
 activity/{activityId}                   Activity
 exports/{exportId}                      Export
+feedback/{feedbackId}                   Feedback                               (T-6.11)
 ```
 
 Design notes:
@@ -430,6 +431,15 @@ export const Export = z.object({
   id: idOf("exp"), ownerId: z.string(), analysisId: idOf("ana"), reportId: idOf("rpt"),
   format: z.enum(["MD", "JSON", "PDF"]), storagePath: z.string(),
   createdAt: Iso, expiresAt: Iso,
+});
+
+// T-6.11 (beta feedback loop, PRD section 13) — added this session, not in
+// the original doc; logged in PROJECT_MEMORY D-107. No in-app reader: the
+// project owner reads this collection directly during the beta.
+export const Feedback = z.object({
+  id: idOf("fbk"), ownerId: z.string(),
+  message: z.string().min(1).max(2000), page: z.string().max(200).optional(),
+  createdAt: Iso,
 });
 ```
 

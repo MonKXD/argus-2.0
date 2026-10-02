@@ -149,4 +149,15 @@ describe("firestore.rules: every other collection denies clients by default", ()
     const owner = testEnv.authenticatedContext(OWNER_UID);
     await assertFails(getDoc(doc(owner.firestore(), "comparisons", "cmp_1")));
   });
+
+  it("denies reading or writing a top-level feedback document even when owned (T-6.11)", async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "feedback", "fbk_1"), { ownerId: OWNER_UID });
+    });
+    const owner = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(getDoc(doc(owner.firestore(), "feedback", "fbk_1")));
+    await assertFails(
+      setDoc(doc(owner.firestore(), "feedback", "fbk_2"), { ownerId: OWNER_UID, message: "hi" }),
+    );
+  });
 });

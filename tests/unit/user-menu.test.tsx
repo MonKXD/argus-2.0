@@ -10,6 +10,7 @@ const signOutUser = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, refresh }),
+  usePathname: () => "/app",
 }));
 
 vi.mock("@/lib/firebase/client-auth", () => ({
