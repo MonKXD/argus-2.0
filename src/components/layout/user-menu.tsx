@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
+import { DeleteAccountButton } from "@/components/layout/delete-account-button";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { signOutUser } from "@/lib/firebase/client-auth";
@@ -37,6 +38,7 @@ function UserMenu({ email }: UserMenuProps) {
           <Button type="button" variant="outline" size="sm" onClick={handleSignOut} disabled={signingOut}>
             {signingOut ? "Signing out…" : "Sign out"}
           </Button>
+          <DeleteAccountButton />
         </div>
       </PopoverContent>
     </Popover>
