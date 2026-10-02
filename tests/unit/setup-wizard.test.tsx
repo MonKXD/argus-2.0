@@ -17,6 +17,10 @@ const draftAnalysis = {
   ...loopwellAnalysis,
   startup: { ...loopwellAnalysis.startup, name: "Untitled analysis", oneLiner: undefined },
   options: { webResearch: true },
+  // A first-time setup, not a re-run (T-5.11's isRerun reads this) —
+  // loopwellAnalysis itself is a COMPLETE demo analysis with a real
+  // `.latest`, which these pre-existing tests don't mean to represent.
+  latest: null,
 };
 
 const NO_SOURCES_RESPONSE = () => new Response(JSON.stringify({ sources: [] }), { status: 200 });
@@ -175,5 +179,22 @@ describe("SetupWizard", () => {
   it("disables Back on the first step", () => {
     render(<SetupWizard analysis={draftAnalysis} />);
     expect(screen.getByRole("button", { name: "Back" })).toBeDisabled();
+  });
+
+  it("shows Re-run analysis instead of Start analysis when the analysis already has a report (T-5.11)", async () => {
+    currentStep = "review";
+    const fetchMock = vi.fn((url: string) =>
+      String(url).endsWith("/sources")
+        ? Promise.resolve(
+            new Response(JSON.stringify({ sources: [{ id: "src_1", status: "PARSED" }] }), { status: 200 }),
+          )
+        : Promise.resolve(new Response("{}", { status: 200 })),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<SetupWizard analysis={{ ...draftAnalysis, latest: loopwellAnalysis.latest }} />);
+
+    expect(await screen.findByRole("button", { name: "Re-run analysis" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Start analysis" })).not.toBeInTheDocument();
   });
 });

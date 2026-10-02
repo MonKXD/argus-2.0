@@ -32,9 +32,16 @@ interface ReportHeaderProps {
  * (FR-WCH-01: "toggle watchlist on any analysis" — this is the per-report
  * entry point for that, not just the dashboard table's). Compare is still
  * a Phase 5 feature that doesn't exist yet on this page — omitted rather
- * than stubbed (D-060's "don't hide not-built-yet behind a flag"). "Re-run"
- * reuses the already-built setup-wizard entry point. PRD section 15's
- * disclaimer belongs wherever a report is shown, so it sits here too.
+ * than stubbed (D-060's "don't hide not-built-yet behind a flag"). "Run
+ * again" and "Add sources" (T-5.11, FR-INT-07) both reuse the already-built
+ * setup-wizard entry point — neither `POST /sources` nor `POST /runs` gates
+ * on analysis status, and `run-pipeline.ts` already versions every run
+ * (`version = (analysis.latest?.version ?? 0) + 1`, D-063), so the only real
+ * gap was a direct path to the Sources step: "Run again" jumps to
+ * `?step=review` (same sources, re-run now); "Add sources" jumps to
+ * `?step=sources` so a user doesn't have to Back through Review and Options
+ * to reach it. PRD section 15's disclaimer belongs wherever a report is
+ * shown, so it sits here too.
  */
 function ReportHeader({ analysis, report, versions = [] }: ReportHeaderProps) {
   const latestVersion = versions[0]?.version ?? report.version;
@@ -81,6 +88,12 @@ function ReportHeader({ analysis, report, versions = [] }: ReportHeaderProps) {
             className="text-ui-sm text-mist hover:text-foreground hover:underline"
           >
             Print or save as PDF
+          </Link>
+          <Link
+            href={`/app/analyses/${analysis.id}/setup?step=sources`}
+            className="text-ui-sm text-mist hover:text-foreground hover:underline"
+          >
+            Add sources
           </Link>
           <Link
             href={`/app/analyses/${analysis.id}/setup?step=review`}

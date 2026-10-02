@@ -208,6 +208,64 @@ describe("executeRun: happy path", () => {
   });
 });
 
+describe("executeRun: a second run on an already-COMPLETE analysis (T-5.11, FR-INT-07)", () => {
+  it("creates a new report version rather than overwriting the first", async () => {
+    const SECOND_RUN_ID = "run_00000000000000000000000002";
+    const { db, store } = createFakeFirestore();
+    store.set(`analyses/${ANALYSIS_ID}`, {
+      ...seedAnalysis(),
+      status: "COMPLETE",
+      currentRunId: SECOND_RUN_ID,
+      latest: {
+        reportId: "rpt_00000000000000000000000001",
+        version: 1,
+        overallScore: 50,
+        confidence: 0.5,
+        label: "SCORED",
+        generatedAt: NOW,
+        topFlagSeverity: null,
+      },
+    });
+    store.set(`analyses/${ANALYSIS_ID}/runs/${SECOND_RUN_ID}`, seedRun({ id: SECOND_RUN_ID }));
+    store.set(`analyses/${ANALYSIS_ID}/sources/${SOURCE_ID}`, seedSource());
+    store.set(`analyses/${ANALYSIS_ID}/evidence/${EVIDENCE_ID}`, seedEvidence());
+    // The prior version's own report document — must survive untouched
+    // (R-DAT-04: a re-run creates a new version, never mutates history).
+    store.set(`analyses/${ANALYSIS_ID}/reports/rpt_00000000000000000000000001`, {
+      id: "rpt_00000000000000000000000001",
+      version: 1,
+    });
+
+    createLlmMock.mockReturnValue(
+      new FakeLlm({
+        submit_facts: factsHandler,
+        submit_dimension_analysis: dimensionHandler,
+        submit_synthesis: synthesisResponse,
+      }),
+    );
+
+    await executeRun(db, { analysisId: ANALYSIS_ID, runId: SECOND_RUN_ID, signal: new AbortController().signal });
+
+    const run = store.get(`analyses/${ANALYSIS_ID}/runs/${SECOND_RUN_ID}`) as Record<string, unknown>;
+    expect(run.status).toBe("SUCCEEDED");
+    expect(run.reportId).not.toBe("rpt_00000000000000000000000001");
+
+    const report = store.get(`analyses/${ANALYSIS_ID}/reports/${run.reportId}`) as Record<string, unknown>;
+    expect(report.version).toBe(2);
+
+    const analysis = store.get(`analyses/${ANALYSIS_ID}`) as Record<string, unknown>;
+    expect((analysis.latest as { version: number }).version).toBe(2);
+    expect((analysis.latest as { reportId: string }).reportId).toBe(run.reportId);
+
+    // The first version's own report document is untouched, not overwritten (R-DAT-04).
+    const firstReport = store.get(`analyses/${ANALYSIS_ID}/reports/rpt_00000000000000000000000001`) as Record<
+      string,
+      unknown
+    >;
+    expect(firstReport.version).toBe(1);
+  });
+});
+
 describe("executeRun: no usable evidence", () => {
   it("fails the run without calling the pipeline", async () => {
     const { db, store } = createFakeFirestore();

@@ -8,6 +8,12 @@ interface ReviewStepProps {
   options: Analysis["options"];
   hasUsableSource: boolean;
   starting: boolean;
+  /** T-5.11/FR-INT-07: true when this analysis already has a prior
+   * completed report (`analysis.latest !== null`) — the button reads
+   * "Re-run analysis" rather than "Start analysis" so a returning user
+   * adding a source sees language that matches what they're actually
+   * doing. */
+  isRerun: boolean;
   onStart: () => void;
 }
 
@@ -21,7 +27,14 @@ interface ReviewStepProps {
  * 5.3 row 4's "Run disabled until valid" (row 2's own validation: "at least
  * one source or a website URL").
  */
-function ReviewStep({ startup, options, hasUsableSource, starting, onStart }: ReviewStepProps) {
+function ReviewStep({
+  startup,
+  options,
+  hasUsableSource,
+  starting,
+  isRerun,
+  onStart,
+}: ReviewStepProps) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
@@ -63,7 +76,7 @@ function ReviewStep({ startup, options, hasUsableSource, starting, onStart }: Re
           disabled={starting || !hasUsableSource}
           title={hasUsableSource ? undefined : "Add at least one source or a website URL first."}
         >
-          {starting ? "Starting…" : "Start analysis"}
+          {starting ? "Starting…" : isRerun ? "Re-run analysis" : "Start analysis"}
         </Button>
         {!hasUsableSource && (
           <p className="text-ui-sm text-mist">Add at least one source or a website URL first.</p>

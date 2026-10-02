@@ -146,6 +146,7 @@ function SetupWizard({ analysis }: SetupWizardProps) {
           options={options}
           hasUsableSource={sourceState.sources.some((s) => s.status !== "FAILED")}
           starting={starting}
+          isRerun={analysis.latest !== null}
           onStart={() => void handleStart()}
         />
       )}

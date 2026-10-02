@@ -30,6 +30,21 @@ describe("ReportShell", () => {
     expect(screen.getByText(`Version ${demoReport.version}`, { exact: false })).toBeInTheDocument();
   });
 
+  it("renders Add sources and Run again links pointing at the setup wizard (T-5.11)", () => {
+    render(
+      <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,
+    );
+
+    expect(screen.getByRole("link", { name: "Add sources" })).toHaveAttribute(
+      "href",
+      `/app/analyses/${loopwellAnalysis.id}/setup?step=sources`,
+    );
+    expect(screen.getByRole("link", { name: "Run again" })).toHaveAttribute(
+      "href",
+      `/app/analyses/${loopwellAnalysis.id}/setup?step=review`,
+    );
+  });
+
   it("renders every one of the 16 sections with its number and title", () => {
     render(
       <ReportShell analysis={loopwellAnalysis} report={demoReport} dimensions={demoDimensions} />,
