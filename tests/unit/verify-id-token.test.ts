@@ -74,7 +74,7 @@ describe("verifyIdTokenManually", () => {
 
   it("rejects a token whose payload was tampered with after signing", async () => {
     const token = signToken(realClaims());
-    const [headerB64, payloadB64, signatureB64] = token.split(".");
+    const [headerB64, , signatureB64] = token.split(".");
     const tamperedPayload = base64url(JSON.stringify(realClaims({ email: "attacker@example.com" })));
     await expect(verifyIdTokenManually(`${headerB64}.${tamperedPayload}.${signatureB64}`)).rejects.toThrow(
       IdTokenVerificationError,

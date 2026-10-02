@@ -89,31 +89,55 @@ export class IdTokenVerificationError extends Error {}
  * signing keys, then replicates `verifyIdToken(idToken, true)`'s
  * revocation/disabled check via `getAdminAuth().getUser()` (unaffected by
  * the bug this works around — see the module doc comment).
+ *
+ * The Firebase Auth Emulator issues ID tokens with `alg: "none"` and an
+ * empty signature segment by design (there is no real key pair to sign
+ * with locally) — Google's own emulator documentation calls this out as
+ * the expected shape, and every Admin SDK integration that supports
+ * emulator-backed dev/test has to special-case it the same way. Found only
+ * by actually driving a real sign-up through this exact function against a
+ * running Auth Emulator (T-5.10's own verification step): with real
+ * production-shaped tokens as the only thing ever exercised since this
+ * function replaced `verifyIdToken()`, local sign-in had been silently
+ * broken (every session-establishing request 401s with "Token is not a
+ * well-formed JWT") since that replacement landed. Skipping the RS256
+ * signature check is scoped strictly to `env.USE_FIREBASE_EMULATORS` —
+ * the same flag that already gates every other emulator-only code path in
+ * this project — so production verification is completely unchanged; every
+ * other claim check (exp/iat/aud/iss/sub, plus the disabled/revoked check
+ * below) still runs for an emulator token exactly as for a real one.
  */
 export async function verifyIdTokenManually(idToken: string): Promise<VerifiedIdToken> {
   const [headerB64, payloadB64, signatureB64] = idToken.split(".");
-  if (!headerB64 || !payloadB64 || !signatureB64) {
+  if (!headerB64 || !payloadB64 || signatureB64 === undefined) {
     throw new IdTokenVerificationError("Token is not a well-formed JWT.");
   }
 
   const header = base64UrlJsonSegment(headerB64);
   const payload = base64UrlJsonSegment(payloadB64);
 
-  if (header.alg !== "RS256") {
-    throw new IdTokenVerificationError(`Unexpected token algorithm "${String(header.alg)}".`);
-  }
+  const isEmulatorToken = env.USE_FIREBASE_EMULATORS && header.alg === "none";
 
-  const keys = await fetchGoogleSigningKeys();
-  const jwk = keys.find((key) => key.kid === header.kid);
-  if (!jwk) {
-    throw new IdTokenVerificationError("No signing key matches this token's key ID.");
-  }
+  if (!isEmulatorToken) {
+    if (header.alg !== "RS256") {
+      throw new IdTokenVerificationError(`Unexpected token algorithm "${String(header.alg)}".`);
+    }
+    if (!signatureB64) {
+      throw new IdTokenVerificationError("Token is not a well-formed JWT.");
+    }
 
-  const publicKey = createPublicKey({ key: jwk, format: "jwk" } as JsonWebKeyInput);
-  const signedData = Buffer.from(`${headerB64}.${payloadB64}`);
-  const signature = Buffer.from(signatureB64, "base64url");
-  if (!cryptoVerify("RSA-SHA256", signedData, publicKey, signature)) {
-    throw new IdTokenVerificationError("Token signature is invalid.");
+    const keys = await fetchGoogleSigningKeys();
+    const jwk = keys.find((key) => key.kid === header.kid);
+    if (!jwk) {
+      throw new IdTokenVerificationError("No signing key matches this token's key ID.");
+    }
+
+    const publicKey = createPublicKey({ key: jwk, format: "jwk" } as JsonWebKeyInput);
+    const signedData = Buffer.from(`${headerB64}.${payloadB64}`);
+    const signature = Buffer.from(signatureB64, "base64url");
+    if (!cryptoVerify("RSA-SHA256", signedData, publicKey, signature)) {
+      throw new IdTokenVerificationError("Token signature is invalid.");
+    }
   }
 
   const now = Math.floor(Date.now() / 1000);
