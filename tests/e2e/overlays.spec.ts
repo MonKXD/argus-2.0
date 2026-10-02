@@ -61,30 +61,7 @@ test.describe("Sheet", () => {
   });
 });
 
-test.describe("CommandPalette", () => {
-  test("opens on Cmd/Ctrl+K from anywhere on an /app page, and on Escape", async ({ page }) => {
-    await page.goto("/app");
-
-    const palette = page.getByRole("dialog", { name: "Command palette" });
-    await expect(palette).toBeHidden();
-
-    await page.keyboard.press("ControlOrMeta+k");
-    await expect(palette).toBeVisible();
-    await expect(palette.getByPlaceholder(/Search analyses/)).toBeFocused();
-
-    await page.keyboard.press("Escape");
-    await expect(palette).toBeHidden();
-  });
-
-  test("opens via the topbar search button, and a nav link closes it", async ({ page }) => {
-    await page.goto("/app");
-
-    await page.getByRole("button", { name: "Search analyses" }).click();
-    const palette = page.getByRole("dialog", { name: "Command palette" });
-    await expect(palette).toBeVisible();
-
-    await palette.getByRole("link", { name: "Analyses" }).click();
-    await expect(palette).toBeHidden();
-    await expect(page).toHaveURL(/\/app\/analyses/);
-  });
-});
+// CommandPalette coverage lives in command-palette.authenticated.spec.ts —
+// it needs a real signed-in session (every assertion here would otherwise
+// just be testing the /login redirect page instead, see that file's own
+// doc comment and docs/PROJECT_MEMORY.md's D-081/D-091).

@@ -26,9 +26,34 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      testIgnore: /\.authenticated\.spec\.ts$/,
       use: {
         ...devices["Desktop Chrome"],
         ...(executablePath ? { launchOptions: { executablePath } } : {}),
+      },
+    },
+    // `auth.setup.ts` signs a throwaway user against the Firebase Auth
+    // Emulator (requires `pnpm emulators` running) and saves its session
+    // cookie to playwright/.auth/user.json for `chromium-authenticated`'s
+    // `dependencies` below to pick up — Playwright only actually runs this
+    // project when a selected spec depends on it.
+    {
+      name: "setup",
+      testMatch: /auth\.setup\.ts$/,
+    },
+    // Specs under `*.authenticated.spec.ts` need a real signed-in session.
+    // `baseURL` is `localhost`, not `127.0.0.1`, because the session cookie
+    // is host-only to whatever origin the session route issued it for
+    // (`APP_URL`) — see auth.setup.ts's own doc comment.
+    {
+      name: "chromium-authenticated",
+      testMatch: /\.authenticated\.spec\.ts$/,
+      dependencies: ["setup"],
+      use: {
+        ...devices["Desktop Chrome"],
+        ...(executablePath ? { launchOptions: { executablePath } } : {}),
+        baseURL: "http://localhost:3000",
+        storageState: "playwright/.auth/user.json",
       },
     },
   ],

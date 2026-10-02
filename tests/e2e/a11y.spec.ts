@@ -11,11 +11,11 @@ const viewports = [
   { name: "390", width: 390, height: 844 },
 ];
 
+// /app and /app/analyses (which need a real signed-in session) are scanned
+// in a11y-app.authenticated.spec.ts instead — see that file's doc comment.
 const pages = [
   { name: "landing", path: "/" },
   { name: "sample report", path: "/sample" },
-  { name: "dashboard", path: "/app" },
-  { name: "analyses list", path: "/app/analyses" },
   { name: "component gallery", path: "/dev/ui" },
 ];
 
@@ -36,6 +36,8 @@ for (const vp of viewports) {
   });
 }
 
+// App-shell keyboard-operability (sidebar links, collapse toggle) needs a
+// real signed-in session — see a11y-app.authenticated.spec.ts.
 test.describe("keyboard operability", () => {
   test("landing page: tab reaches the primary CTA and it activates on Enter", async ({ page }) => {
     await page.goto("/");
@@ -47,30 +49,6 @@ test.describe("keyboard operability", () => {
       guard++;
     }
     await expect(cta).toBeFocused();
-  });
-
-  test("app shell: sidebar links and collapse toggle are reachable and operable by keyboard", async ({
-    page,
-  }) => {
-    await page.goto("/app");
-
-    const analysesLink = page.getByRole("link", { name: "Analyses" }).first();
-    await analysesLink.focus();
-    await expect(analysesLink).toBeFocused();
-    await page.keyboard.press("Enter");
-    await expect(page).toHaveURL(/\/app\/analyses/);
-  });
-
-  test("sidebar collapse button has a visible focus outline", async ({ page }) => {
-    await page.goto("/app");
-    const collapseButton = page.getByRole("button", { name: /Collapse|Expand/ });
-    await collapseButton.focus();
-    await expect(collapseButton).toBeFocused();
-    const outline = await collapseButton.evaluate((el) => {
-      const style = getComputedStyle(el);
-      return style.outlineStyle === "none" ? style.boxShadow : style.outlineStyle;
-    });
-    expect(outline).not.toBe("none");
   });
 });
 
