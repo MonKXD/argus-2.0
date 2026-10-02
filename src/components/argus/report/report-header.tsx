@@ -25,9 +25,12 @@ interface ReportHeaderProps {
 /**
  * APP_FLOW 5.5's header row: "name, stage, sector, version, generated time
  * · Compare · Export · Watch · Re-run." Export, print and watch are now
- * real (T-5.05/T-5.06/T-5.07): Export Markdown/JSON are plain `<a href>`
- * downloads via `GET .../reports/:reportId/export?format=`, no client JS;
- * "Print or save as PDF" opens `/print/report/:id` in a new tab;
+ * real (T-5.05/T-5.06/T-5.07/T-6.04): Export Markdown/JSON/PDF are plain
+ * `<a href>` downloads via `GET .../reports/:reportId/export?format=`, no
+ * client JS — PDF is server-rendered (headless Chromium navigating the
+ * print page internally), still just a GET download from this link's own
+ * perspective. "Print or save as PDF" opens `/print/report/:id` in a new
+ * tab, for a reader who wants the browser's own print dialog instead;
  * `WatchlistToggleButton` is the same star control `AnalysesTable` uses
  * (FR-WCH-01: "toggle watchlist on any analysis" — this is the per-report
  * entry point for that, not just the dashboard table's). Compare is still
@@ -80,6 +83,12 @@ function ReportHeader({ analysis, report, versions = [] }: ReportHeaderProps) {
             className="text-ui-sm text-mist hover:text-foreground hover:underline"
           >
             Export JSON
+          </a>
+          <a
+            href={`/api/analyses/${analysis.id}/reports/${report.id}/export?format=pdf`}
+            className="text-ui-sm text-mist hover:text-foreground hover:underline"
+          >
+            Export PDF
           </a>
           <Link
             href={`/print/report/${analysis.id}`}

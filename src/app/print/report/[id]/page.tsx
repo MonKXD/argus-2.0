@@ -13,6 +13,7 @@ import { SourceRepo } from "@/lib/repos/source-repo";
 
 interface PrintReportPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ reportId?: string }>;
 }
 
 /**
@@ -20,9 +21,13 @@ interface PrintReportPageProps {
  * | For browser 'Save as PDF'"). Outside `/app`'s layout deliberately — no
  * sidebar/topbar chrome belongs in a printed document — so this page does
  * its own `requireUser()`/ownership check, the same pattern `AppLayout`
- * itself uses. Always prints the latest version (`ReportRepo.list()`'s
- * first entry, same as `/app/analyses/[id]`'s own default) — printing an
- * arbitrary historical version isn't named in FR-EXP-02's own scope.
+ * itself uses. Prints the latest version by default; an optional
+ * `?reportId=` selects a specific historical one (same `?version=` idea
+ * `/app/analyses/[id]` already uses, T-4.11, but keyed by id since that's
+ * what T-6.04's server PDF export already has on hand rather than a
+ * version number) — added for T-6.04 (FR-EXP-03), whose server-rendered
+ * PDF route navigates here internally and must render the exact report
+ * version it was asked to export, not silently substitute the latest one.
  *
  * The `@media print` block below forces legible colours: this app is
  * dark-only on screen (D-012), so its text token is a near-white colour
@@ -39,8 +44,9 @@ interface PrintReportPageProps {
  * the rest of the app is unaffected (R-UI-02: tokens only, no new raw
  * colour).
  */
-export default async function PrintReportPage({ params }: PrintReportPageProps) {
+export default async function PrintReportPage({ params, searchParams }: PrintReportPageProps) {
   const { id } = await params;
+  const { reportId } = await searchParams;
   const user = await requireUser().catch(() => redirect("/login"));
 
   const db = getAdminFirestore();
@@ -49,7 +55,7 @@ export default async function PrintReportPage({ params }: PrintReportPageProps) 
 
   const reportRepo = new ReportRepo(db);
   const versionHistory = await reportRepo.list(id);
-  const report = versionHistory[0];
+  const report = reportId ? (versionHistory.find((r) => r.id === reportId) ?? null) : (versionHistory[0] ?? null);
   if (!report) notFound();
 
   const [dimensions, sources] = await Promise.all([

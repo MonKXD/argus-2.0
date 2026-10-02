@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -5,6 +6,8 @@ import { recordActivity } from "@/lib/activity";
 import { assertOwns, requireUser } from "@/lib/api/auth";
 import { handleApiError, NotFoundError, ValidationError } from "@/lib/api/errors";
 import { DISCLAIMER_TEXT } from "@/lib/disclaimer";
+import { env } from "@/lib/env";
+import { renderReportPdf } from "@/lib/export/render-pdf";
 import { buildReportExportPayload } from "@/lib/export/report-export-data";
 import { renderReportMarkdown } from "@/lib/export/report-markdown";
 import { getAdminFirestore } from "@/lib/repos/admin-firestore";
@@ -16,7 +19,15 @@ interface RouteContext {
   params: Promise<{ id: string; reportId: string }>;
 }
 
-const Format = z.enum(["md", "json"]);
+const Format = z.enum(["md", "json", "pdf"]);
+
+/**
+ * T-6.04 (FR-EXP-03): a headless-browser PDF render takes real wall-clock
+ * time (browser launch, page navigation, layout) well beyond the plain
+ * Markdown/JSON branches below — a generous but still Hobby-plan-safe
+ * ceiling (D-070).
+ */
+export const maxDuration = 45;
 
 function slugify(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "report";
@@ -59,14 +70,28 @@ export async function GET(request: Request, { params }: RouteContext): Promise<N
       disclaimer: DISCLAIMER_TEXT,
     });
 
+    const formatLabel = format === "json" ? "JSON" : format === "pdf" ? "PDF" : "Markdown";
     await recordActivity(db, {
       ownerId: user.uid,
       type: "REPORT_EXPORTED",
       analysisId: id,
-      message: `Exported ${analysis.startup.name}'s report as ${format === "json" ? "JSON" : "Markdown"}.`,
+      message: `Exported ${analysis.startup.name}'s report as ${formatLabel}.`,
     });
 
     const slug = slugify(analysis.startup.name);
+
+    if (format === "pdf") {
+      const sessionCookieValue = (await cookies()).get(env.SESSION_COOKIE_NAME)?.value;
+      if (!sessionCookieValue) throw new NotFoundError("Session not found.");
+      const pdf = await renderReportPdf({ analysisId: id, reportId, sessionCookieValue });
+      return new NextResponse(new Uint8Array(pdf), {
+        headers: {
+          "content-type": "application/pdf",
+          "content-disposition": `attachment; filename="${slug}-v${report.version}.pdf"`,
+        },
+      });
+    }
+
     if (format === "json") {
       return new NextResponse(JSON.stringify(payload, null, 2), {
         headers: {

@@ -220,7 +220,7 @@ Error codes: `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `VALIDATION_FAILED`, `
 | GET | `/api/analyses/:id/reports/:reportId` | Full report (assembled from report and dimension docs) |
 | PATCH | `/api/analyses/:id/reports/:reportId/checklist/:itemId` | Update checklist status or note |
 | PATCH | `/api/analyses/:id/reports/:reportId/flags/:flagId` | Acknowledge or dismiss a flag |
-| POST | `/api/analyses/:id/exports` | Create export (`format`: `md`, `json`, `pdf`) |
+| GET | `/api/analyses/:id/reports/:reportId/export` | Download the report (query: `format` — `md`, `json`, `pdf`). T-6.04 corrected this row: the originally-sketched `POST .../exports` was never the route actually built (T-5.05 built a GET under the report itself instead — a plain `<a href>` download needs no POST, R-SEC-07's own origin-check scope already excludes GETs) and this table had drifted from it since. |
 | POST | `/api/comparisons` | Create comparison (2 to 4 analysis and report pairs) |
 | GET | `/api/comparisons/:id` | Get comparison |
 | DELETE | `/api/comparisons/:id` | Delete comparison |
