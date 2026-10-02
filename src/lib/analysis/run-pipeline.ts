@@ -1,3 +1,4 @@
+import { recordActivity } from "@/lib/activity";
 import { createLlm } from "@/lib/ai/create-llm";
 import { runAnalysisPipeline } from "@/lib/analysis/pipeline";
 import { env } from "@/lib/env";
@@ -147,6 +148,12 @@ export async function executeRun(db: Firestore, args: ExecuteRunArgs): Promise<v
         { merge: true },
       );
       await analysisRepo.update(analysisId, { status: "FAILED", updatedAt: new Date().toISOString() });
+      await recordActivity(db, {
+        ownerId: analysis.ownerId,
+        type: "RUN_FAILED",
+        analysisId,
+        message: `The run for ${analysis.startup.name} failed: no usable sources.`,
+      });
       return;
     }
 
@@ -225,6 +232,15 @@ export async function executeRun(db: Firestore, args: ExecuteRunArgs): Promise<v
         topFlagSeverity,
       },
     });
+    await recordActivity(db, {
+      ownerId: analysis.ownerId,
+      type: "RUN_COMPLETED",
+      analysisId,
+      message:
+        runStatus === "PARTIAL"
+          ? `Run for ${analysis.startup.name} completed with some dimensions incomplete.`
+          : `Run for ${analysis.startup.name} completed. Score: ${result.report.overall.score ?? "—"}.`,
+    });
   } catch (error) {
     const aborted = signal.aborted;
     const now = new Date().toISOString();
@@ -257,5 +273,13 @@ export async function executeRun(db: Firestore, args: ExecuteRunArgs): Promise<v
       status: aborted ? "READY" : "FAILED",
       updatedAt: now,
     });
+    if (!aborted) {
+      await recordActivity(db, {
+        ownerId: analysis.ownerId,
+        type: "RUN_FAILED",
+        analysisId,
+        message: `The run for ${analysis.startup.name} failed.`,
+      });
+    }
   }
 }

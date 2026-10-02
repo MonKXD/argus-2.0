@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { recordActivity } from "@/lib/activity";
 import { requireUser } from "@/lib/api/auth";
 import { handleApiError } from "@/lib/api/errors";
 import { assertSameOrigin } from "@/lib/api/origin";
@@ -47,7 +48,14 @@ export async function POST(request: Request): Promise<NextResponse> {
       archivedAt: null,
     };
 
-    await new AnalysisRepo(getAdminFirestore()).create(analysis);
+    const db = getAdminFirestore();
+    await new AnalysisRepo(db).create(analysis);
+    await recordActivity(db, {
+      ownerId: user.uid,
+      type: "ANALYSIS_CREATED",
+      analysisId: analysis.id,
+      message: `Started an analysis for ${analysis.startup.name}.`,
+    });
     return NextResponse.json({ analysis }, { status: 201 });
   } catch (error) {
     return handleApiError(error);

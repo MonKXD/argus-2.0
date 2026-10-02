@@ -5,22 +5,25 @@ import { NewAnalysisEmptyState } from "@/components/argus/new-analysis-empty-sta
 import { KpiStrip } from "@/components/dashboard/kpi-strip";
 import { LiveInProgressPanel } from "@/components/dashboard/live-in-progress-panel";
 import { MarketIntelligencePanel } from "@/components/dashboard/market-intelligence-panel";
+import { RecentActivityPanel } from "@/components/dashboard/recent-activity-panel";
 import { WatchlistPanel } from "@/components/dashboard/watchlist-panel";
 import { requireUser } from "@/lib/api/auth";
+import { ActivityRepo } from "@/lib/repos/activity-repo";
 import { getAdminFirestore } from "@/lib/repos/admin-firestore";
 import { AnalysisRepo } from "@/lib/repos/analysis-repo";
 import type { Analysis } from "@/lib/schema/analysis";
 
-// DESIGN section 5.2 / TRACKER T-1.13/T-3.10: KPI strip, analyses table
-// (dominant element), in-progress and watchlist panels, market
-// intelligence — all on the signed-in user's own real analyses now
-// (D-067). Recent activity isn't shown: there's no Activity data model yet
-// (deliberately not pulled forward in T-1.08/D-026, and it's Phase 5
-// functionality) — showing a panel with nothing behind it would be worse
-// than not showing one.
+// DESIGN section 5.2 / TRACKER T-1.13/T-3.10/T-5.08: KPI strip, analyses
+// table (dominant element), in-progress, watchlist and recent-activity
+// panels, market intelligence — all on the signed-in user's own real data
+// (D-067, D-088's T-5.08 adding the Activity feed).
 export default async function DashboardPage() {
   const user = await requireUser();
-  const analyses = await new AnalysisRepo(getAdminFirestore()).listByOwner(user.uid);
+  const db = getAdminFirestore();
+  const [analyses, activity] = await Promise.all([
+    new AnalysisRepo(db).listByOwner(user.uid),
+    new ActivityRepo(db).listByOwner(user.uid),
+  ]);
   const liveInProgress = analyses.filter(
     (a): a is Analysis & { currentRunId: string } => a.status === "PROCESSING" && a.currentRunId !== null,
   );
@@ -63,6 +66,7 @@ export default async function DashboardPage() {
         <div className="flex flex-col gap-6">
           <LiveInProgressPanel analyses={liveInProgress} />
           <WatchlistPanel analyses={analyses} />
+          <RecentActivityPanel activity={activity} />
         </div>
       </div>
 

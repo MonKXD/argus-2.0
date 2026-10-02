@@ -6,11 +6,14 @@ import { UnauthenticatedError } from "@/lib/api/errors";
 const requireUser = vi.fn();
 const create = vi.fn();
 const listByOwner = vi.fn();
+const recordActivity = vi.fn();
 
 vi.mock("@/lib/api/auth", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api/auth")>();
   return { ...actual, requireUser: () => requireUser() };
 });
+
+vi.mock("@/lib/activity", () => ({ recordActivity: (...args: unknown[]) => recordActivity(...args) }));
 
 vi.mock("@/lib/repos/admin-firestore", () => ({ getAdminFirestore: () => ({}) }));
 
@@ -70,6 +73,10 @@ describe("POST /api/analyses", () => {
     expect(body.analysis.status).toBe("DRAFT");
     expect(body.analysis.startup.name).toBe("Acme");
     expect(body.analysis.options).toEqual({ webResearch: true });
+    expect(recordActivity).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ ownerId: USER.uid, type: "ANALYSIS_CREATED" }),
+    );
     expect(create).toHaveBeenCalledWith(body.analysis);
   });
 

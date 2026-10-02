@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { recordActivity } from "@/lib/activity";
 import { requireUser } from "@/lib/api/auth";
 import { handleApiError, NotFoundError, ValidationError } from "@/lib/api/errors";
 import { assertSameOrigin } from "@/lib/api/origin";
@@ -70,6 +71,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     };
 
     await new ComparisonRepo(db).create(comparison);
+    await recordActivity(db, {
+      ownerId: user.uid,
+      type: "COMPARISON_CREATED",
+      message: `Created a comparison: ${comparison.name}.`,
+    });
     return NextResponse.json({ comparison }, { status: 201 });
   } catch (error) {
     return handleApiError(error);

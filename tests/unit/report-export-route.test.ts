@@ -7,11 +7,14 @@ const analysisGet = vi.fn();
 const getReport = vi.fn();
 const listDimensions = vi.fn();
 const sourceList = vi.fn();
+const recordActivity = vi.fn();
 
 vi.mock("@/lib/api/auth", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api/auth")>();
   return { ...actual, requireUser: () => requireUser() };
 });
+
+vi.mock("@/lib/activity", () => ({ recordActivity: (...args: unknown[]) => recordActivity(...args) }));
 
 vi.mock("@/lib/repos/admin-firestore", () => ({ getAdminFirestore: () => ({}) }));
 
@@ -90,6 +93,10 @@ describe("GET /api/analyses/[id]/reports/[reportId]/export", () => {
     expect(response.headers.get("content-disposition")).toContain(".md");
     const body = await response.text();
     expect(body).toContain(loopwellAnalysis.startup.name);
+    expect(recordActivity).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ ownerId: OWNER.uid, type: "REPORT_EXPORTED" }),
+    );
   });
 
   it("returns JSON with the full export payload when format=json", async () => {

@@ -12,11 +12,14 @@ const afterMock = vi.fn();
 const registerRun = vi.fn();
 const unregisterRun = vi.fn();
 const executeRun = vi.fn();
+const recordActivity = vi.fn();
 
 vi.mock("@/lib/api/auth", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api/auth")>();
   return { ...actual, requireUser: () => requireUser() };
 });
+
+vi.mock("@/lib/activity", () => ({ recordActivity: (...args: unknown[]) => recordActivity(...args) }));
 
 vi.mock("@/lib/repos/analysis-repo", () => ({
   AnalysisRepo: class {
@@ -124,6 +127,10 @@ describe("POST /api/analyses/[id]/runs/[runId]/resume", () => {
     );
     expect(registerRun).toHaveBeenCalledWith(RUN_ID);
     expect(afterMock).toHaveBeenCalledTimes(1);
+    expect(recordActivity).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ ownerId: OWNER.uid, type: "RUN_STARTED" }),
+    );
   });
 
   it("allows resuming a PARTIAL or CANCELLED run", async () => {

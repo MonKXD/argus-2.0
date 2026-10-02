@@ -2,8 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { LiveInProgressPanel } from "@/components/dashboard/live-in-progress-panel";
+import { RecentActivityPanel } from "@/components/dashboard/recent-activity-panel";
 import { WatchlistPanel } from "@/components/dashboard/watchlist-panel";
 import { demoAnalyses } from "@/demo";
+import type { Activity } from "@/lib/schema/activity";
 
 const useRunProgress = vi.fn();
 vi.mock("@/hooks/use-run-progress", () => ({
@@ -57,5 +59,40 @@ describe("WatchlistPanel", () => {
     const noneWatchlisted = demoAnalyses.map((a) => ({ ...a, isWatchlisted: false }));
     rerender(<WatchlistPanel analyses={noneWatchlisted} />);
     expect(screen.queryByRole("link", { name: "View all" })).not.toBeInTheDocument();
+  });
+});
+
+describe("RecentActivityPanel", () => {
+  const activity: Activity[] = [
+    {
+      id: "act_00000000000000000000000001",
+      ownerId: demoAnalyses[0]!.ownerId,
+      type: "ANALYSIS_CREATED",
+      analysisId: demoAnalyses[0]!.id,
+      message: `Started an analysis for ${demoAnalyses[0]!.startup.name}.`,
+      createdAt: "2026-09-25T00:00:00.000Z",
+    },
+    {
+      id: "act_00000000000000000000000002",
+      ownerId: demoAnalyses[0]!.ownerId,
+      type: "COMPARISON_CREATED",
+      message: "Created a comparison: Seed-stage fintech.",
+      createdAt: "2026-09-26T00:00:00.000Z",
+    },
+  ];
+
+  it("shows a designed empty state when nothing has happened yet", () => {
+    render(<RecentActivityPanel activity={[]} />);
+    expect(screen.getByText("Nothing has happened yet.")).toBeInTheDocument();
+  });
+
+  it("renders each activity's message, linking to its analysis when it has one", () => {
+    render(<RecentActivityPanel activity={activity} />);
+
+    const link = screen.getByRole("link", {
+      name: `Started an analysis for ${demoAnalyses[0]!.startup.name}.`,
+    });
+    expect(link).toHaveAttribute("href", `/app/analyses/${demoAnalyses[0]!.id}`);
+    expect(screen.getByText("Created a comparison: Seed-stage fintech.")).toBeInTheDocument();
   });
 });

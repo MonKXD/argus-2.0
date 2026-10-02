@@ -1,6 +1,7 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { after, NextResponse } from "next/server";
 
+import { recordActivity } from "@/lib/activity";
 import { assertWithinRunLimits } from "@/lib/analysis/run-limits";
 import { executeRun } from "@/lib/analysis/run-pipeline";
 import { registerRun, unregisterRun } from "@/lib/analysis/run-registry";
@@ -84,6 +85,12 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
       status: "PROCESSING",
       currentRunId: runId,
       updatedAt: now,
+    });
+    await recordActivity(db, {
+      ownerId: user.uid,
+      type: "RUN_STARTED",
+      analysisId,
+      message: `Resumed a run for ${analysis.startup.name}.`,
     });
 
     const controller = registerRun(runId);

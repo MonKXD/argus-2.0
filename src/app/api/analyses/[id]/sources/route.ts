@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { recordActivity } from "@/lib/activity";
 import {
   FileSignatureError,
   MAX_DECOMPRESSED_MULTIPLIER,
@@ -101,8 +102,9 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
     assertSameOrigin(request);
     const { id: analysisId } = await params;
     const user = await requireUser();
+    const db = getAdminFirestore();
 
-    const analysis = await new AnalysisRepo(getAdminFirestore()).get(analysisId);
+    const analysis = await new AnalysisRepo(db).get(analysisId);
     if (!analysis) throw new NotFoundError("Analysis not found.");
     assertOwns(analysis.ownerId, user);
 
@@ -239,7 +241,15 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
       }
     }
 
-    await new SourceRepo(getAdminFirestore()).create(source, evidence);
+    await new SourceRepo(db).create(source, evidence);
+    if (source.status !== "FAILED") {
+      await recordActivity(db, {
+        ownerId: user.uid,
+        type: "SOURCE_ADDED",
+        analysisId,
+        message: `Added a source: ${source.title}.`,
+      });
+    }
     return NextResponse.json({ source }, { status: 201 });
   } catch (error) {
     return handleApiError(error);

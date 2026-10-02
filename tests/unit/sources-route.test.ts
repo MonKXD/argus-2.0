@@ -10,11 +10,14 @@ const sniffFileKind = vi.fn();
 const ingestSource = vi.fn();
 const fileExists = vi.fn();
 const fileDownload = vi.fn();
+const recordActivity = vi.fn();
 
 vi.mock("@/lib/api/auth", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api/auth")>();
   return { ...actual, requireUser: () => requireUser() };
 });
+
+vi.mock("@/lib/activity", () => ({ recordActivity: (...args: unknown[]) => recordActivity(...args) }));
 
 vi.mock("@/lib/repos/admin-firestore", () => ({ getAdminFirestore: () => ({}) }));
 
@@ -139,6 +142,10 @@ describe("POST /api/analyses/[id]/sources", () => {
       expect.objectContaining({ storagePath: validBody.storagePath, mimeType: "application/pdf" }),
       [{ id: "ev_1" }],
     );
+    expect(recordActivity).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ ownerId: OWNER.uid, type: "SOURCE_ADDED" }),
+    );
   });
 
   it("registers a FAILED source with a plain-English message when extraction throws", async () => {
@@ -151,6 +158,7 @@ describe("POST /api/analyses/[id]/sources", () => {
     expect(body.source.status).toBe("FAILED");
     expect(body.source.error.message).toMatch(/could not be read/i);
     expect(sourceCreate).toHaveBeenCalledWith(expect.objectContaining({ status: "FAILED" }), []);
+    expect(recordActivity).not.toHaveBeenCalled();
   });
 
   it("registers a FAILED source when the file signature doesn't match its claimed type", async () => {

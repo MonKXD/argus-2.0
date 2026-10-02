@@ -7,11 +7,14 @@ const get = vi.fn();
 const update = vi.fn();
 const recursiveDelete = vi.fn();
 const deleteFiles = vi.fn();
+const recordActivity = vi.fn();
 
 vi.mock("@/lib/api/auth", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api/auth")>();
   return { ...actual, requireUser: () => requireUser() };
 });
+
+vi.mock("@/lib/activity", () => ({ recordActivity: (...args: unknown[]) => recordActivity(...args) }));
 
 vi.mock("@/lib/repos/admin-firestore", () => ({
   getAdminFirestore: () => ({
@@ -154,6 +157,27 @@ describe("PATCH /api/analyses/[id]", () => {
     );
     expect(response.status).toBe(400);
     expect(update).not.toHaveBeenCalled();
+  });
+
+  it("records a WATCHLIST_REMOVED activity when isWatchlisted actually changes (FR-WCH-01)", async () => {
+    get.mockResolvedValue(loopwellAnalysis); // isWatchlisted: true
+    update.mockResolvedValue(undefined);
+
+    await PATCH(patchRequest({ isWatchlisted: false }), context(loopwellAnalysis.id));
+
+    expect(recordActivity).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ ownerId: OWNER.uid, type: "WATCHLIST_REMOVED" }),
+    );
+  });
+
+  it("does not record a watchlist activity when isWatchlisted is unchanged", async () => {
+    get.mockResolvedValue(loopwellAnalysis); // isWatchlisted: true
+    update.mockResolvedValue(undefined);
+
+    await PATCH(patchRequest({ isWatchlisted: true }), context(loopwellAnalysis.id));
+
+    expect(recordActivity).not.toHaveBeenCalled();
   });
 });
 

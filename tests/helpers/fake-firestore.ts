@@ -84,6 +84,7 @@ export class FakeCollectionRef {
     private readonly converter: FakeConverter | undefined,
     private readonly wheres: WhereClause[] = [],
     private readonly orderBys: OrderByClause[] = [],
+    private readonly limitCount: number | undefined = undefined,
   ) {}
 
   doc(id: string): FakeDocRef {
@@ -96,7 +97,14 @@ export class FakeCollectionRef {
   }
 
   withConverter(converter: FakeConverter): FakeCollectionRef {
-    return new FakeCollectionRef(this.store, this.path, converter, this.wheres, this.orderBys);
+    return new FakeCollectionRef(
+      this.store,
+      this.path,
+      converter,
+      this.wheres,
+      this.orderBys,
+      this.limitCount,
+    );
   }
 
   where(field: string, op: "==" | ">=", value: unknown): FakeCollectionRef {
@@ -106,14 +114,30 @@ export class FakeCollectionRef {
       this.converter,
       [...this.wheres, { field, op, value }],
       this.orderBys,
+      this.limitCount,
     );
   }
 
   orderBy(field: string, direction: "asc" | "desc" = "asc"): FakeCollectionRef {
-    return new FakeCollectionRef(this.store, this.path, this.converter, this.wheres, [
-      ...this.orderBys,
-      { field, direction },
-    ]);
+    return new FakeCollectionRef(
+      this.store,
+      this.path,
+      this.converter,
+      this.wheres,
+      [...this.orderBys, { field, direction }],
+      this.limitCount,
+    );
+  }
+
+  limit(count: number): FakeCollectionRef {
+    return new FakeCollectionRef(
+      this.store,
+      this.path,
+      this.converter,
+      this.wheres,
+      this.orderBys,
+      count,
+    );
   }
 
   async get(): Promise<{ docs: { data(): unknown }[] }> {
@@ -134,6 +158,8 @@ export class FakeCollectionRef {
         return clause.direction === "desc" ? -cmp : cmp;
       });
     }
+
+    if (this.limitCount !== undefined) entries = entries.slice(0, this.limitCount);
 
     const docs = entries.map(([key, value]) => ({
       data: () => (this.converter ? this.converter.fromFirestore({ data: () => value }) : value),

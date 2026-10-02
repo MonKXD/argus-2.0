@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { recordActivity } from "@/lib/activity";
 import { assertOwns, requireUser } from "@/lib/api/auth";
 import { ConflictError, handleApiError, NotFoundError } from "@/lib/api/errors";
 import { assertSameOrigin } from "@/lib/api/origin";
@@ -50,7 +51,8 @@ export async function PATCH(request: Request, { params }: RouteContext): Promise
     const { id } = await params;
     const user = await requireUser();
 
-    const repo = new AnalysisRepo(getAdminFirestore());
+    const db = getAdminFirestore();
+    const repo = new AnalysisRepo(db);
     const existing = await repo.get(id);
     if (!existing) throw new NotFoundError("Analysis not found.");
     assertOwns(existing.ownerId, user);
@@ -66,6 +68,18 @@ export async function PATCH(request: Request, { params }: RouteContext): Promise
     };
 
     await repo.update(id, patch);
+
+    if (body.isWatchlisted !== undefined && body.isWatchlisted !== existing.isWatchlisted) {
+      await recordActivity(db, {
+        ownerId: user.uid,
+        type: body.isWatchlisted ? "WATCHLIST_ADDED" : "WATCHLIST_REMOVED",
+        analysisId: id,
+        message: body.isWatchlisted
+          ? `Added ${existing.startup.name} to the watchlist.`
+          : `Removed ${existing.startup.name} from the watchlist.`,
+      });
+    }
+
     return NextResponse.json({ analysis: { ...existing, ...patch } });
   } catch (error) {
     return handleApiError(error);

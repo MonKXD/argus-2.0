@@ -198,6 +198,13 @@ describe("executeRun: happy path", () => {
       k.startsWith(`analyses/${ANALYSIS_ID}/reports/${run.reportId}/dimensions/`),
     );
     expect(dimensionEntries).toHaveLength(8);
+
+    const activityEntries = [...store.keys()]
+      .filter((k) => k.startsWith("activity/"))
+      .map((k) => store.get(k) as Record<string, unknown>);
+    expect(activityEntries).toContainEqual(
+      expect.objectContaining({ type: "RUN_COMPLETED", analysisId: ANALYSIS_ID }),
+    );
   });
 });
 
@@ -220,6 +227,13 @@ describe("executeRun: no usable evidence", () => {
 
     const analysis = store.get(`analyses/${ANALYSIS_ID}`) as Record<string, unknown>;
     expect(analysis.status).toBe("FAILED");
+
+    const activityEntries = [...store.keys()]
+      .filter((k) => k.startsWith("activity/"))
+      .map((k) => store.get(k) as Record<string, unknown>);
+    expect(activityEntries).toContainEqual(
+      expect.objectContaining({ type: "RUN_FAILED", analysisId: ANALYSIS_ID }),
+    );
   });
 });
 
@@ -242,6 +256,8 @@ describe("executeRun: cancelRequested before start", () => {
 
     const analysis = store.get(`analyses/${ANALYSIS_ID}`) as Record<string, unknown>;
     expect(analysis.status).toBe("READY");
+
+    expect([...store.keys()].some((k) => k.startsWith("activity/"))).toBe(false);
   });
 });
 
@@ -268,6 +284,13 @@ describe("executeRun: mid-run failure", () => {
 
     const analysis = store.get(`analyses/${ANALYSIS_ID}`) as Record<string, unknown>;
     expect(analysis.status).toBe("FAILED");
+
+    const activityEntries = [...store.keys()]
+      .filter((k) => k.startsWith("activity/"))
+      .map((k) => store.get(k) as Record<string, unknown>);
+    expect(activityEntries).toContainEqual(
+      expect.objectContaining({ type: "RUN_FAILED", analysisId: ANALYSIS_ID }),
+    );
   });
 
   it("marks the run CANCELLED when the failure is an aborted signal", async () => {
@@ -291,5 +314,7 @@ describe("executeRun: mid-run failure", () => {
 
     const analysis = store.get(`analyses/${ANALYSIS_ID}`) as Record<string, unknown>;
     expect(analysis.status).toBe("READY");
+
+    expect([...store.keys()].some((k) => k.startsWith("activity/"))).toBe(false);
   });
 });

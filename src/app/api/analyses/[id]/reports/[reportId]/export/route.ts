@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { recordActivity } from "@/lib/activity";
 import { assertOwns, requireUser } from "@/lib/api/auth";
 import { handleApiError, NotFoundError, ValidationError } from "@/lib/api/errors";
 import { DISCLAIMER_TEXT } from "@/lib/disclaimer";
@@ -56,6 +57,13 @@ export async function GET(request: Request, { params }: RouteContext): Promise<N
       dimensions,
       sources,
       disclaimer: DISCLAIMER_TEXT,
+    });
+
+    await recordActivity(db, {
+      ownerId: user.uid,
+      type: "REPORT_EXPORTED",
+      analysisId: id,
+      message: `Exported ${analysis.startup.name}'s report as ${format === "json" ? "JSON" : "Markdown"}.`,
     });
 
     const slug = slugify(analysis.startup.name);

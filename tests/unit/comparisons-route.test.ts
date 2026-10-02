@@ -8,11 +8,14 @@ const analysisGet = vi.fn();
 const reportGetReport = vi.fn();
 const comparisonCreate = vi.fn();
 const comparisonListByOwner = vi.fn();
+const recordActivity = vi.fn();
 
 vi.mock("@/lib/api/auth", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api/auth")>();
   return { ...actual, requireUser: () => requireUser() };
 });
+
+vi.mock("@/lib/activity", () => ({ recordActivity: (...args: unknown[]) => recordActivity(...args) }));
 
 vi.mock("@/lib/repos/admin-firestore", () => ({ getAdminFirestore: () => ({}) }));
 
@@ -138,6 +141,10 @@ describe("POST /api/comparisons", () => {
     });
     expect(body.comparison.scoringVersions).toEqual(["2026.1"]);
     expect(comparisonCreate).toHaveBeenCalledOnce();
+    expect(recordActivity).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ ownerId: OWNER.uid, type: "COMPARISON_CREATED" }),
+    );
   });
 });
 
