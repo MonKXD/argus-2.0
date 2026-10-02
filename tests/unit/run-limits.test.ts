@@ -8,7 +8,7 @@ vi.mock("@/lib/env", () => ({
   env: { MAX_CONCURRENT_RUNS: 2, DAILY_ANALYSIS_LIMIT: 3, LOG_LEVEL: "silent", NODE_ENV: "test" },
 }));
 
-const { assertWithinRunLimits } = await import("@/lib/analysis/run-limits");
+const { assertWithinRunLimits, getRunUsage } = await import("@/lib/analysis/run-limits");
 
 function run(overrides: Partial<{ ownerId: string; status: string; startedAt: string }>) {
   return {
@@ -65,5 +65,16 @@ describe("assertWithinRunLimits", () => {
     const { db, store } = createFakeFirestore();
     store.set("analyses/ana_1/sources/src_1", { ownerId: "user_1", status: "RUNNING" });
     await expect(assertWithinRunLimits(db, "user_1")).resolves.toBeUndefined();
+  });
+});
+
+describe("getRunUsage (T-5.13)", () => {
+  it("returns the same real running/daily counts assertWithinRunLimits checks against", async () => {
+    const { db, store } = createFakeFirestore();
+    const now = new Date().toISOString();
+    store.set("analyses/ana_1/runs/run_1", run({ status: "RUNNING", startedAt: now }));
+    store.set("analyses/ana_1/runs/run_2", run({ status: "SUCCEEDED", startedAt: now }));
+
+    await expect(getRunUsage(db, "user_1")).resolves.toEqual({ runningCount: 1, dailyCount: 2 });
   });
 });

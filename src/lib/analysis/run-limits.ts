@@ -5,13 +5,35 @@ import type { Firestore } from "firebase-admin/firestore";
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
+export interface RunUsage {
+  runningCount: number;
+  dailyCount: number;
+}
+
+/**
+ * The two `collectionGroup("runs")` queries `assertWithinRunLimits` checks
+ * against, extracted so T-5.13's usage view (`GET /api/usage`) can show the
+ * same real counts rather than a second, possibly-drifting computation.
+ * `Run` documents live in `analyses/{id}/runs/{runId}` subcollections, so
+ * both queries are scoped by `ownerId` (server-side Admin SDK reads, not
+ * subject to the owner-scoped client rules) — see
+ * `firebase/firestore.indexes.json` for the composite indexes these need.
+ */
+export async function getRunUsage(db: Firestore, ownerId: string): Promise<RunUsage> {
+  const runs = db.collectionGroup("runs");
+  const since = new Date(Date.now() - ONE_DAY_MS).toISOString();
+
+  const [runningSnapshot, todaySnapshot] = await Promise.all([
+    runs.where("ownerId", "==", ownerId).where("status", "==", "RUNNING").get(),
+    runs.where("ownerId", "==", ownerId).where("startedAt", ">=", since).get(),
+  ]);
+
+  return { runningCount: runningSnapshot.size, dailyCount: todaySnapshot.size };
+}
+
 /**
  * TRD section 7: "at most 2 concurrent runs per user; daily analysis limit
- * from DAILY_ANALYSIS_LIMIT; both return LIMIT_EXCEEDED." `Run` documents
- * live in `analyses/{id}/runs/{runId}` subcollections, so both checks are
- * `collectionGroup("runs")` queries scoped by `ownerId` (server-side Admin
- * SDK reads, not subject to the owner-scoped client rules) — see
- * `firebase/firestore.indexes.json` for the composite indexes these need.
+ * from DAILY_ANALYSIS_LIMIT; both return LIMIT_EXCEEDED."
  *
  * Best-effort, not transactional: a race between two concurrent requests
  * from the same user can both pass the check before either run is created,
@@ -20,18 +42,15 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
  * soft usage cap enforced against a single user's own concurrent requests.
  */
 export async function assertWithinRunLimits(db: Firestore, ownerId: string): Promise<void> {
-  const runs = db.collectionGroup("runs");
+  const { runningCount, dailyCount } = await getRunUsage(db, ownerId);
 
-  const runningSnapshot = await runs.where("ownerId", "==", ownerId).where("status", "==", "RUNNING").get();
-  if (runningSnapshot.size >= env.MAX_CONCURRENT_RUNS) {
+  if (runningCount >= env.MAX_CONCURRENT_RUNS) {
     throw new LimitExceededError(
       `You have ${env.MAX_CONCURRENT_RUNS} analyses running already. Wait for one to finish before starting another.`,
     );
   }
 
-  const since = new Date(Date.now() - ONE_DAY_MS).toISOString();
-  const todaySnapshot = await runs.where("ownerId", "==", ownerId).where("startedAt", ">=", since).get();
-  if (todaySnapshot.size >= env.DAILY_ANALYSIS_LIMIT) {
+  if (dailyCount >= env.DAILY_ANALYSIS_LIMIT) {
     throw new LimitExceededError(
       `You've reached today's limit of ${env.DAILY_ANALYSIS_LIMIT} analysis runs. Try again tomorrow.`,
     );
