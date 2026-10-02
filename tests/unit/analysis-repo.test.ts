@@ -58,4 +58,16 @@ describe("AnalysisRepo", () => {
 
     await expect(repo.listByOwner("nobody")).resolves.toEqual([]);
   });
+
+  it("listWatchlisted returns watchlisted analyses across every owner (T-6.01)", async () => {
+    const { db } = createFakeFirestore();
+    const repo = new AnalysisRepo(db);
+    await repo.create({ ...loopwellAnalysis, isWatchlisted: true });
+    await repo.create({ ...otherAnalysis, isWatchlisted: true });
+    await repo.create({ ...loopwellAnalysis, id: "ana_00000000000000000000000098", isWatchlisted: false });
+
+    const watchlisted = await repo.listWatchlisted();
+
+    expect(watchlisted.map((a) => a.id).sort()).toEqual([loopwellAnalysis.id, otherAnalysis.id].sort());
+  });
 });

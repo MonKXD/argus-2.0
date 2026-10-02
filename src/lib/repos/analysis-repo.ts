@@ -47,4 +47,14 @@ export class AnalysisRepo {
       .get();
     return snapshot.docs.map((doc) => doc.data());
   }
+
+  /** T-6.01: every watchlisted analysis across every owner, for the
+   * scheduled signals job — the only caller that needs a cross-owner
+   * query; every other read in this app is scoped to the signed-in user's
+   * own `ownerId` (R-SEC-01). A single-field equality filter needs no new
+   * composite index. */
+  async listWatchlisted(): Promise<Analysis[]> {
+    const snapshot = await this.collection().where("isWatchlisted", "==", true).get();
+    return snapshot.docs.map((doc) => doc.data());
+  }
 }

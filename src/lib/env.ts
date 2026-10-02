@@ -67,6 +67,11 @@ const serverSchema = z
 
     FEATURE_WEB_RESEARCH: boolFromString.default(true),
     FEATURE_MONITORING: boolFromString.default(false),
+    /** T-6.01: compared against the cron route's own `Authorization: Bearer`
+     * header. Vercel Cron sends this automatically when the project has a
+     * `CRON_SECRET` env var set (its own documented convention) — optional
+     * here since local/emulator dev never calls the cron route directly. */
+    CRON_SECRET: z.string().min(1).optional(),
   })
   .superRefine((data, ctx) => {
     if (!data.USE_FIREBASE_EMULATORS) {
