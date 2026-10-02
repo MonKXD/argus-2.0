@@ -81,6 +81,20 @@ export default function SettingsPage() {
     <div className="flex flex-col gap-10 p-6">
       <h1 className="font-serif text-h2 text-foreground">Settings</h1>
 
+      <section className="flex flex-col gap-3">
+        <h2 className="text-h3 font-serif text-foreground">Your data</h2>
+        <p className="max-w-md text-ui-sm text-mist">
+          Download a copy of every analysis, report, comparison and piece of activity history on
+          your account, as a single JSON file.
+        </p>
+        <a
+          href="/api/account/export"
+          className="w-fit rounded-control border border-hairline px-3 py-1.5 text-ui-sm font-medium text-foreground hover:bg-panel-raised"
+        >
+          Export all my data
+        </a>
+      </section>
+
       <section className="flex flex-col gap-4">
         <h2 className="text-h3 font-serif text-foreground">Usage and limits</h2>
         {error ? (

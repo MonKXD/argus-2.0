@@ -83,6 +83,14 @@ describe("SettingsPage", () => {
     expect(screen.getByText(/Version 1\.0\.0/)).toBeInTheDocument();
   });
 
+  it("links to the full data export (T-6.12)", () => {
+    render(<SettingsPage />);
+    expect(screen.getByRole("link", { name: "Export all my data" })).toHaveAttribute(
+      "href",
+      "/api/account/export",
+    );
+  });
+
   it("shows an empty state when there are no runs yet (T-6.08)", async () => {
     render(<SettingsPage />);
     expect(
