@@ -17,6 +17,9 @@ const viewports = [
 const pages = [
   { name: "dashboard", path: "/app" },
   { name: "analyses list", path: "/app/analyses" },
+  { name: "watchlist", path: "/app/watchlist" },
+  { name: "settings", path: "/app/settings" },
+  { name: "compare creator", path: "/app/compare" },
 ];
 
 for (const vp of viewports) {

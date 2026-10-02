@@ -345,13 +345,19 @@ function ReportShell({
         onValueChange={(v) => setStatusFilter(v as StatusFilter)}
         className="min-w-0"
       >
-        <TabsList aria-label="Filter claims by status" className="overflow-x-auto">
-          <TabsTrigger value="ALL">All</TabsTrigger>
-          <TabsTrigger value="VERIFIED">{STATUS_LABEL.VERIFIED}</TabsTrigger>
-          <TabsTrigger value="AI_ANALYSIS">{STATUS_LABEL.AI_ANALYSIS}</TabsTrigger>
-          <TabsTrigger value="ASSUMPTION">{STATUS_LABEL.ASSUMPTION}</TabsTrigger>
-          <TabsTrigger value="MISSING">{STATUS_LABEL.MISSING}</TabsTrigger>
-        </TabsList>
+        {/* Radix's TabsList manages its own roving tabindex and won't accept
+         * an overridden tabIndex — the scrollable region needs its own,
+         * separately focusable wrapper so a keyboard user can scroll it
+         * directly (axe scrollable-region-focusable). */}
+        <div className="overflow-x-auto" tabIndex={0}>
+          <TabsList aria-label="Filter claims by status">
+            <TabsTrigger value="ALL">All</TabsTrigger>
+            <TabsTrigger value="VERIFIED">{STATUS_LABEL.VERIFIED}</TabsTrigger>
+            <TabsTrigger value="AI_ANALYSIS">{STATUS_LABEL.AI_ANALYSIS}</TabsTrigger>
+            <TabsTrigger value="ASSUMPTION">{STATUS_LABEL.ASSUMPTION}</TabsTrigger>
+            <TabsTrigger value="MISSING">{STATUS_LABEL.MISSING}</TabsTrigger>
+          </TabsList>
+        </div>
         {/* This toggle filters claims across the whole page below, not a
          * single co-located panel — there's nothing for a real TabsContent
          * to show. Radix's TabsTrigger still emits `aria-controls` pointing
