@@ -19,6 +19,9 @@ const pages = [
   { name: "component gallery", path: "/dev/ui" },
   { name: "login", path: "/login" },
   { name: "signup", path: "/signup" },
+  { name: "terms", path: "/legal/terms" },
+  { name: "privacy", path: "/legal/privacy" },
+  { name: "disclaimer", path: "/legal/disclaimer" },
 ];
 
 for (const vp of viewports) {
