@@ -1,13 +1,12 @@
 import { FieldValue } from "firebase-admin/firestore";
-import { after, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { recordActivity } from "@/lib/activity";
 import { assertWithinRunLimits } from "@/lib/analysis/run-limits";
-import { executeRun } from "@/lib/analysis/run-pipeline";
-import { registerRun, unregisterRun } from "@/lib/analysis/run-registry";
 import { assertOwns, requireUser } from "@/lib/api/auth";
 import { ConflictError, handleApiError, NotFoundError } from "@/lib/api/errors";
 import { assertSameOrigin } from "@/lib/api/origin";
+import { triggerRun } from "@/lib/api/trigger-run";
 import { getAdminFirestore } from "@/lib/repos/admin-firestore";
 import { AnalysisRepo } from "@/lib/repos/analysis-repo";
 import { zodConverter } from "@/lib/repos/converter";
@@ -76,6 +75,12 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
         cancelRequested: false,
         error: FieldValue.delete(),
         finishedAt: FieldValue.delete(),
+        // A terminal run always clears its own `queueState` (T-6.03) before
+        // reaching FAILED/PARTIAL/CANCELLED, but clear it here too in case
+        // ORCHESTRATION_MODE changed between the failed run and this resume
+        // — a resumed queue-mode run must always start its chunking fresh
+        // from chunk A, never pick up a stale reportId/dimensions.
+        queueState: FieldValue.delete(),
         startedAt: now,
       },
       { merge: true },
@@ -93,10 +98,7 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
       message: `Resumed a run for ${analysis.startup.name}.`,
     });
 
-    const controller = registerRun(runId);
-    after(() =>
-      executeRun(db, { analysisId, runId, signal: controller.signal }).finally(() => unregisterRun(runId)),
-    );
+    await triggerRun(db, { analysisId, runId });
 
     return NextResponse.json({ runId }, { status: 202 });
   } catch (error) {

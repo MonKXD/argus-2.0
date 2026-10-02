@@ -61,9 +61,10 @@ function sumUsage(usage: Usage[]): Usage {
  * `facts` subcollection right before a run writes its own is the fix —
  * facts are engine-intermediate data, not a versioned, user-facing
  * document R-DAT-04 protects (that rule is about `Report`, which already
- * gets a fresh id and version every run).
+ * gets a fresh id and version every run). Exported for T-6.03's queue-mode
+ * orchestrator, which needs the identical cleanup at its own first chunk.
  */
-async function deleteExistingFacts(db: Firestore, analysisId: string): Promise<void> {
+export async function deleteExistingFacts(db: Firestore, analysisId: string): Promise<void> {
   const snapshot = await db.collection("analyses").doc(analysisId).collection("facts").get();
   const refs = snapshot.docs.map((doc) => doc.ref);
   for (let start = 0; start < refs.length; start += MAX_BATCH_WRITES) {

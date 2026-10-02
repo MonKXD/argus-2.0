@@ -70,9 +70,9 @@ A run takes roughly 1 to 5 minutes. Serverless timeouts and post-response CPU th
 | Mode | Description | Use |
 |---|---|---|
 | A. Inline | `POST /runs` creates the run and the handler keeps executing the pipeline to completion. UI follows the run document. The handler must ignore client disconnects. | Current (T-3.08 through T-3.13). Both run-triggering routes set `export const maxDuration = 60` (T-3.14) — this project's Vercel account is on the Hobby plan, and 60s is the highest ceiling confidently known to be safe there without Fluid Compute; `waitUntil()`/`after()` extend the invocation's life but stay bound by the same `maxDuration`, not a separate budget (verified against Vercel's current docs). |
-| B. Queued | Handler enqueues a job (Cloud Tasks, or a durable-step service such as Inngest) that calls a step endpoint. | Production hardening, Phase 6 (T-6.03). **T-3.14's finding: likely needed sooner than Phase 6.** A 60-second ceiling is well short of this section's own documented 1-to-5-minute run time — any real multi-source, 8-dimension analysis is a realistic candidate to be killed mid-flight on the current plan, which (unlike a normal failure) leaves the `Run`/`Analysis` stuck at `RUNNING`/`PROCESSING` with no `FAILED` write, since the platform kills the invocation rather than letting `run-pipeline.ts`'s own `catch` block run. Revisit this priority call once real usage data exists, or upgrade the Vercel plan (Pro/Enterprise raise the ceiling substantially) as a lower-effort interim fix. |
+| B. Queued | Set `ORCHESTRATION_MODE=queue`: `POST /runs`/`.../resume` publish a message to Upstash QStash instead of calling `after()`; QStash delivers it to `POST /api/queue/run-step`, which runs one bounded chunk of the pipeline (EXTRACT_FACTS+CONSISTENCY, then ANALYZE+SCORE, then SYNTHESIZE+VERIFY+FINALIZE), persists its output, and — if not finished — publishes the next chunk's message itself. No single invocation needs to cover the whole pipeline, so this isn't bound by any one route's `maxDuration`. | Built T-6.03, choosing QStash (TQ-4) over a Vercel plan upgrade. See PROJECT_MEMORY D-099. |
 
-Both modes call the same `runPipeline(ctx)` function. Choosing between them is a deployment concern only. Record the decision in PROJECT_MEMORY.
+Both modes share the same underlying step functions (`extractFacts`, `runConsistency`, `analyzeAllDimensions`, `computeOverall`, `runSynthesis`, `runVerify`) — Mode A calls them in one straight-line sequence (`runAnalysisPipeline()`), Mode B calls the identical functions one at a time across chunked invocations (`executeRunChunk()`), since Mode A's own function has no pause point to share directly. Intermediate state that doesn't fit in one chunk's return value travels on the `Run` document's own `queueState` field between invocations. Choosing between the two modes is a deployment concern (`ORCHESTRATION_MODE` env var) only. Record the decision in PROJECT_MEMORY.
 
 ## 4. Repository structure
 
@@ -225,6 +225,9 @@ Error codes: `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `VALIDATION_FAILED`, `
 | GET | `/api/comparisons/:id` | Get comparison |
 | DELETE | `/api/comparisons/:id` | Delete comparison |
 | GET | `/api/usage` | Current usage and limits |
+| GET | `/api/signals` | Every signal across the owner's own watchlisted analyses |
+| GET | `/api/cron/signals` | Vercel Cron only (`Authorization: Bearer $CRON_SECRET`) — detects news signals for watchlisted companies (T-6.01) |
+| POST | `/api/queue/run-step` | QStash only (`upstash-signature` header) — runs one chunk of a queue-mode run and self-chains to the next (T-6.03, `ORCHESTRATION_MODE=queue`) |
 
 Limits: at most 2 concurrent runs per user; daily analysis limit from `DAILY_ANALYSIS_LIMIT`; both return `LIMIT_EXCEEDED`.
 

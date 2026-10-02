@@ -72,6 +72,21 @@ const serverSchema = z
      * `CRON_SECRET` env var set (its own documented convention) — optional
      * here since local/emulator dev never calls the cron route directly. */
     CRON_SECRET: z.string().min(1).optional(),
+
+    /**
+     * T-6.03 (TQ-4, queue-based Mode B): "inline" (default, D-009) runs the
+     * pipeline inline via `after()`, bound to the triggering route's own
+     * `maxDuration`. "queue" chunks the run across QStash-chained
+     * invocations of `POST /api/queue/run-step` instead, so no single
+     * invocation needs to cover the whole pipeline — see PROJECT_MEMORY
+     * D-070/D-099 for why Hobby-plan `maxDuration` makes this a real risk,
+     * not a hypothetical one.
+     */
+    ORCHESTRATION_MODE: z.enum(["inline", "queue"]).default("inline"),
+    // Required only when ORCHESTRATION_MODE="queue" (see the .superRefine below).
+    QSTASH_TOKEN: z.string().min(1).optional(),
+    QSTASH_CURRENT_SIGNING_KEY: z.string().min(1).optional(),
+    QSTASH_NEXT_SIGNING_KEY: z.string().min(1).optional(),
   })
   .superRefine((data, ctx) => {
     if (!data.USE_FIREBASE_EMULATORS) {
@@ -97,6 +112,18 @@ const serverSchema = z
           path: [field],
           message: `${field} is required when LLM_PROVIDER="${data.LLM_PROVIDER}"`,
         });
+      }
+    }
+
+    if (data.ORCHESTRATION_MODE === "queue") {
+      for (const field of ["QSTASH_TOKEN", "QSTASH_CURRENT_SIGNING_KEY", "QSTASH_NEXT_SIGNING_KEY"] as const) {
+        if (!data[field]) {
+          ctx.addIssue({
+            code: "custom",
+            path: [field],
+            message: `${field} is required when ORCHESTRATION_MODE="queue"`,
+          });
+        }
       }
     }
   });

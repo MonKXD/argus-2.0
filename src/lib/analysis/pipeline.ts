@@ -278,11 +278,14 @@ export async function runAnalysisPipeline(args: RunAnalysisPipelineArgs): Promis
   };
 }
 
-function toDimensionResults(dimensions: DimensionAnalysis[]): DimensionResult[] {
+/** Exported for T-6.03's queue-mode orchestrator, which recomputes the same
+ * values across separate chunked invocations rather than one straight-line
+ * call — shares this pure logic instead of a second copy. */
+export function toDimensionResults(dimensions: DimensionAnalysis[]): DimensionResult[] {
   return dimensions.map((d) => ({ dimension: d.dimension, score: d.score, confidence: d.confidence }));
 }
 
-function makeEvidenceInfoOf(evidence: Evidence[]): (evidenceId: string) => EvidenceInfo | undefined {
+export function makeEvidenceInfoOf(evidence: Evidence[]): (evidenceId: string) => EvidenceInfo | undefined {
   const byId = new Map(evidence.map((e) => [e.id, e]));
   return (evidenceId: string) => {
     const e = byId.get(evidenceId);
@@ -296,7 +299,7 @@ function makeEvidenceInfoOf(evidence: Evidence[]): (evidenceId: string) => Evide
  * call. `evidenceTruncated` is carried over from the original ANALYZE
  * result (VERIFY doesn't touch it).
  */
-function recomputeDimensionScores(
+export function recomputeDimensionScores(
   verified: DimensionAnalysis[],
   evidenceInfoOf: (evidenceId: string) => EvidenceInfo | undefined,
   original: DimensionAnalysis[],

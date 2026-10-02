@@ -1,15 +1,14 @@
-import { after, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { recordActivity } from "@/lib/activity";
 import { activeModelIds } from "@/lib/ai/create-llm";
 import { stageProfileFor, SCORING_VERSION } from "@/lib/analysis/config";
 import { SYNTHESIS_PROMPT_VERSION } from "@/lib/analysis/prompts/synthesis";
 import { assertWithinRunLimits } from "@/lib/analysis/run-limits";
-import { executeRun } from "@/lib/analysis/run-pipeline";
-import { registerRun, unregisterRun } from "@/lib/analysis/run-registry";
 import { assertOwns, requireUser } from "@/lib/api/auth";
 import { handleApiError, NotFoundError } from "@/lib/api/errors";
 import { assertSameOrigin } from "@/lib/api/origin";
+import { triggerRun } from "@/lib/api/trigger-run";
 import { getAdminFirestore } from "@/lib/repos/admin-firestore";
 import { AnalysisRepo } from "@/lib/repos/analysis-repo";
 import { zodConverter } from "@/lib/repos/converter";
@@ -33,9 +32,11 @@ import type { Firestore } from "firebase-admin/firestore";
  * value should come down to whatever the build error reports. See
  * PROJECT_MEMORY D-070 for the full decision and its known risk: a run
  * that hits this ceiling is killed mid-flight with no chance to write
- * `FAILED`, leaving the `Run`/`Analysis` stuck at `RUNNING`/`PROCESSING`
- * — the real fix for genuinely long runs is T-6.03's queue-based Mode B
- * (TRD's own documented escape hatch, D-009), not a bigger number here.
+ * `FAILED`, leaving the `Run`/`Analysis` stuck at `RUNNING`/`PROCESSING`.
+ * This still bounds Mode A (the default, `ORCHESTRATION_MODE="inline"`);
+ * T-6.03 built the real fix, queue-based Mode B (TRD's own documented
+ * escape hatch, D-009) — set `ORCHESTRATION_MODE="queue"` to chunk a run
+ * across QStash-chained invocations instead, see PROJECT_MEMORY D-099.
  */
 export const maxDuration = 60;
 
@@ -133,10 +134,7 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
       message: `Started a run for ${analysis.startup.name}.`,
     });
 
-    const controller = registerRun(runId);
-    after(() =>
-      executeRun(db, { analysisId, runId, signal: controller.signal }).finally(() => unregisterRun(runId)),
-    );
+    await triggerRun(db, { analysisId, runId });
 
     return NextResponse.json({ runId }, { status: 202 });
   } catch (error) {

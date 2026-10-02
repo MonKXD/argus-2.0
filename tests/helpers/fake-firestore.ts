@@ -6,6 +6,8 @@
  * zodConverter — not the Firestore service itself, which real-emulator
  * tests (see T-3.02/T-3.03's PROJECT_MEMORY entries) cover separately.
  */
+import { FieldValue } from "firebase-admin/firestore";
+
 import type { Firestore } from "firebase-admin/firestore";
 
 export interface FakeConverter {
@@ -53,7 +55,15 @@ export class FakeDocRef {
     const toWrite = this.converter ? this.converter.toFirestore(data) : data;
     if (options?.merge) {
       const existing = (this.store.get(this.path) as object | undefined) ?? {};
-      this.store.set(this.path, { ...existing, ...(toWrite as object) });
+      const merged: Record<string, unknown> = { ...existing, ...(toWrite as object) };
+      // Real Firestore interprets a `FieldValue.delete()` sentinel in a
+      // merge patch as "remove this field" rather than a literal value —
+      // match that here so a test asserting a field was cleared (e.g. T-6.03's
+      // `queueState`) exercises the same behaviour the real Admin SDK gives.
+      for (const [key, value] of Object.entries(merged)) {
+        if (value instanceof FieldValue) delete merged[key];
+      }
+      this.store.set(this.path, merged);
     } else {
       this.store.set(this.path, toWrite);
     }

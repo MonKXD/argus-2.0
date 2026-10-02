@@ -337,6 +337,20 @@ export const StepState = z.object({
   error: z.object({ code: z.string(), message: z.string() }).optional(),
 });
 
+// T-6.03 (queue-based Mode B, TQ-4): scratch state carried on `Run` between
+// QStash-chained chunk invocations, which share no memory with each other.
+// Deliberately small — dimension analyses themselves persist to the real
+// reports/{reportId}/dimensions/{key} subcollection as soon as ANALYZE
+// finishes, never kept here. Present only while a queue-mode run is in
+// flight; cleared (FieldValue.delete()) once the run reaches a terminal
+// status. Mode A (`executeRun`) never reads or writes it.
+export const RunQueueState = z.object({
+  reportId: idOf("rpt"),
+  flags: z.array(Flag), warnings: z.array(RunWarning), usage: Usage,
+  overall: Overall.optional(),
+  failedDimensions: z.array(z.object({ dimension: DimensionKey, error: z.string() })).optional(),
+});
+
 export const Run = z.object({
   id: idOf("run"), analysisId: idOf("ana"), ownerId: z.string(),
   status: RunStatus,
@@ -351,6 +365,7 @@ export const Run = z.object({
   reportId: idOf("rpt").nullable(),
   error: z.object({ code: z.string(), message: z.string() }).optional(),
   startedAt: Iso, finishedAt: Iso.optional(),
+  queueState: RunQueueState.optional(),                     // T-6.03, queue-mode only
 });
 ```
 
