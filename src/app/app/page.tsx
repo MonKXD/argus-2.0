@@ -11,12 +11,15 @@ import { requireUser } from "@/lib/api/auth";
 import { ActivityRepo } from "@/lib/repos/activity-repo";
 import { getAdminFirestore } from "@/lib/repos/admin-firestore";
 import { AnalysisRepo } from "@/lib/repos/analysis-repo";
+import { ReportRepo } from "@/lib/repos/report-repo";
 import type { Analysis } from "@/lib/schema/analysis";
+import type { Flag } from "@/lib/schema/claims";
 
-// DESIGN section 5.2 / TRACKER T-1.13/T-3.10/T-5.08: KPI strip, analyses
-// table (dominant element), in-progress, watchlist and recent-activity
-// panels, market intelligence — all on the signed-in user's own real data
-// (D-067, D-088's T-5.08 adding the Activity feed).
+// DESIGN section 5.2 / TRACKER T-1.13/T-3.10/T-5.08/T-5.09: KPI strip,
+// analyses table (dominant element), in-progress, watchlist and
+// recent-activity panels, market intelligence (sector mix, score
+// distribution, common risks) — all on the signed-in user's own real data
+// (D-067, D-088's Activity feed, D-090's score-distribution/common-risks).
 export default async function DashboardPage() {
   const user = await requireUser();
   const db = getAdminFirestore();
@@ -41,6 +44,22 @@ export default async function DashboardPage() {
       </div>
     );
   }
+
+  // FR-DSH-08's "common risks": each completed analysis's latest report's
+  // own OPEN flags (a dismissed/acknowledged flag isn't a live risk any
+  // more — the same reading `run-pipeline.ts` already uses for
+  // `Analysis.latest.topFlagSeverity`). One owner's own analyses are
+  // already a small, bounded set (D-059), so one extra Report read per
+  // completed analysis is the same trade-off the report export route and
+  // the comparison creator already make.
+  const reportRepo = new ReportRepo(db);
+  const openFlags: Flag[] = (
+    await Promise.all(
+      analyses
+        .filter((a) => a.latest !== null)
+        .map((a) => reportRepo.getReport(a.id, a.latest!.reportId)),
+    )
+  ).flatMap((report) => report?.flags.filter((flag) => flag.status === "OPEN") ?? []);
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -70,7 +89,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <MarketIntelligencePanel analyses={analyses} />
+      <MarketIntelligencePanel analyses={analyses} openFlags={openFlags} />
     </div>
   );
 }
