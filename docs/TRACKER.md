@@ -2,15 +2,15 @@
 
 Living status of the build. Update in the same commit as the work it describes.
 
-Last updated: 2026-10-02 (T-6.01 — Signals pipeline for watchlisted companies, D-097)
+Last updated: 2026-10-02 (T-6.02 — Signal feed UI and re-run prompt, D-098)
 
 Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L (see IMPLEMENTATION_PLAN section 2). Each task lists the requirement IDs it satisfies.
 
 ## Current focus
 
-- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18. Phase 3 complete (14/14). Phase 4 (Report UI, Alpha) complete (14/14). Phase 5 (Beta) complete (13/13).
+- Phase: 1 complete. Phase 2 (engine spike) 17/18 — blocked on T-2.18. Phase 3 complete (14/14). Phase 4 (Report UI, Alpha) complete (14/14). Phase 5 (Beta) complete (13/13). Phase 6 2/15.
 - Task: none in progress
-- Next up: T-6.02 (signal feed UI and re-run prompt), which reads the `Signal` records T-6.01 now writes. T-2.18 (phase gate) stays blocked in parallel — see below. T-3.14's own finding (Hobby-plan duration ceiling well under a real run's length) is worth flagging to the project owner as a possible reason to prioritize T-6.03 or a plan upgrade sooner than Phase 6. The e2e authenticated-session gap flagged at T-4.14 is now closed — see D-092: a real Playwright auth fixture (`tests/e2e/auth.setup.ts`) now backs a `chromium-authenticated` project, and the CommandPalette/dashboard/analyses-list specs it unblocked all pass for real.
+- Next up: T-6.03 (queue-based orchestrator if required, TQ-4) — T-3.14/D-070's own finding (Hobby-plan duration ceiling well under a real run's length) is the real evidence named there for prioritizing this now rather than waiting. T-2.18 (phase gate) stays blocked in parallel — see below.
 - Blockers: T-2.18 needs the project owner to run `pnpm eval` with a real `ANTHROPIC_API_KEY` (none configured in this sandbox) and share the result; an agent session can't complete it alone. Production Firebase (real Google OAuth provider config, real `dev`/`prod` projects, real Admin SDK credentials) still needs the project owner — T-3.01 re-examined this blocker and found it only applies to *production*: `src/lib/env.ts`'s own `USE_FIREBASE_EMULATORS` design (from T-0.05) already makes local dev, and every T-3.01 automated/manual verification, work fully against the Firebase Emulator Suite with no real project. `pnpm build`/`pnpm dev` also need a local `.env.local` (gitignored, never committed) with at least placeholder values for the full server env schema — see PROJECT_MEMORY D-056.
 
 ## Phase progress
@@ -23,7 +23,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 | 3 | Auth, persistence, intake, orchestration | 14 | 14 | Done |
 | 4 | Report UI (Alpha) | 14 | 14 | Done |
 | 5 | Compare, export, watchlist, activity (Beta) | 13 | 13 | Done |
-| 6 | Monitoring, hardening, launch (1.0) | 15 | 0 | Not started |
+| 6 | Monitoring, hardening, launch (1.0) | 15 | 2 | In progress |
 
 ---
 
@@ -135,7 +135,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 ## Phase 6 — Monitoring, hardening, launch (1.0)
 
 - [x] **T-6.01** Signals pipeline for watchlisted companies (scheduled) · L · FR-WCH-02 — done 2026-10-02, see D-097. Two real open design gaps (no scheduling mechanism existed anywhere in this project; no concrete signal-detection method was specified) put directly to the user before coding — chose Vercel Cron (daily) and web search + LLM classification. New `GET /api/cron/signals` (Vercel Cron auth via `CRON_SECRET` bearer token, gated behind the already-declared-but-unused `FEATURE_MONITORING` flag) lists every watchlisted analysis across every owner (`AnalysisRepo.listWatchlisted()`, a new cross-owner query — verified against the real Firestore emulator, no composite index needed) and runs `detectSignalsForAnalysis()` per company, isolating one failure from the rest. One `ResearchProvider.search()` per company, then the already-built `ingestSource()` (SSRF-safe, already tested) turns each new article URL into a real `Source`+`Evidence` pair — "stored with sources" is exactly what INGEST already does, not a new mechanism. One FAST-role LLM call per article grounds a `Signal` in that evidence (title/url/publisher always come from the search hit, never the model, per R-AI-01). Dedupes against each analysis's own already-surfaced signal URLs. `vercel.json` added (daily cron, 13:00 UTC). `pnpm check` (1,106 unit tests, up from 1,097) and `pnpm build` both green.
-- [ ] **T-6.02** Signal feed UI and re-run prompt · M · FR-WCH-03
+- [x] **T-6.02** Signal feed UI and re-run prompt · M · FR-WCH-03 — done 2026-10-02, see D-098. New `GET /api/signals` reads every signal across the owner's own watchlisted analyses (scoped via `AnalysisRepo.listByOwner`, never T-6.01's cross-owner `listWatchlisted()`), newest first, capped at 20, labelled with each analysis's company name. New `SignalFeed` component (plain-text impact tags, no new colour — DESIGN reserves chromatic colour for the evidence spectrum) renders under the existing `/app/watchlist` table: title linked to the source article, the related dimension when the detector named one, the summary, and a "Re-run analysis" link into the wizard's review step (the same entry point `ReportHeader`'s own "Run again" link uses, T-5.11/D-094). Verified for real against the Firestore/Auth emulators via a real signed-up user and two seeded signals — correct newest-first ordering, no overflow at 1440/768/390px. `pnpm check` (1,111 tests, up from 1,106) and `pnpm build` both green.
 - [ ] **T-6.03** Queue-based orchestrator if required (TQ-4) · L · NFR-02
 - [ ] **T-6.04** Server-rendered PDF export · M · FR-EXP-03
 - [ ] **T-6.05** Security review: rules, SSRF, injection, headers and CSP, secrets, logging · M · NFR-03, NFR-04

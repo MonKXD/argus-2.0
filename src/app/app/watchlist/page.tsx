@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { AnalysesTable } from "@/components/argus/analyses-table";
 import { EmptyState } from "@/components/argus/empty-state";
+import { SignalFeed, type SignalWithCompany } from "@/components/argus/signal-feed";
 import { TableSkeleton } from "@/components/argus/table-skeleton";
 import type { Analysis } from "@/lib/schema/analysis";
 
@@ -26,6 +27,7 @@ const ANALYSES_TABLE_COLUMNS = 6;
  */
 export default function WatchlistPage() {
   const [analyses, setAnalyses] = useState<Analysis[] | null>(null);
+  const [signals, setSignals] = useState<SignalWithCompany[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
 
@@ -49,19 +51,41 @@ export default function WatchlistPage() {
     };
   }, [retryToken]);
 
-  return (
-    <div className="flex flex-col gap-6 p-6">
-      <h1 className="font-serif text-h2 text-foreground">Watchlist</h1>
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/signals")
+      .then((response) => (response.ok ? (response.json() as Promise<{ signals: SignalWithCompany[] }>) : null))
+      .then((body) => {
+        if (!cancelled && body) setSignals(body.signals);
+      })
+      .catch(() => {
+        if (!cancelled) setSignals([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [retryToken]);
 
-      {error ? (
-        <EmptyState message={error} action={{ label: "Retry", onClick: () => setRetryToken((t) => t + 1) }} />
-      ) : analyses === null ? (
-        <TableSkeleton columns={ANALYSES_TABLE_COLUMNS} />
-      ) : analyses.length === 0 ? (
-        <EmptyState message="Nothing watchlisted yet." />
-      ) : (
-        <AnalysesTable analyses={analyses} />
-      )}
+  return (
+    <div className="flex flex-col gap-8 p-6">
+      <div className="flex flex-col gap-6">
+        <h1 className="font-serif text-h2 text-foreground">Watchlist</h1>
+
+        {error ? (
+          <EmptyState message={error} action={{ label: "Retry", onClick: () => setRetryToken((t) => t + 1) }} />
+        ) : analyses === null ? (
+          <TableSkeleton columns={ANALYSES_TABLE_COLUMNS} />
+        ) : analyses.length === 0 ? (
+          <EmptyState message="Nothing watchlisted yet." />
+        ) : (
+          <AnalysesTable analyses={analyses} />
+        )}
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <h2 className="font-serif text-h3 text-foreground">Signals</h2>
+        {signals === null ? <TableSkeleton columns={1} /> : <SignalFeed signals={signals} />}
+      </div>
     </div>
   );
 }

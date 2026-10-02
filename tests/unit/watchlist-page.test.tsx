@@ -18,8 +18,16 @@ describe("WatchlistPage", () => {
     vi.unstubAllGlobals();
   });
 
+  function mockFetch(analysesBody: unknown) {
+    return vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/signals")) return Promise.resolve(jsonResponse({ signals: [] }));
+      return Promise.resolve(jsonResponse(analysesBody));
+    });
+  }
+
   it("shows only the owner's watchlisted analyses (FR-WCH-01/APP_FLOW 5.7)", async () => {
-    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(jsonResponse({ analyses: demoAnalyses }))));
+    vi.stubGlobal("fetch", mockFetch({ analyses: demoAnalyses }));
     render(<WatchlistPage />);
 
     expect(await screen.findByRole("link", { name: "Loopwell" })).toBeInTheDocument();
@@ -28,7 +36,7 @@ describe("WatchlistPage", () => {
 
   it("shows a designed empty state when nothing is watchlisted", async () => {
     const noneWatchlisted = demoAnalyses.map((a) => ({ ...a, isWatchlisted: false }));
-    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(jsonResponse({ analyses: noneWatchlisted }))));
+    vi.stubGlobal("fetch", mockFetch({ analyses: noneWatchlisted }));
     render(<WatchlistPage />);
 
     expect(await screen.findByText("Nothing watchlisted yet.")).toBeInTheDocument();
@@ -38,7 +46,9 @@ describe("WatchlistPage", () => {
     let shouldFail = true;
     vi.stubGlobal(
       "fetch",
-      vi.fn(() => {
+      vi.fn((input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes("/api/signals")) return Promise.resolve(jsonResponse({ signals: [] }));
         if (shouldFail) return Promise.resolve(new Response("{}", { status: 500 }));
         return Promise.resolve(jsonResponse({ analyses: demoAnalyses }));
       }),
