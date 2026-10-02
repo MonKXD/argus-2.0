@@ -4,10 +4,10 @@ import Link from "next/link";
 
 import { WatchlistToggleButton } from "@/components/argus/watchlist-toggle-button";
 import { DataTable } from "@/components/ui/data-table";
+import { ANALYSIS_STATUS_LABEL } from "@/lib/analysis-status-labels";
 import { confidenceLabel } from "@/lib/confidence";
 import { formatDate } from "@/lib/format";
 import type { Analysis } from "@/lib/schema/analysis";
-import type { AnalysisStatus } from "@/lib/schema/enums";
 
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -17,15 +17,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 // dashboard action "toggle watchlist") is shared by every page that reuses
 // this table — the dashboard's top-10, the full analyses list, and
 // /app/watchlist's own filtered view.
-
-const STATUS_LABEL: Record<AnalysisStatus, string> = {
-  DRAFT: "Draft",
-  READY: "Ready",
-  PROCESSING: "Processing",
-  COMPLETE: "Complete",
-  PARTIAL: "Partial",
-  FAILED: "Failed",
-};
 
 const columns: ColumnDef<Analysis>[] = [
   {
@@ -76,7 +67,7 @@ const columns: ColumnDef<Analysis>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => STATUS_LABEL[row.original.status],
+    cell: ({ row }) => ANALYSIS_STATUS_LABEL[row.original.status],
   },
   {
     accessorKey: "updatedAt",

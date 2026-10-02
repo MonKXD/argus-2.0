@@ -131,6 +131,37 @@ describe("GET /api/analyses", () => {
     expect((await miss.json()).analyses).toHaveLength(0);
   });
 
+  it("filters by tag", async () => {
+    listByOwner.mockResolvedValue([
+      loopwellAnalysis, // tags: ["fintech", "embedded-finance"]
+      { ...loopwellAnalysis, id: "ana_00000000000000000000000002", tags: [] },
+    ]);
+
+    const response = await GET(getRequest("?tag=fintech"));
+    const body = await response.json();
+
+    expect(body.analyses).toHaveLength(1);
+    expect(body.analyses[0].id).toBe(loopwellAnalysis.id);
+  });
+
+  it("filters by score range, excluding analyses with no score", async () => {
+    listByOwner.mockResolvedValue([
+      loopwellAnalysis, // latest.overallScore: 62
+      {
+        ...loopwellAnalysis,
+        id: "ana_00000000000000000000000002",
+        latest: { ...loopwellAnalysis.latest!, overallScore: 90 },
+      },
+      { ...loopwellAnalysis, id: "ana_00000000000000000000000003", latest: null },
+    ]);
+
+    const response = await GET(getRequest("?scoreMin=60&scoreMax=70"));
+    const body = await response.json();
+
+    expect(body.analyses).toHaveLength(1);
+    expect(body.analyses[0].id).toBe(loopwellAnalysis.id);
+  });
+
   it("paginates with a cursor", async () => {
     const many = Array.from({ length: 25 }, (_, i) => ({
       ...loopwellAnalysis,

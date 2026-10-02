@@ -69,6 +69,9 @@ const ListQuery = z.object({
   status: AnalysisStatus.optional(),
   stage: Stage.optional(),
   sector: z.string().max(80).optional(),
+  tag: z.string().max(32).optional(),
+  scoreMin: z.coerce.number().min(0).max(100).optional(),
+  scoreMax: z.coerce.number().min(0).max(100).optional(),
   q: z.string().max(200).optional(),
   sort: z.enum(SORTS).default("-updatedAt"),
   cursor: z.string().optional(),
@@ -103,6 +106,20 @@ export async function GET(request: Request): Promise<NextResponse> {
     if (query.status) analyses = analyses.filter((a) => a.status === query.status);
     if (query.stage) analyses = analyses.filter((a) => a.startup.stage === query.stage);
     if (query.sector) analyses = analyses.filter((a) => a.startup.sector === query.sector);
+    if (query.tag) analyses = analyses.filter((a) => a.tags.includes(query.tag!));
+    // A score-range filter means "has a score in this range" — an
+    // insufficient-evidence analysis (latest.overallScore: null) or one
+    // with no report yet (latest: null) has no score to range-check, so it
+    // doesn't match either bound.
+    if (query.scoreMin !== undefined || query.scoreMax !== undefined) {
+      analyses = analyses.filter((a) => {
+        const score = a.latest?.overallScore;
+        if (score === null || score === undefined) return false;
+        if (query.scoreMin !== undefined && score < query.scoreMin) return false;
+        if (query.scoreMax !== undefined && score > query.scoreMax) return false;
+        return true;
+      });
+    }
     if (query.q) {
       const needle = query.q.trim().toLowerCase();
       analyses = analyses.filter((a) => a.startup.name.toLowerCase().includes(needle));

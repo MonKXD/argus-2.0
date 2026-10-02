@@ -59,7 +59,7 @@ describe("AnalysesListPage", () => {
 
     await user.type(screen.getByLabelText("Search"), "nonexistent startup");
 
-    expect(await screen.findByText('No analyses match "nonexistent startup".')).toBeInTheDocument();
+    expect(await screen.findByText("No analyses match these filters.")).toBeInTheDocument();
   });
 
   it("clears the search and restores the table via the empty state's action", async () => {
@@ -69,11 +69,50 @@ describe("AnalysesListPage", () => {
 
     const search = screen.getByLabelText("Search");
     await user.type(search, "nonexistent startup");
-    await screen.findByText('No analyses match "nonexistent startup".');
-    await user.click(screen.getByRole("button", { name: "Clear search" }));
+    await screen.findByText("No analyses match these filters.");
+    await user.click(screen.getByRole("button", { name: "Clear filters" }));
 
     expect(search).toHaveValue("");
     expect(await screen.findByRole("link", { name: "Loopwell" })).toBeInTheDocument();
+  });
+
+  it("includes the selected stage, status, sector, tag and score range in the request (T-5.10)", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn((url: string) => {
+      const analyses = url.includes("stage=SEED") ? [] : demoAnalyses;
+      return Promise.resolve(jsonResponse({ analyses, nextCursor: null }));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<AnalysesListPage />);
+    await screen.findByRole("link", { name: "Loopwell" });
+
+    await user.type(screen.getByLabelText("Sector"), "Fintech");
+    await user.type(screen.getByLabelText("Tag"), "seed");
+    await user.type(screen.getByLabelText("Minimum score"), "40");
+    await user.type(screen.getByLabelText("Maximum score"), "80");
+
+    await waitFor(() => {
+      const lastCall = fetchMock.mock.calls.at(-1)?.[0] as string;
+      expect(lastCall).toContain("sector=Fintech");
+      expect(lastCall).toContain("tag=seed");
+      expect(lastCall).toContain("scoreMin=40");
+      expect(lastCall).toContain("scoreMax=80");
+    });
+  });
+
+  it("shows 'Clear filters' once any filter is active, resetting search and filters together", async () => {
+    const user = userEvent.setup();
+    render(<AnalysesListPage />);
+    await screen.findByRole("link", { name: "Loopwell" });
+
+    expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Sector"), "Fintech");
+    expect(await screen.findByRole("button", { name: "Clear filters" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Clear filters" }));
+    expect(screen.getByLabelText("Sector")).toHaveValue("");
+    expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
   });
 
   it("shows an error with Retry when the request fails, and recovers on retry", async () => {
