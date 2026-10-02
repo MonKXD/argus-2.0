@@ -94,7 +94,7 @@ Imported into every Claude Code session through `CLAUDE.md`. Keep it short and e
 |---|---|
 | R-SEC-01 | Every handler starts with `requireUser()`. Any route touching an analysis, comparison or export calls `assertOwns()`. |
 | R-SEC-02 | Firestore and Storage rules are deny-by-default. Every path or collection you touch gets rules tests. |
-| R-SEC-03 | Secrets are server-only. Only Firebase web config and `APP_URL` may be public. Never log secrets. Never read, print or commit `.env*` files. |
+| R-SEC-03 | Secrets are server-only. Only Firebase web config, `APP_URL`, and the Sentry DSN (a write-only, rate-limited ingest endpoint — vendor-documented as safe for client exposure, not a credential, D-104) may be public. Never log secrets. Never read, print or commit `.env*` files. |
 | R-SEC-04 | Never log document text, quotes, prompts or model output. Log IDs, counts, hashes and durations. |
 | R-SEC-05 | Uploads: extension allowlist, magic-byte check, size and page caps, decompressed-size caps. |
 | R-SEC-06 | Fetch user-supplied URLs only through the SSRF-safe fetcher. |

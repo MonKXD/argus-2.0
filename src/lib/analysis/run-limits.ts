@@ -1,5 +1,8 @@
+import { z } from "zod";
+
 import { LimitExceededError } from "@/lib/api/errors";
 import { env } from "@/lib/env";
+import { Run } from "@/lib/schema/run";
 
 import type { Firestore } from "firebase-admin/firestore";
 
@@ -8,6 +11,41 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 export interface RunUsage {
   runningCount: number;
   dailyCount: number;
+}
+
+// R-COD-02: validate at the Firestore-read boundary, but only the fields
+// this view actually uses — a full `Run.parse()` would require every other
+// pipeline-internal field (steps, modelIds, promptVersion, ...) to be
+// present too, which is true of every real run document but makes this a
+// narrower, more honest boundary contract for a read-only dashboard.
+const RecentRunShape = Run.pick({
+  id: true,
+  analysisId: true,
+  status: true,
+  startedAt: true,
+  finishedAt: true,
+  usage: true,
+});
+export type RecentRun = z.infer<typeof RecentRunShape>;
+
+/**
+ * T-6.08 (observability, NFR-08/09: "cost estimate recorded per run"). Reuses
+ * the same owner-scoped `collectionGroup("runs")` shape as `getRunUsage()`,
+ * newest first, capped (same bounded-small-read trade-off as
+ * `ActivityRepo.listByOwner`, D-089) — this is a dashboard for one owner's
+ * own runs, not a full archive. `Run.usage`/`startedAt`/`finishedAt` already
+ * exist on every run document (duration = finishedAt - startedAt; cost =
+ * usage.estimatedCostUsd) — no schema change needed, just a read.
+ */
+export async function listRecentRuns(db: Firestore, ownerId: string, limit = 20): Promise<RecentRun[]> {
+  const snapshot = await db
+    .collectionGroup("runs")
+    .where("ownerId", "==", ownerId)
+    .orderBy("startedAt", "desc")
+    .limit(limit)
+    .get();
+
+  return snapshot.docs.map((doc) => RecentRunShape.parse(doc.data()));
 }
 
 /**

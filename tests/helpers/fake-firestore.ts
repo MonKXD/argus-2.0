@@ -186,25 +186,52 @@ export class FakeCollectionRef {
 
 /**
  * A minimal fake of a `collectionGroup(name)` query (T-3.08's concurrency
- * and daily-run-limit checks): matches every document anywhere in the store
- * whose immediate parent collection is named `name`, regardless of depth —
- * e.g. `collectionGroup("runs")` matches `analyses/{id}/runs/{runId}` docs
- * for every analysis, the same way the real Firestore Admin SDK's
- * collection-group queries cut across parents. Supports only what
- * `run-limits.ts` needs: `==` and `>=` equality/range filters, no orderBy.
+ * and daily-run-limit checks, extended by T-6.08's `listRecentRuns` for
+ * `orderBy`/`limit`): matches every document anywhere in the store whose
+ * immediate parent collection is named `name`, regardless of depth — e.g.
+ * `collectionGroup("runs")` matches `analyses/{id}/runs/{runId}` docs for
+ * every analysis, the same way the real Firestore Admin SDK's
+ * collection-group queries cut across parents. `orderBy`/`limit` mirror
+ * `FakeCollectionRef`'s own implementation rather than duplicating it
+ * differently.
  */
 export class FakeCollectionGroupRef {
   constructor(
     private readonly store: Map<string, unknown>,
     private readonly collectionName: string,
     private readonly wheres: WhereClause[] = [],
+    private readonly orderBys: OrderByClause[] = [],
+    private readonly limitCount: number | undefined = undefined,
   ) {}
 
   where(field: string, op: "==" | ">=", value: unknown): FakeCollectionGroupRef {
-    return new FakeCollectionGroupRef(this.store, this.collectionName, [
-      ...this.wheres,
-      { field, op, value },
-    ]);
+    return new FakeCollectionGroupRef(
+      this.store,
+      this.collectionName,
+      [...this.wheres, { field, op, value }],
+      this.orderBys,
+      this.limitCount,
+    );
+  }
+
+  orderBy(field: string, direction: "asc" | "desc" = "asc"): FakeCollectionGroupRef {
+    return new FakeCollectionGroupRef(
+      this.store,
+      this.collectionName,
+      this.wheres,
+      [...this.orderBys, { field, direction }],
+      this.limitCount,
+    );
+  }
+
+  limit(count: number): FakeCollectionGroupRef {
+    return new FakeCollectionGroupRef(
+      this.store,
+      this.collectionName,
+      this.wheres,
+      this.orderBys,
+      count,
+    );
   }
 
   async get(): Promise<{ size: number; docs: { data(): unknown }[] }> {
@@ -216,6 +243,17 @@ export class FakeCollectionGroupRef {
     for (const clause of this.wheres) {
       entries = entries.filter(([, value]) => matchesWhere(value, clause));
     }
+
+    for (const clause of this.orderBys) {
+      entries = [...entries].sort((a, b) => {
+        const av = readField(a[1], clause.field);
+        const bv = readField(b[1], clause.field);
+        const cmp = av! < bv! ? -1 : av! > bv! ? 1 : 0;
+        return clause.direction === "desc" ? -cmp : cmp;
+      });
+    }
+
+    if (this.limitCount !== undefined) entries = entries.slice(0, this.limitCount);
 
     const docs = entries.map(([, value]) => ({ data: () => value }));
     return { size: docs.length, docs };

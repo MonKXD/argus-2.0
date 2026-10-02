@@ -87,6 +87,14 @@ const serverSchema = z
     QSTASH_TOKEN: z.string().min(1).optional(),
     QSTASH_CURRENT_SIGNING_KEY: z.string().min(1).optional(),
     QSTASH_NEXT_SIGNING_KEY: z.string().min(1).optional(),
+
+    // T-6.08 (observability, NFR-08): server-side mirror of
+    // NEXT_PUBLIC_SENTRY_DSN, the same dual-entry pattern as
+    // FIREBASE_STORAGE_BUCKET above — server code (instrumentation.ts,
+    // route handlers) never reads NEXT_PUBLIC_* vars. Optional: error
+    // tracking is off (Sentry.init simply isn't called) until a real DSN is
+    // configured, same as every other optional integration in this file.
+    SENTRY_DSN: z.string().min(1).optional(),
   })
   .superRefine((data, ctx) => {
     if (!data.USE_FIREBASE_EMULATORS) {
@@ -139,6 +147,12 @@ const clientSchema = z.object({
   // SDK needs its own flag to call connectAuthEmulator (T-3.01), since it
   // never sees server env vars.
   NEXT_PUBLIC_USE_FIREBASE_EMULATORS: boolFromString.default(false),
+  // R-SEC-03 names a Sentry DSN alongside Firebase web config and APP_URL as
+  // safe to expose publicly — see docs/RULES.md and PROJECT_MEMORY D-104: a
+  // DSN is a write-only, rate-limited ingest endpoint, not a credential, and
+  // Sentry's own docs treat it as client-embeddable by design. Optional: no
+  // DSN means no client-side error tracking, not a startup failure.
+  NEXT_PUBLIC_SENTRY_DSN: z.string().min(1).optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;
@@ -167,6 +181,7 @@ function parseClientEnv(): ClientEnv {
     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
     NEXT_PUBLIC_USE_FIREBASE_EMULATORS: process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   });
   if (!result.success) {
     throw new Error(`Invalid client environment variables:\n${formatIssues(result.error)}`);

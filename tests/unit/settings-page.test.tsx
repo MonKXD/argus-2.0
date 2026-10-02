@@ -12,7 +12,13 @@ describe("SettingsPage", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
-        jsonResponse({ runningCount: 1, dailyCount: 4, maxConcurrentRuns: 2, dailyAnalysisLimit: 10 }),
+        jsonResponse({
+          runningCount: 1,
+          dailyCount: 4,
+          maxConcurrentRuns: 2,
+          dailyAnalysisLimit: 10,
+          recentRuns: [],
+        }),
       ),
     );
   });
@@ -34,7 +40,13 @@ describe("SettingsPage", () => {
       vi.fn(() => {
         if (shouldFail) return Promise.resolve(new Response("{}", { status: 500 }));
         return Promise.resolve(
-          jsonResponse({ runningCount: 0, dailyCount: 0, maxConcurrentRuns: 2, dailyAnalysisLimit: 10 }),
+          jsonResponse({
+            runningCount: 0,
+            dailyCount: 0,
+            maxConcurrentRuns: 2,
+            dailyAnalysisLimit: 10,
+            recentRuns: [],
+          }),
         );
       }),
     );
@@ -69,5 +81,41 @@ describe("SettingsPage", () => {
   it("shows the scoring version", () => {
     render(<SettingsPage />);
     expect(screen.getByText(/Version 1\.0\.0/)).toBeInTheDocument();
+  });
+
+  it("shows an empty state when there are no runs yet (T-6.08)", async () => {
+    render(<SettingsPage />);
+    expect(
+      await screen.findByText("No runs yet. Start an analysis to see its duration and cost here."),
+    ).toBeInTheDocument();
+  });
+
+  it("renders a recent run's status, duration and cost (T-6.08)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          runningCount: 0,
+          dailyCount: 1,
+          maxConcurrentRuns: 2,
+          dailyAnalysisLimit: 10,
+          recentRuns: [
+            {
+              id: "run_1",
+              analysisId: "ana_1",
+              status: "SUCCEEDED",
+              startedAt: "2026-10-02T00:00:00.000Z",
+              finishedAt: "2026-10-02T00:00:08.000Z",
+              usage: { inputTokens: 1000, outputTokens: 500, estimatedCostUsd: 0.0123 },
+            },
+          ],
+        }),
+      ),
+    );
+
+    render(<SettingsPage />);
+    expect(await screen.findByText("Complete")).toBeInTheDocument();
+    expect(screen.getByText("8 sec")).toBeInTheDocument();
+    expect(screen.getByText("$0.0123")).toBeInTheDocument();
   });
 });

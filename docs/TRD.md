@@ -302,7 +302,8 @@ Limits: at most 2 concurrent runs per user; daily analysis limit from `DAILY_ANA
 - Structured JSON logs with `analysisId`, `runId`, `step`, `attempt`.
 - Run document stores per-step timing, usage, warnings and error codes.
 - Dev-only run inspector at `/dev/runs/[id]`.
-- Error tracking (for example Sentry) added in Phase 6. Track: downgrade rate, warnings per run, cost per run, step failure rate.
+- Error tracking via Sentry (T-6.08): `src/instrumentation.ts`/`instrumentation-node.ts`/`instrumentation-edge.ts`/`instrumentation-client.ts`, wired to Next's `onRequestError` hook for server/edge errors and a `global-error.tsx` boundary for root-layout client errors. Off by default (no-op) until `SENTRY_DSN`/`NEXT_PUBLIC_SENTRY_DSN` are set — see `.env.example`.
+- Run and cost dashboard (T-6.08, NFR-08/09): `GET /api/usage`'s `recentRuns` field (`listRecentRuns()`, `src/lib/analysis/run-limits.ts`) and the "Run history" section of `/app/settings` — the signed-in owner's own recent runs with duration (`finishedAt - startedAt`) and `usage.estimatedCostUsd`, already recorded on every `Run` document (no schema change).
 
 ## 15. Testing strategy
 

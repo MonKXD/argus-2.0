@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getRunUsage } from "@/lib/analysis/run-limits";
+import { getRunUsage, listRecentRuns } from "@/lib/analysis/run-limits";
 import { requireUser } from "@/lib/api/auth";
 import { handleApiError } from "@/lib/api/errors";
 import { env } from "@/lib/env";
@@ -16,13 +16,18 @@ import { getAdminFirestore } from "@/lib/repos/admin-firestore";
 export async function GET(): Promise<NextResponse> {
   try {
     const user = await requireUser();
-    const usage = await getRunUsage(getAdminFirestore(), user.uid);
+    const db = getAdminFirestore();
+    const [usage, recentRuns] = await Promise.all([
+      getRunUsage(db, user.uid),
+      listRecentRuns(db, user.uid),
+    ]);
 
     return NextResponse.json({
       runningCount: usage.runningCount,
       dailyCount: usage.dailyCount,
       maxConcurrentRuns: env.MAX_CONCURRENT_RUNS,
       dailyAnalysisLimit: env.DAILY_ANALYSIS_LIMIT,
+      recentRuns,
     });
   } catch (error) {
     return handleApiError(error);

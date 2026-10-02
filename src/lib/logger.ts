@@ -9,7 +9,7 @@ import { env } from "@/lib/env";
  * separately from `logger` so tests can point a pino instance built from
  * these options at an in-memory stream instead of stdout.
  */
-const REDACTED_FIELDS = [
+export const REDACTED_FIELDS = [
   "apiKey",
   "password",
   "token",

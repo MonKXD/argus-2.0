@@ -5,16 +5,27 @@ import { Fragment, useEffect, useState } from "react";
 import { EmptyState } from "@/components/argus/empty-state";
 import { SCORING_VERSION, STAGE_PROFILE_WEIGHTS } from "@/lib/analysis/config";
 import { DIMENSION_LABEL, DIMENSION_ORDER } from "@/lib/dimension-labels";
-import { formatNumber } from "@/lib/format";
-import type { StageProfile } from "@/lib/schema/enums";
+import { formatDate, formatDuration, formatNumber } from "@/lib/format";
+import { RUN_STATUS_LABEL } from "@/lib/run-status-labels";
+import type { RunStatus, StageProfile } from "@/lib/schema/enums";
 import { RUBRICS } from "@/lib/schema/rubrics";
 import { STAGE_PROFILE_LABEL } from "@/lib/stage-labels";
+
+interface RecentRun {
+  id: string;
+  analysisId: string;
+  status: RunStatus;
+  startedAt: string;
+  finishedAt: string | undefined;
+  usage: { estimatedCostUsd: number; inputTokens: number; outputTokens: number };
+}
 
 interface Usage {
   runningCount: number;
   dailyCount: number;
   maxConcurrentRuns: number;
   dailyAnalysisLimit: number;
+  recentRuns: RecentRun[];
 }
 
 const STAGE_PROFILE_ORDER: StageProfile[] = ["EARLY", "SEED", "GROWTH"];
@@ -29,7 +40,10 @@ const STAGE_PROFILE_ORDER: StageProfile[] = ["EARLY", "SEED", "GROWTH"];
  * Usage fetches the real `GET /api/usage` (T-5.13), which shares
  * `run-limits.ts`'s own `getRunUsage()` with the server-side gate
  * (`assertWithinRunLimits`) so this view can never show a number that
- * disagrees with what actually blocks starting a run. The methodology
+ * disagrees with what actually blocks starting a run. The same response now
+ * also carries `recentRuns` (T-6.08, NFR-08/09's "cost estimate recorded
+ * per run"), from `listRecentRuns()` — one more real field on the same
+ * fetch, not a second round trip. The methodology
  * section needs no fetch — it's a static render of data already in code
  * (`RUBRICS`, verbatim from AI_SPEC.md section 4 since T-2.09/D-047;
  * `STAGE_PROFILE_WEIGHTS`/`SCORING_VERSION`, verbatim from SCHEMA.md
@@ -84,6 +98,68 @@ export default function SettingsPage() {
               {usage.dailyCount} of {usage.dailyAnalysisLimit}
             </dd>
           </dl>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-h3 font-serif text-foreground">Run history</h2>
+          <p className="text-ui-sm text-mist">
+            Your most recent analysis runs, with duration and the model usage cost each one
+            recorded (NFR-08/09).
+          </p>
+        </div>
+        {usage === null ? null : usage.recentRuns.length === 0 ? (
+          <EmptyState message="No runs yet. Start an analysis to see its duration and cost here." />
+        ) : (
+          <div className="overflow-x-auto" tabIndex={0}>
+            <table className="w-full min-w-[560px] text-left text-ui-sm">
+              <thead>
+                <tr className="border-b border-hairline text-mist">
+                  <th scope="col" className="py-2 pr-4 font-medium">
+                    Started
+                  </th>
+                  <th scope="col" className="py-2 pr-4 font-medium">
+                    Status
+                  </th>
+                  <th scope="col" className="py-2 pr-4 text-right font-medium">
+                    Duration
+                  </th>
+                  <th scope="col" className="py-2 pr-4 text-right font-medium">
+                    Tokens
+                  </th>
+                  <th scope="col" className="py-2 pr-4 text-right font-medium">
+                    Cost
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {usage.recentRuns.map((run) => (
+                  <tr key={run.id} className="border-b border-hairline last:border-0">
+                    <td className="py-2 pr-4 text-foreground">{formatDate(run.startedAt)}</td>
+                    <td className="py-2 pr-4 text-foreground">{RUN_STATUS_LABEL[run.status]}</td>
+                    <td className="py-2 pr-4 text-right tabular-nums text-foreground">
+                      {run.finishedAt
+                        ? formatDuration(
+                            new Date(run.finishedAt).getTime() - new Date(run.startedAt).getTime(),
+                          )
+                        : "—"}
+                    </td>
+                    <td className="py-2 pr-4 text-right tabular-nums text-foreground">
+                      {formatNumber(run.usage.inputTokens + run.usage.outputTokens)}
+                    </td>
+                    <td className="py-2 pr-4 text-right tabular-nums text-foreground">
+                      {formatNumber(run.usage.estimatedCostUsd, {
+                        style: "currency",
+                        currency: "USD",
+                        maximumFractionDigits: 4,
+                      })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
 
