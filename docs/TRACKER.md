@@ -22,7 +22,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 | 2 | Engine spike (CLI-first) | 18 | 17 | In progress (blocked on T-2.18) |
 | 3 | Auth, persistence, intake, orchestration | 14 | 14 | Done |
 | 4 | Report UI (Alpha) | 14 | 14 | Done |
-| 5 | Compare, export, watchlist, activity (Beta) | 13 | 6 | In progress |
+| 5 | Compare, export, watchlist, activity (Beta) | 13 | 10 | In progress |
 | 6 | Monitoring, hardening, launch (1.0) | 15 | 0 | Not started |
 
 ---
