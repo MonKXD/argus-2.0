@@ -23,7 +23,7 @@ Legend: `[ ]` todo, `[~]` in progress, `[x]` done, `[!]` blocked. Size: S, M, L 
 | 3 | Auth, persistence, intake, orchestration | 14 | 14 | Done |
 | 4 | Report UI (Alpha) | 14 | 14 | Done |
 | 5 | Compare, export, watchlist, activity (Beta) | 13 | 13 | Done |
-| 6 | Monitoring, hardening, launch (1.0) | 15 | 2 | In progress |
+| 6 | Monitoring, hardening, launch (1.0) | 15 | 5 | In progress |
 
 ---
 
