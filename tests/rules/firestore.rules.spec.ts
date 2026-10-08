@@ -150,6 +150,18 @@ describe("firestore.rules: every other collection denies clients by default", ()
     await assertFails(getDoc(doc(owner.firestore(), "comparisons", "cmp_1")));
   });
 
+  it("denies reading a server-only subcollection (notes) even for the owner (T-6.14)", async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "analyses", ANALYSIS_ID, "notes", "note_1"), {
+        analysisId: ANALYSIS_ID,
+        sectionKey: "founder-team",
+        text: "Check this later.",
+      });
+    });
+    const owner = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(getDoc(doc(owner.firestore(), "analyses", ANALYSIS_ID, "notes", "note_1")));
+  });
+
   it("denies reading or writing a top-level feedback document even when owned (T-6.11)", async () => {
     await testEnv.withSecurityRulesDisabled(async (context) => {
       await setDoc(doc(context.firestore(), "feedback", "fbk_1"), { ownerId: OWNER_UID });

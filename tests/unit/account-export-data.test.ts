@@ -7,6 +7,7 @@ import { ActivityRepo } from "@/lib/repos/activity-repo";
 import { AnalysisRepo } from "@/lib/repos/analysis-repo";
 import { ComparisonRepo } from "@/lib/repos/comparison-repo";
 import { FeedbackRepo } from "@/lib/repos/feedback-repo";
+import { NoteRepo } from "@/lib/repos/note-repo";
 import { ReportRepo } from "@/lib/repos/report-repo";
 import { SourceRepo } from "@/lib/repos/source-repo";
 
@@ -19,6 +20,7 @@ function repos(db: ReturnType<typeof createFakeFirestore>["db"]) {
     analysisRepo: new AnalysisRepo(db),
     sourceRepo: new SourceRepo(db),
     reportRepo: new ReportRepo(db),
+    noteRepo: new NoteRepo(db),
     comparisonRepo: new ComparisonRepo(db),
     activityRepo: new ActivityRepo(db),
     feedbackRepo: new FeedbackRepo(db),
@@ -38,6 +40,13 @@ describe("buildAccountExportPayload (T-6.12)", () => {
       ownerId: OWNER_ID,
     });
     store.set(`analyses/${loopwellAnalysis.id}/reports/${loopwellReport.id}`, loopwellReport);
+    store.set(`analyses/${loopwellAnalysis.id}/notes/note_00000000000000000000000001`, {
+      id: "note_00000000000000000000000001",
+      analysisId: loopwellAnalysis.id,
+      sectionKey: "founder-team",
+      text: "Follow up on this.",
+      createdAt: new Date().toISOString(),
+    });
     store.set("comparisons/cmp_00000000000000000000000001", {
       id: "cmp_00000000000000000000000001",
       ownerId: OWNER_ID,
@@ -71,6 +80,7 @@ describe("buildAccountExportPayload (T-6.12)", () => {
     expect(payload.analyses[0]?.sources).toHaveLength(loopwellSources.length);
     expect(payload.analyses[0]?.runs).toHaveLength(1);
     expect(payload.analyses[0]?.reports).toHaveLength(1);
+    expect(payload.analyses[0]?.notes).toHaveLength(1);
     expect(payload.comparisons).toHaveLength(1);
     expect(payload.activity).toHaveLength(1);
     expect(payload.feedback).toHaveLength(1);

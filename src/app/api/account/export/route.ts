@@ -8,6 +8,7 @@ import { getAdminFirestore } from "@/lib/repos/admin-firestore";
 import { AnalysisRepo } from "@/lib/repos/analysis-repo";
 import { ComparisonRepo } from "@/lib/repos/comparison-repo";
 import { FeedbackRepo } from "@/lib/repos/feedback-repo";
+import { NoteRepo } from "@/lib/repos/note-repo";
 import { ReportRepo } from "@/lib/repos/report-repo";
 import { SourceRepo } from "@/lib/repos/source-repo";
 
@@ -29,6 +30,7 @@ export async function GET(): Promise<NextResponse> {
       analysisRepo: new AnalysisRepo(db),
       sourceRepo: new SourceRepo(db),
       reportRepo: new ReportRepo(db),
+      noteRepo: new NoteRepo(db),
       comparisonRepo: new ComparisonRepo(db),
       activityRepo: new ActivityRepo(db),
       feedbackRepo: new FeedbackRepo(db),

@@ -13,6 +13,7 @@ import { EvidencePanel } from "@/components/argus/report/evidence-panel";
 import { ReportHeader } from "@/components/argus/report/report-header";
 import { ReportSectionNav } from "@/components/argus/report/report-section-nav";
 import type { ReportVersionSummary } from "@/components/argus/report/report-version-selector";
+import { SectionNotes } from "@/components/argus/section-notes";
 import { DimensionRadar } from "@/components/charts/dimension-radar";
 import { ScoreGauge } from "@/components/charts/score-gauge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +25,7 @@ import type { Analysis } from "@/lib/schema/analysis";
 import type { Claim, CriterionScore, DimensionAnalysis } from "@/lib/schema/claims";
 import type { ClaimStatus, DimensionKey } from "@/lib/schema/enums";
 import type { Evidence, Fact, Source } from "@/lib/schema/evidence";
+import type { Note } from "@/lib/schema/note";
 import type { Report } from "@/lib/schema/report";
 import { SEVERITY_CLASS } from "@/lib/severity";
 import { SOURCE_TYPE_LABEL } from "@/lib/source-labels";
@@ -53,6 +55,10 @@ interface ReportShellProps {
    * Omitted the same way `sources` can be — the header then shows a plain
    * version number with no selector or history. */
   versions?: ReportVersionSummary[];
+  /** Every user note across every section (T-6.14, FR-RPT-20), grouped by
+   * `sectionKey` below. Omitted the same way `sources` can be — each
+   * section's `SectionNotes` then just starts empty. */
+  notes?: Note[];
   /** A `PARTIAL`-status banner (with its own Resume action) rendered
    * between the header and the section nav/reading column. */
   partialNotice?: ReactNode;
@@ -316,8 +322,16 @@ function ReportShell({
   evidence = [],
   facts = [],
   versions = [],
+  notes = [],
   partialNotice,
 }: ReportShellProps) {
+  const notesBySection = new Map<string, Note[]>();
+  for (const note of notes) {
+    const existing = notesBySection.get(note.sectionKey);
+    if (existing) existing.push(note);
+    else notesBySection.set(note.sectionKey, [note]);
+  }
+
   const byKey = new Map(dimensions.map((d) => [d.dimension, d]));
   const dimensionScores = Object.fromEntries(
     dimensions.map((d) => [d.dimension, { score: d.score, confidence: d.confidence }]),
@@ -390,6 +404,11 @@ function ReportShell({
               <div className="mt-4">
                 <ClaimList claims={report.narrative.executiveSummary} />
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="executive-summary"
+                notes={notesBySection.get("executive-summary") ?? []}
+              />
             </section>
 
             <section id="investment-overview">
@@ -401,6 +420,11 @@ function ReportShell({
               <div className="mt-4">
                 <ClaimList claims={report.narrative.investmentOverview} />
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="investment-overview"
+                notes={notesBySection.get("investment-overview") ?? []}
+              />
             </section>
 
             <section id="investment-score">
@@ -425,6 +449,11 @@ function ReportShell({
               <div className="mt-4">
                 <ExplainScore overall={report.overall} dimensions={dimensions} />
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="investment-score"
+                notes={notesBySection.get("investment-score") ?? []}
+              />
             </section>
 
             <section id="founder-team">
@@ -436,6 +465,11 @@ function ReportShell({
               <div className="mt-4">
                 <DimensionSection dimension={byKey.get("founder")} showCriteria />
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="founder-team"
+                notes={notesBySection.get("founder-team") ?? []}
+              />
             </section>
 
             <section id="product-business-model">
@@ -460,6 +494,11 @@ function ReportShell({
                   </div>
                 </div>
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="product-business-model"
+                notes={notesBySection.get("product-business-model") ?? []}
+              />
             </section>
 
             <section id="market-opportunity">
@@ -471,6 +510,11 @@ function ReportShell({
               <div className="mt-4">
                 <DimensionSection dimension={byKey.get("market")} showCriteria />
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="market-opportunity"
+                notes={notesBySection.get("market-opportunity") ?? []}
+              />
             </section>
 
             <section id="market-trends">
@@ -482,6 +526,11 @@ function ReportShell({
               <div className="mt-4">
                 <ClaimList claims={report.narrative.marketTrends} />
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="market-trends"
+                notes={notesBySection.get("market-trends") ?? []}
+              />
             </section>
 
             <section id="competitive-landscape">
@@ -493,6 +542,11 @@ function ReportShell({
               <div className="mt-4">
                 <DimensionSection dimension={byKey.get("competitive")} showCriteria />
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="competitive-landscape"
+                notes={notesBySection.get("competitive-landscape") ?? []}
+              />
             </section>
 
             <section id="traction-growth">
@@ -504,6 +558,11 @@ function ReportShell({
               <div className="mt-4">
                 <DimensionSection dimension={byKey.get("traction")} showCriteria />
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="traction-growth"
+                notes={notesBySection.get("traction-growth") ?? []}
+              />
             </section>
 
             <section id="financial-signals">
@@ -515,6 +574,11 @@ function ReportShell({
               <div className="mt-4">
                 <DimensionSection dimension={byKey.get("financial")} showCriteria />
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="financial-signals"
+                notes={notesBySection.get("financial-signals") ?? []}
+              />
             </section>
 
             <section id="risks-flags">
@@ -547,6 +611,11 @@ function ReportShell({
                 )}
                 <DimensionSection dimension={byKey.get("risk")} showCriteria />
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="risks-flags"
+                notes={notesBySection.get("risks-flags") ?? []}
+              />
             </section>
 
             <section id="strengths-weaknesses">
@@ -569,6 +638,11 @@ function ReportShell({
                   </div>
                 </div>
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="strengths-weaknesses"
+                notes={notesBySection.get("strengths-weaknesses") ?? []}
+              />
             </section>
 
             <section id="market-gaps">
@@ -580,6 +654,11 @@ function ReportShell({
               <div className="mt-4">
                 <ClaimList claims={report.narrative.marketGaps} />
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="market-gaps"
+                notes={notesBySection.get("market-gaps") ?? []}
+              />
             </section>
 
             <section id="ai-insights">
@@ -591,6 +670,11 @@ function ReportShell({
               <div className="mt-4">
                 <ClaimList claims={report.narrative.aiInsights} />
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="ai-insights"
+                notes={notesBySection.get("ai-insights") ?? []}
+              />
             </section>
 
             <section id="evidence-sources">
@@ -662,6 +746,11 @@ function ReportShell({
                   ))}
                 </ul>
               )}
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="evidence-sources"
+                notes={notesBySection.get("evidence-sources") ?? []}
+              />
             </section>
 
             <section id="missing-information">
@@ -700,6 +789,11 @@ function ReportShell({
                   </ul>
                 )}
               </div>
+              <SectionNotes
+                analysisId={analysis.id}
+                sectionKey="missing-information"
+                notes={notesBySection.get("missing-information") ?? []}
+              />
             </section>
           </div>
 

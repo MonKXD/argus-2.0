@@ -19,6 +19,7 @@ vi.mock("@/lib/repos/report-repo", () => ({ ReportRepo: class {} }));
 vi.mock("@/lib/repos/comparison-repo", () => ({ ComparisonRepo: class {} }));
 vi.mock("@/lib/repos/activity-repo", () => ({ ActivityRepo: class {} }));
 vi.mock("@/lib/repos/feedback-repo", () => ({ FeedbackRepo: class {} }));
+vi.mock("@/lib/repos/note-repo", () => ({ NoteRepo: class {} }));
 
 const { UnauthenticatedError } = await import("@/lib/api/errors");
 const { GET } = await import("@/app/api/account/export/route");

@@ -4,6 +4,7 @@ import type { AnalysisRepo } from "@/lib/repos/analysis-repo";
 import type { ComparisonRepo } from "@/lib/repos/comparison-repo";
 import { zodConverter } from "@/lib/repos/converter";
 import type { FeedbackRepo } from "@/lib/repos/feedback-repo";
+import type { NoteRepo } from "@/lib/repos/note-repo";
 import type { ReportRepo } from "@/lib/repos/report-repo";
 import type { SourceRepo } from "@/lib/repos/source-repo";
 import type { Activity } from "@/lib/schema/activity";
@@ -11,6 +12,7 @@ import type { Analysis } from "@/lib/schema/analysis";
 import type { Comparison } from "@/lib/schema/comparison";
 import type { Source } from "@/lib/schema/evidence";
 import type { Feedback } from "@/lib/schema/feedback";
+import type { Note } from "@/lib/schema/note";
 import type { Report } from "@/lib/schema/report";
 import { Run } from "@/lib/schema/run";
 
@@ -21,6 +23,7 @@ export interface AccountExportAnalysis {
   sources: Source[];
   runs: Run[];
   reports: Report[];
+  notes: Note[];
 }
 
 export interface AccountExportPayload {
@@ -44,8 +47,9 @@ export interface AccountExportPayload {
  * already carry, and R-DAT-03's "never load all evidence for list views"
  * caution extends naturally to not making a single synchronous export
  * route's response size depend on an owner's entire evidence corpus across
- * every analysis they've ever run. `feedback` is included since it's the
- * owner's own authored text, unlike Evidence/Facts.
+ * every analysis they've ever run. `feedback` and each analysis's `notes`
+ * (T-6.14) are included since both are the owner's own authored text,
+ * unlike Evidence/Facts.
  */
 export async function buildAccountExportPayload(
   db: Firestore,
@@ -54,6 +58,7 @@ export async function buildAccountExportPayload(
     analysisRepo: AnalysisRepo;
     sourceRepo: SourceRepo;
     reportRepo: ReportRepo;
+    noteRepo: NoteRepo;
     comparisonRepo: ComparisonRepo;
     activityRepo: ActivityRepo;
     feedbackRepo: FeedbackRepo;
@@ -63,7 +68,7 @@ export async function buildAccountExportPayload(
 
   const analysisExports = await Promise.all(
     analyses.map(async (analysis): Promise<AccountExportAnalysis> => {
-      const [sources, runsSnapshot, reports] = await Promise.all([
+      const [sources, runsSnapshot, reports, notes] = await Promise.all([
         repos.sourceRepo.list(analysis.id),
         db
           .collection("analyses")
@@ -72,12 +77,14 @@ export async function buildAccountExportPayload(
           .withConverter(zodConverter(Run))
           .get(),
         repos.reportRepo.list(analysis.id),
+        repos.noteRepo.listByAnalysis(analysis.id),
       ]);
       return {
         analysis,
         sources,
         runs: runsSnapshot.docs.map((doc) => doc.data()),
         reports,
+        notes,
       };
     }),
   );

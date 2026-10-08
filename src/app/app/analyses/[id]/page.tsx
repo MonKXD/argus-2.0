@@ -11,6 +11,7 @@ import { getAdminFirestore } from "@/lib/repos/admin-firestore";
 import { AnalysisRepo } from "@/lib/repos/analysis-repo";
 import { zodConverter } from "@/lib/repos/converter";
 import { FactRepo } from "@/lib/repos/fact-repo";
+import { NoteRepo } from "@/lib/repos/note-repo";
 import { ReportRepo } from "@/lib/repos/report-repo";
 import { SourceRepo } from "@/lib/repos/source-repo";
 import { Run } from "@/lib/schema/run";
@@ -98,6 +99,7 @@ export default async function AnalysisPage({ params, searchParams }: AnalysisPag
       const sources = await sourceRepo.list(id);
       const evidence = await sourceRepo.listEvidence(id);
       const facts = await new FactRepo(getAdminFirestore()).list(id);
+      const notes = await new NoteRepo(getAdminFirestore()).listByAnalysis(id);
       const run =
         analysis.status === "PARTIAL" && analysis.currentRunId
           ? await loadRun(id, analysis.currentRunId)
@@ -112,6 +114,7 @@ export default async function AnalysisPage({ params, searchParams }: AnalysisPag
           sources={sources}
           evidence={evidence}
           facts={facts}
+          notes={notes}
           versions={versions}
           partialNotice={
             // A historical version's own report is unaffected by a later
