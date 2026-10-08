@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { DuplicateAnalysisButton } from "@/components/argus/duplicate-analysis-button";
 import { WatchlistToggleButton } from "@/components/argus/watchlist-toggle-button";
 import { DataTable } from "@/components/ui/data-table";
 import { ANALYSIS_STATUS_LABEL } from "@/lib/analysis-status-labels";
@@ -73,6 +74,11 @@ const columns: ColumnDef<Analysis>[] = [
     accessorKey: "updatedAt",
     header: "Updated",
     cell: ({ row }) => formatDate(row.original.updatedAt),
+  },
+  {
+    id: "duplicate",
+    header: "",
+    cell: ({ row }) => <DuplicateAnalysisButton analysisId={row.original.id} />,
   },
 ];
 

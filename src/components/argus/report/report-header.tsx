@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { DeleteAnalysisButton } from "@/components/argus/delete-analysis-button";
+import { DuplicateAnalysisButton } from "@/components/argus/duplicate-analysis-button";
 import {
   ReportVersionSelector,
   type ReportVersionSummary,
@@ -114,6 +115,7 @@ function ReportHeader({ analysis, report, versions = [] }: ReportHeaderProps) {
             Back to dashboard
           </Link>
           <WatchlistToggleButton analysisId={analysis.id} isWatchlisted={analysis.isWatchlisted} />
+          <DuplicateAnalysisButton analysisId={analysis.id} />
           <DeleteAnalysisButton analysisId={analysis.id} startupName={analysis.startup.name} />
         </div>
       </div>

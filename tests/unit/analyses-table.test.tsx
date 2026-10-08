@@ -45,4 +45,11 @@ describe("AnalysesTable", () => {
       within(notWatchlistedRow).getByRole("button", { name: "Add to watchlist" }),
     ).toBeInTheDocument();
   });
+
+  it("renders a duplicate action for every row (T-6.13)", () => {
+    render(<AnalysesTable analyses={demoAnalyses} />);
+    expect(screen.getAllByRole("button", { name: "Duplicate analysis" })).toHaveLength(
+      demoAnalyses.length,
+    );
+  });
 });
