@@ -4,7 +4,9 @@ import { DISCLAIMER_TEXT } from "@/lib/disclaimer";
 
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Terms of Service — ARGUS AI" };
+// T-6.15: the root layout's title template ("%s — ARGUS AI") appends the
+// suffix now, so this names only the page-specific part.
+export const metadata: Metadata = { title: "Terms of Service" };
 
 /**
  * T-6.09 (PRD section 15, FR-LND-03). A draft for a pre-launch product —

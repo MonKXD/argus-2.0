@@ -1,5 +1,7 @@
 import { IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from "next/font/google";
 
+import { env } from "@/lib/env";
+
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -27,9 +29,35 @@ const ibmPlexMono = IBM_Plex_Mono({
   weight: ["400", "500"],
 });
 
+const DESCRIPTION =
+  "Evidence-first startup due diligence and investment intelligence platform.";
+
+/**
+ * T-6.15 (FR-LND-04, "SEO and social metadata"). `metadataBase` resolves
+ * every relative URL below (and in `sitemap.ts`/`robots.ts`) against the
+ * real deployed origin (R-SEC-03 already names `APP_URL` as a safe public
+ * value). `openGraph`/`twitter` carry no `images` field — the sibling
+ * `opengraph-image.tsx`/`twitter-image.tsx` file conventions generate and
+ * attach those automatically, and file-based metadata takes priority over
+ * this object's own, so duplicating the image path here would be dead
+ * code, not a fallback.
+ */
 export const metadata: Metadata = {
-  title: "ARGUS AI",
-  description: "Evidence-first startup due diligence and investment intelligence platform.",
+  metadataBase: new URL(env.APP_URL),
+  title: { default: "ARGUS AI", template: "%s — ARGUS AI" },
+  description: DESCRIPTION,
+  openGraph: {
+    title: "ARGUS AI",
+    description: DESCRIPTION,
+    url: "/",
+    siteName: "ARGUS AI",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ARGUS AI",
+    description: DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

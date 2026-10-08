@@ -4,7 +4,9 @@ import { DISCLAIMER_TEXT } from "@/lib/disclaimer";
 
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Disclaimer — ARGUS AI" };
+// T-6.15: the root layout's title template ("%s — ARGUS AI") appends the
+// suffix now, so this names only the page-specific part.
+export const metadata: Metadata = { title: "Disclaimer" };
 
 // T-6.09 (PRD section 15, FR-LND-03): the standalone destination for the
 // footer's "Disclaimer" link. The verbatim required text is already shown

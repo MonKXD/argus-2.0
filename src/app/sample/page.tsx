@@ -11,6 +11,17 @@ import {
   loopwellAnalysis,
 } from "@/demo";
 
+import type { Metadata } from "next";
+
+// T-6.15 (FR-LND-02/FR-LND-04): a distinct title/description for the one
+// page search and social shares would most plausibly link to besides the
+// landing page itself.
+export const metadata: Metadata = {
+  title: "Sample report",
+  description:
+    "A full, real ARGUS AI report on a fictional startup — every claim labelled Verified, AI analysis, Assumption or Missing.",
+};
+
 /**
  * T-4.14: `/sample` now renders the real, full 16-section `ReportShell`
  * (T-4.01 through T-4.13) against the one fully-worked demo dataset
